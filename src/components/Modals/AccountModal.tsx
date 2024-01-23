@@ -7,46 +7,49 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
+  // Dropdown,
+  // DropdownTrigger,
+  // DropdownMenu,
+  // DropdownItem,
 } from "@nextui-org/react";
 import {
   useLogoutFunction,
-  withAuthInfo,
   useRedirectFunctions,
-  WithLoggedInAuthInfoProps,
-} from "@propelauth/react";
-
+  useUser,
+} from "@propelauth/nextjs/client";
 import ThemeComponent from "@/components/ThemeComponent";
-interface AccountModalProps extends WithLoggedInAuthInfoProps {
+interface AccountModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-const AccountModal = withAuthInfo((props: AccountModalProps) => {
+export const AccountModal = (props: AccountModalProps) => {
   const open = props.open;
   const onClose = props.onClose;
+  const { loading, user } = useUser();
   const { redirectToOrgPage } = useRedirectFunctions();
   const { redirectToAccountPage } = useRedirectFunctions();
   const logoutFn = useLogoutFunction();
   const { currentOrg, setOrg } = useOrgContext();
 
   useEffect(() => {
-    const orgIds = props.orgHelper?.getOrgIds();
-    setOrg(orgIds[0] || "");
-  }, []);
+    if (!loading) {
+      const orgs = user?.getOrgs();
+      setOrg(orgs?.[0]?.orgId || "");
+    } else {
+      setOrg("");
+    }
+  }, [loading]);
 
   const handleLogout = () => {
-    logoutFn(true);
+    logoutFn();
   };
 
   function getOrg(orgId?: string) {
     if (!orgId) {
       return null;
     }
-    return props.orgHelper?.getOrg(orgId);
+    return user?.getOrg(orgId);
   }
 
   return (
@@ -59,33 +62,9 @@ const AccountModal = withAuthInfo((props: AccountModalProps) => {
                 Account Information
               </ModalHeader>
               <ModalBody>
-                {props.orgHelper?.getOrgs()?.length > 1 && (
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button
-                        color="primary"
-                        className="mb-3 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                      >
-                        Choose Company
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu
-                      aria-label="Dynamic Actions"
-                      items={props.orgHelper.getOrgs()}
-                      className="rounded-md shadow-lg"
-                      onAction={(key) => {
-                        setOrg(key.toString());
-                      }}
-                      color="primary"
-                    >
-                      {(item) => (
-                        <DropdownItem key={item.orgId}>
-                          {item.orgName}
-                        </DropdownItem>
-                      )}
-                    </DropdownMenu>
-                  </Dropdown>
-                )}
+                {/* {user?.getOrgs()?.length ??
+                  (0 > 1 && (
+                  ))} */}
                 <Button
                   color="primary"
                   onClick={() => redirectToOrgPage(currentOrg)}
@@ -109,5 +88,4 @@ const AccountModal = withAuthInfo((props: AccountModalProps) => {
       </Modal>
     </>
   );
-});
-export default AccountModal;
+};

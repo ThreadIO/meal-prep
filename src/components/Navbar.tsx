@@ -1,11 +1,13 @@
-import Link from "next/link";
-import { withAuthInfo } from "@propelauth/react";
-import AccountModal from "@/components/Modals/AccountModal";
+"use client";
+import { useUser } from "@propelauth/nextjs/client";
+import { AccountModal } from "@/components/Modals/AccountModal";
 import { useState } from "react";
 import UserProfile from "@/components/UserProfile";
 import BusinessIcon from "@/components/BusinessIcon";
 import { useTheme } from "next-themes";
-const Navbar = withAuthInfo((props) => {
+import Link from "next/link";
+const Navbar = () => {
+  const { user } = useUser();
   const [openAccount, setOpenAccount] = useState(false);
   const { theme } = useTheme();
   return (
@@ -52,11 +54,11 @@ const Navbar = withAuthInfo((props) => {
           cursor: "pointer",
         }}
       >
-        <UserProfile user={props.user} />
+        <UserProfile user={user} />
       </button>
       <AccountModal open={openAccount} onClose={() => setOpenAccount(false)} />
     </div>
   );
-});
+};
 
 export default Navbar;

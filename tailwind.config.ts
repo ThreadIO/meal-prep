@@ -28,6 +28,7 @@ module.exports = {
             background: "#000000",
             foreground: "#ffffff",
             primary: {
+              DEFAULT: "#003B36",
               foreground: "#ffffff",
             },
             focus: "#F182F6",

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { AuthProvider } from "@propelauth/react";
+import { AuthProvider } from "@propelauth/nextjs/client";
 import "@/styles/globals.css";
 import { OrgProvider } from "@/components/OrgContext";
 import { ThemeProvider as NextThemesProvider } from "next-themes";

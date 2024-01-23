@@ -1,5 +1,5 @@
 import React from "react";
-import { User } from "@propelauth/react";
+import { User } from "@propelauth/nextjs/client";
 import { UserCircleIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { Tooltip, Image } from "@nextui-org/react";
 interface UserProfileProps {
