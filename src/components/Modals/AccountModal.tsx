@@ -19,7 +19,6 @@ import {
   WithLoggedInAuthInfoProps,
 } from "@propelauth/react";
 
-import Link from "next/link";
 import ThemeComponent from "@/components/ThemeComponent";
 interface AccountModalProps extends WithLoggedInAuthInfoProps {
   open: boolean;
@@ -50,11 +49,6 @@ const AccountModal = withAuthInfo((props: AccountModalProps) => {
     return props.orgHelper?.getOrg(orgId);
   }
 
-  function getRole() {
-    const org = getOrg(currentOrg);
-    return org?.userAssignedRole;
-  }
-
   return (
     <>
       <Modal isOpen={open} onOpenChange={onClose}>
@@ -72,7 +66,7 @@ const AccountModal = withAuthInfo((props: AccountModalProps) => {
                         color="primary"
                         className="mb-3 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                       >
-                        Choose Department
+                        Choose Company
                       </Button>
                     </DropdownTrigger>
                     <DropdownMenu
@@ -97,18 +91,8 @@ const AccountModal = withAuthInfo((props: AccountModalProps) => {
                   onClick={() => redirectToOrgPage(currentOrg)}
                   className="mb-3 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
-                  <span>Manage Department: {getOrg(currentOrg)?.orgName}</span>
+                  <span>Manage Company: {getOrg(currentOrg)?.orgName}</span>
                 </Button>
-                {getRole() === "Owner" || getRole() === "Admin" ? (
-                  <Link href="/documents">
-                    <Button
-                      className="mb-3 inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                      color="primary"
-                    >
-                      Documents
-                    </Button>
-                  </Link>
-                ) : null}
                 <ThemeComponent />
               </ModalBody>
               <ModalFooter>

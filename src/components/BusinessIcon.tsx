@@ -18,14 +18,7 @@ const BusinessIcon: React.FC<BusinessIconProps> = ({
   style,
 }) => {
   const { theme } = useTheme();
-  const src =
-    process.env.NEXT_PUBLIC_COMPANY === "plz"
-      ? theme === "dark"
-        ? "/plz.png"
-        : "/plz-light.png"
-      : theme === "dark"
-        ? "/thread.svg"
-        : "/thread-light.svg";
+  const src = theme === "dark" ? "/thread.svg" : "/thread-light.svg";
   return (
     <Image
       src={src}
