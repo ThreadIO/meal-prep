@@ -1,7 +1,7 @@
 import React from "react";
 import { User } from "@propelauth/react";
 import { UserCircleIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
-import { Tooltip } from "@nextui-org/react";
+import { Tooltip, Image } from "@nextui-org/react";
 interface UserProfileProps {
   user?: User | null; // Update the type to explicitly allow null
   toolTipsToggle?: boolean;
@@ -46,7 +46,7 @@ const UserProfile = ({ user, toolTipsToggle, isLoading }: UserProfileProps) => {
           color={"primary"}
           content={`${user.firstName} ${user.lastName}`}
         >
-          <img
+          <Image
             className="user-icon ml-3"
             src={user.pictureUrl || "https://via.placeholder.com/150"}
             alt="User Picture"
@@ -59,7 +59,7 @@ const UserProfile = ({ user, toolTipsToggle, isLoading }: UserProfileProps) => {
           />
         </Tooltip>
       ) : (
-        <img
+        <Image
           className="user-icon ml-3"
           src={user.pictureUrl || "https://via.placeholder.com/150"}
           alt="User Picture"
