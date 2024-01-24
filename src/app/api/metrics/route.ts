@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 let bodyContent = JSON.stringify({
   task_list: [
     {
-      count: 6,
+      count: 3,
       emails: [
         {
           email_thread: [
@@ -100,52 +100,6 @@ let bodyContent = JSON.stringify({
           email_thread: [
             {
               message:
-                "Hey, yeah there wasn’t that many gpu’s available. When I signed up and checked almost every gpu wasn’t available.",
-              sender: "ismail yussuf",
-              timestamp: "Tuesday, January 16 2024 at 11:45 PM PST",
-            },
-            {
-              message:
-                "Hey ismail yussuf!\n\nI saw you created a Brev account but didn't make it through the initial question asking why you created the account. I'm curious, did you find anything frustrating? Did you get stuck? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
-              sender: "Nader Khalil",
-              timestamp: "Mon, Jan 15, 2024 at 5:41 PM",
-            },
-          ],
-          initial_email: {
-            message:
-              "Hey ismail yussuf!\n\nI saw you created a Brev account but didn't make it through the initial question asking why you created the account. I'm curious, did you find anything frustrating? Did you get stuck? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
-            sender: "Nader Khalil",
-            subject: "Re: Why Brev?",
-            timestamp: "Mon, Jan 15, 2024 at 5:41 PM",
-          },
-        },
-        {
-          email_thread: [
-            {
-              message:
-                "Hi Nader teams,\n\nGreeting from Indonesia,\nI am Wury, machine learning researcher from Indonesia\n\nAnyway, thank you for providing us with these amazing tools.\n\nI have a question, how to monitor RAM and CPU usage. some time ago I used NVIDIA T4 (16GiB)1 GPUs x 8 CPUs | 52GiB to train my model. But after 15 hours, the instance suddenly died, I just assumed it was because the RAM or CPU exceeded its limit. It would be very useful, if you also provide a monitoring dashboard for the instance.\n\nBest Regards,\n\nWuriyanto",
-              sender: "kata_semangat",
-              timestamp: "Wednesday, January 10 2024 at 7:54 PM PST",
-            },
-            {
-              message:
-                "Hi kata_semangat,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
-              sender: "Nader Khalil",
-              timestamp: "Wed, Dec 20, 2023 at 3:04 PM",
-            },
-          ],
-          initial_email: {
-            message:
-              "Hi kata_semangat,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
-            sender: "Nader Khalil",
-            subject: "Re: A very automated email 🤙",
-            timestamp: "Wed, Dec 20, 2023 at 3:04 PM",
-          },
-        },
-        {
-          email_thread: [
-            {
-              message:
                 "Hey team! I heard about you on Twitter (Harper).\n\nI'm looking to learn how to fine-tune and ship models. I'm a builder at heart, and a PM by trade. \nCan I pay for 1:1 training to learn how to fine-tune models? It's my January goal 😅",
               sender: "Nick Lebesis",
               timestamp: "Thursday, January 11 2024 at 7:55 AM PST",
@@ -165,93 +119,12 @@ let bodyContent = JSON.stringify({
             timestamp: "Thu, Jan 11, 2024 at 10:34 AM",
           },
         },
-        {
-          email_thread: [
-            {
-              message:
-                "Hello,\n\nI am coding a POC for a mental health chatbot and I am looking for some GPU power to have Mistral finetuned to my needs. I happened to find brev Youtube videos which I find very interesting. I will definitely give brev a trial!\n\nAll the best,\n\nPierre-Emmanuel",
-              sender: "Pierre-Emmanuel Féga",
-              timestamp: "Thursday, January 11 2024 at 4:44 PM PST",
-            },
-            {
-              message:
-                "Hi Pierre-Emmanuel FEGA,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
-              sender: "Nader Khalil",
-              timestamp: "vendredi 12 janvier 2024 01:33",
-            },
-          ],
-          initial_email: {
-            message:
-              "Hi Pierre-Emmanuel FEGA,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
-            sender: "Nader Khalil",
-            subject: "RE: A very automated email 🤙",
-            timestamp: "vendredi 12 janvier 2024 01:33",
-          },
-        },
       ],
-      task: "Provide assistance and improve the setup process for fine-tuning models.",
+      task: "Update the initial question asking why users created an account to ensure a smoother onboarding process.",
     },
     {
-      count: 4,
+      count: 3,
       emails: [
-        {
-          email_thread: [
-            {
-              message:
-                "Hey Chris! Awesome! Excited for y'all to try it out, let me know if there's anything I can do. Btw we have a big release planned for January including a large supply of much cheaper NVIDIA A100s!",
-              sender: "Nader Khalil",
-              timestamp: "Saturday, December 23 2023 at 5:58 PM PST",
-            },
-            {
-              message:
-                "Nader,\n\nThanks for reaching out.\n\nQuite the opposite, I was impressed by the site.\n\nWe'll probably be trying it in the near future :)\n\nCheers,\nChris Jenkins",
-              sender: "Chris Jenkins",
-              timestamp: "Sat, Dec 23, 2023 at 12:38 AM",
-            },
-            {
-              message:
-                "Hey Chris Jenkins!\n\nI saw you created a Brev account but haven't created anything yet. I'm curious, did you find anything frustrating? Is there anything I can do to help? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
-              sender: "Nader Khalil",
-              timestamp: "Sat, Dec 23, 2023 at 12:47 AM",
-            },
-          ],
-          initial_email: {
-            message:
-              "Hey Chris Jenkins!\n\nI saw you created a Brev account but haven't created anything yet. I'm curious, did you find anything frustrating? Is there anything I can do to help? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
-            sender: "Nader Khalil",
-            subject: "Re: Reaching out from Brev",
-            timestamp: "Sat, Dec 23, 2023 at 12:47 AM",
-          },
-        },
-        {
-          email_thread: [
-            {
-              message:
-                "Hey Paul!\n\nYes this sounds correct! Brev's does 3 things:\nWe connect to many datacenters & clouds to get better pricing and GPU availability\nOur CLI manages the networking, so you don't have to deal with editing your SSH config again, and can access notebooks in the browser\nReliably installs CUDA & python version on your GPU through the UI \n\nBtw we have a big release planned for January including a large supply of much cheaper NVIDIA A100s!",
-              sender: "Nader Khalil",
-              timestamp: "Saturday, December 23 2023 at 6:01 PM PST",
-            },
-            {
-              message:
-                "Hi Nader,\n\nI am just getting my head around the problem you solve. On the surface, you seem to provide a simple way to access deploying AI training work on powerful third-party hosts. Is this correct? We need to do a lot of training for a few tasks on computer vision and some work with LLM fine-tuning. I understand your company's value add.\n\nCheers\n\nPaul",
-              sender: "Paul Miller",
-              timestamp: "Sat, Dec 23, 2023 at 11:14 AM",
-            },
-            {
-              message:
-                "Hey Paul Miller!\n\nI saw you created a Brev account but haven't created anything yet. I'm curious, did you find anything frustrating? Is there anything I can do to help? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
-              sender: "Nader Khalil",
-              timestamp: "Sunday, 24 December 2023 at 7:31 AM",
-            },
-          ],
-          initial_email: {
-            message:
-              "Hey Paul Miller!\n\nI saw you created a Brev account but haven't created anything yet. I'm curious, did you find anything frustrating? Is there anything I can do to help? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
-            sender: "Nader Khalil",
-            subject: "Reaching out from Brev",
-            timestamp: "Sunday, 24 December 2023 at 7:31 AM",
-          },
-        },
         {
           email_thread: [
             {
@@ -285,6 +158,82 @@ let bodyContent = JSON.stringify({
           email_thread: [
             {
               message:
+                "Hey Zeke!!\n\nThank you so much for sharing this. Such a bummer of an experience hahaha. We're bringing more A100 capacity online in the next 4-7 days. Ill reach out when that's done :)\n\nWould love to meet up! I swing by the Replicate office quite frequently, or rather I plan to. Heading home for the holidays but Ill be back on the 28th! Wanna meet up in person or do you prefer a call?\n\nP.S. will update the pricing on the blog page!\n\n-Nader",
+              sender: "Nader Khalil",
+              timestamp: "Tuesday, November 14 2023 at 2:37 PM PST",
+            },
+            {
+              message:
+                "Hey!\n\nZeke from Replicate here. I don't know much about Brev.dev but I keep hearing some interesting things. Would love to meet and chat with you about GPU dev envs, How Colab fits into things, etc.\n\nWanna grab a time to chat? [Calendly Link]\n\nAlso a quick bit of feedback:\n\nThe Replicate prices on this page are now out of date: [Blog Page Link]\n\nI just tried to set up an instance and hit a few hurdles. See screenshot below.\n\nLooking forward to chatting!\n\nZeke",
+              sender: "Zeke Sikelianos",
+              timestamp: "Tue, Nov 14, 2023 at 2:16 PM",
+            },
+            {
+              message:
+                "Hi Zeke Sikelianos,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
+              sender: "Nader Khalil",
+              timestamp: "Tue, Nov 14, 2023 at 1:52 PM",
+            },
+          ],
+          initial_email: {
+            message:
+              "Hi Zeke Sikelianos,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
+            sender: "Nader Khalil",
+            subject: "Re: A very automated email 🤙",
+            timestamp: "Tue, Nov 14, 2023 at 1:52 PM",
+          },
+        },
+        {
+          email_thread: [
+            {
+              message:
+                "Hey Skylar! Did you get to the automatic1111 link from the links in the console? Thank you so much for pointing that out! Yes, we changed the way we do templates, actually mirroring Roboflow's impeccable GTM: [GitHub Link]\n\nThere's an automatic1111 template you can use there on your vast.ai instance or if you wish to give Brev another shot.\n\nI put $50 in credits on your account for pointing out the dead urls. Thank you!!\n\n-Nader",
+              sender: "Nader Khalil",
+              timestamp: "Wednesday, January 17 2024 at 11:54 AM PST",
+            },
+            {
+              message:
+                'Thanks Nader. I originally joined to try out SD on a bigger (more VRAM) GPU than I have in my home machine. Upon joining, there are 3 articles presented, one of which is about deploying SD, but I get an error (looks like Next.js 404) when I click the article. I was asked to upgrade to the new version of Brev UI when logging in but got an error "the selected template requires the old UI" when selecting the Automatic1111 template. Gave up and was able to get Automatic1111 running on vast.ai on my preferred GPU in minutes. Still like the idea behind Brev and I\'d like to try it out sometime.\n\n- Skylar',
+              sender: "Skylar Givens",
+              timestamp: "Mon, Jan 15, 2024 at 9:05 PM",
+            },
+            {
+              message:
+                "Hey Skylar!! Hahaha didn't pay attention to the background, good eye. We love Roboflow.\n\nWe've run into some growth scaling issues which introduced a bunch of instabilities. Sorry if you ran into anything, but we're shipping updates like we're mad making everything way more robust.\n\nPlease let me know if you ran into any difficulties, or if there's ever anything I can do to help :)\n\n-Nader",
+              sender: "Nader Khalil",
+              timestamp: "Mon, Jan 15, 2024 at 2:00 PM",
+            },
+            {
+              message:
+                "Awesome! Love that you kept the Roboflow banner around. I'm at Roboflow and that desk used to be where we worked. With swyx right next door in the enclosed corner office.\n\nExcited to try out Brev!\n\n- Skylar",
+              sender: "Skylar Givens",
+              timestamp: "Sat, Jan 13, 2024 at 5:41 PM",
+            },
+            {
+              message:
+                "Hi Skylar Givens,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
+              sender: "Nader Khalil",
+              timestamp: "Sat, Jan 13, 2024 at 5:12 PM",
+            },
+          ],
+          initial_email: {
+            message:
+              "Hi Skylar Givens,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
+            sender: "Nader Khalil",
+            subject: "Re: A very automated email 🤙",
+            timestamp: "Sat, Jan 13, 2024 at 5:12 PM",
+          },
+        },
+      ],
+      task: "Address concerns about costs by offering more affordable options and providing transparent pricing information.",
+    },
+    {
+      count: 2,
+      emails: [
+        {
+          email_thread: [
+            {
+              message:
                 "Hello Nader,\nI created this account cause I might need to test fine-tuning an llm model\n\nRegards \nGeorge Fraiha",
               sender: "George Fraiha",
               timestamp: "Thursday, January 18 2024 at 4:44 AM PST",
@@ -304,12 +253,6 @@ let bodyContent = JSON.stringify({
             timestamp: "Thu, Jan 18, 2024, 1:16 PM",
           },
         },
-      ],
-      task: "Gather feedback from users on their Brev accounts.",
-    },
-    {
-      count: 2,
-      emails: [
         {
           email_thread: [
             {
@@ -345,37 +288,130 @@ let bodyContent = JSON.stringify({
             timestamp: "Thu, Oct 19, 2023 at 9:26 PM",
           },
         },
+      ],
+      task: "Refine the process of adding GCP accounts to make it more user-friendly and allow for more restricted service account access.",
+    },
+    {
+      count: 1,
+      emails: [
         {
           email_thread: [
             {
               message:
-                "Hey Zeke!!\n\nThank you so much for sharing this. Such a bummer of an experience hahaha. We're bringing more A100 capacity online in the next 4-7 days. Ill reach out when that's done :)\n\nWould love to meet up! I swing by the Replicate office quite frequently, or rather I plan to. Heading home for the holidays but Ill be back on the 28th! Wanna meet up in person or do you prefer a call?\n\nP.S. will update the pricing on the blog page!\n\n-Nader",
-              sender: "Nader Khalil",
-              timestamp: "Tuesday, November 14 2023 at 2:37 PM PST",
+                "Hello,\n\nI am coding a POC for a mental health chatbot and I am looking for some GPU power to have Mistral finetuned to my needs. I happened to find brev Youtube videos which I find very interesting. I will definitely give brev a trial!\n\nAll the best,\n\nPierre-Emmanuel",
+              sender: "Pierre-Emmanuel Féga",
+              timestamp: "Thursday, January 11 2024 at 4:44 PM PST",
             },
             {
               message:
-                "Hey!\n\nZeke from Replicate here. I don't know much about Brev.dev but I keep hearing some interesting things. Would love to meet and chat with you about GPU dev envs, How Colab fits into things, etc.\n\nWanna grab a time to chat? [Calendly Link]\n\nAlso a quick bit of feedback:\n\nThe Replicate prices on this page are now out of date: [Blog Page Link]\n\nI just tried to set up an instance and hit a few hurdles. See screenshot below.\n\nLooking forward to chatting!\n\nZeke",
-              sender: "Zeke Sikelianos",
-              timestamp: "Tue, Nov 14, 2023 at 2:16 PM",
-            },
-            {
-              message:
-                "Hi Zeke Sikelianos,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
+                "Hi Pierre-Emmanuel FEGA,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
               sender: "Nader Khalil",
-              timestamp: "Tue, Nov 14, 2023 at 1:52 PM",
+              timestamp: "vendredi 12 janvier 2024 01:33",
             },
           ],
           initial_email: {
             message:
-              "Hi Zeke Sikelianos,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
+              "Hi Pierre-Emmanuel FEGA,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
             sender: "Nader Khalil",
-            subject: "Re: A very automated email 🤙",
-            timestamp: "Tue, Nov 14, 2023 at 1:52 PM",
+            subject: "RE: A very automated email 🤙",
+            timestamp: "vendredi 12 janvier 2024 01:33",
           },
         },
       ],
-      task: "Offer 1:1 training for fine-tuning models.",
+      task: "Improve website loading speed to prevent users from getting distracted and leaving the site.",
+    },
+    {
+      count: 1,
+      emails: [
+        {
+          email_thread: [
+            {
+              message:
+                "Hi Nader teams,\n\nGreeting from Indonesia,\nI am Wury, machine learning researcher from Indonesia\n\nAnyway, thank you for providing us with these amazing tools.\n\nI have a question, how to monitor RAM and CPU usage. some time ago I used NVIDIA T4 (16GiB)1 GPUs x 8 CPUs | 52GiB to train my model. But after 15 hours, the instance suddenly died, I just assumed it was because the RAM or CPU exceeded its limit. It would be very useful, if you also provide a monitoring dashboard for the instance.\n\nBest Regards,\n\nWuriyanto",
+              sender: "kata_semangat",
+              timestamp: "Wednesday, January 10 2024 at 7:54 PM PST",
+            },
+            {
+              message:
+                "Hi kata_semangat,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
+              sender: "Nader Khalil",
+              timestamp: "Wed, Dec 20, 2023 at 3:04 PM",
+            },
+          ],
+          initial_email: {
+            message:
+              "Hi kata_semangat,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
+            sender: "Nader Khalil",
+            subject: "Re: A very automated email 🤙",
+            timestamp: "Wed, Dec 20, 2023 at 3:04 PM",
+          },
+        },
+      ],
+      task: "Develop a monitoring dashboard for instances to allow users to track RAM and CPU usage and prevent instances from unexpectedly shutting down.",
+    },
+    {
+      count: 1,
+      emails: [
+        {
+          email_thread: [
+            {
+              message:
+                "Hey Paul!\n\nYes this sounds correct! Brev's does 3 things:\nWe connect to many datacenters & clouds to get better pricing and GPU availability\nOur CLI manages the networking, so you don't have to deal with editing your SSH config again, and can access notebooks in the browser\nReliably installs CUDA & python version on your GPU through the UI \n\nBtw we have a big release planned for January including a large supply of much cheaper NVIDIA A100s!",
+              sender: "Nader Khalil",
+              timestamp: "Saturday, December 23 2023 at 6:01 PM PST",
+            },
+            {
+              message:
+                "Hi Nader,\n\nI am just getting my head around the problem you solve. On the surface, you seem to provide a simple way to access deploying AI training work on powerful third-party hosts. Is this correct? We need to do a lot of training for a few tasks on computer vision and some work with LLM fine-tuning. I understand your company's value add.\n\nCheers\n\nPaul",
+              sender: "Paul Miller",
+              timestamp: "Sat, Dec 23, 2023 at 11:14 AM",
+            },
+            {
+              message:
+                "Hey Paul Miller!\n\nI saw you created a Brev account but haven't created anything yet. I'm curious, did you find anything frustrating? Is there anything I can do to help? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
+              sender: "Nader Khalil",
+              timestamp: "Sunday, 24 December 2023 at 7:31 AM",
+            },
+          ],
+          initial_email: {
+            message:
+              "Hey Paul Miller!\n\nI saw you created a Brev account but haven't created anything yet. I'm curious, did you find anything frustrating? Is there anything I can do to help? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
+            sender: "Nader Khalil",
+            subject: "Reaching out from Brev",
+            timestamp: "Sunday, 24 December 2023 at 7:31 AM",
+          },
+        },
+      ],
+      task: "Explore the possibility of offering 1:1 training for users who want to learn how to fine-tune and ship models.",
+    },
+    {
+      count: 1,
+      emails: [
+        {
+          email_thread: [
+            {
+              message:
+                "Hey, yeah there wasn’t that many gpu’s available. When I signed up and checked almost every gpu wasn’t available.",
+              sender: "ismail yussuf",
+              timestamp: "Tuesday, January 16 2024 at 11:45 PM PST",
+            },
+            {
+              message:
+                "Hey ismail yussuf!\n\nI saw you created a Brev account but didn't make it through the initial question asking why you created the account. I'm curious, did you find anything frustrating? Did you get stuck? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
+              sender: "Nader Khalil",
+              timestamp: "Mon, Jan 15, 2024 at 5:41 PM",
+            },
+          ],
+          initial_email: {
+            message:
+              "Hey ismail yussuf!\n\nI saw you created a Brev account but didn't make it through the initial question asking why you created the account. I'm curious, did you find anything frustrating? Did you get stuck? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
+            sender: "Nader Khalil",
+            subject: "Re: Why Brev?",
+            timestamp: "Mon, Jan 15, 2024 at 5:41 PM",
+          },
+        },
+      ],
+      task: "Update the pricing information on the blog page to ensure accuracy.",
     },
     {
       count: 1,
@@ -410,7 +446,42 @@ let bodyContent = JSON.stringify({
           },
         },
       ],
-      task: "Address concerns about costs and improve the cloud GPU experience.",
+      task: "Provide clearer instructions and guidance for users who encounter difficulties during the initial setup, especially for fine-tuning LLaMA 2 models.",
+    },
+    {
+      count: 1,
+      emails: [
+        {
+          email_thread: [
+            {
+              message:
+                "Hey Chris! Awesome! Excited for y'all to try it out, let me know if there's anything I can do. Btw we have a big release planned for January including a large supply of much cheaper NVIDIA A100s!",
+              sender: "Nader Khalil",
+              timestamp: "Saturday, December 23 2023 at 5:58 PM PST",
+            },
+            {
+              message:
+                "Nader,\n\nThanks for reaching out.\n\nQuite the opposite, I was impressed by the site.\n\nWe'll probably be trying it in the near future :)\n\nCheers,\nChris Jenkins",
+              sender: "Chris Jenkins",
+              timestamp: "Sat, Dec 23, 2023 at 12:38 AM",
+            },
+            {
+              message:
+                "Hey Chris Jenkins!\n\nI saw you created a Brev account but haven't created anything yet. I'm curious, did you find anything frustrating? Is there anything I can do to help? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
+              sender: "Nader Khalil",
+              timestamp: "Sat, Dec 23, 2023 at 12:47 AM",
+            },
+          ],
+          initial_email: {
+            message:
+              "Hey Chris Jenkins!\n\nI saw you created a Brev account but haven't created anything yet. I'm curious, did you find anything frustrating? Is there anything I can do to help? I'd love any feedback you have— it's super helpful!\n\nI hope to hear from you!\n\n-Nader Khalil | CEO & Co-founder Brev.dev | (415) 237-2247",
+            sender: "Nader Khalil",
+            subject: "Re: Reaching out from Brev",
+            timestamp: "Sat, Dec 23, 2023 at 12:47 AM",
+          },
+        },
+      ],
+      task: "Reach out to users to gather feedback on their experience and identify areas for improvement.",
     },
     {
       count: 1,
@@ -483,109 +554,37 @@ let bodyContent = JSON.stringify({
           },
         },
       ],
-      task: "Provide GPU power for fine-tuning Mistral.",
-    },
-    {
-      count: 1,
-      emails: [
-        {
-          email_thread: [
-            {
-              message:
-                "Hey Skylar! Did you get to the automatic1111 link from the links in the console? Thank you so much for pointing that out! Yes, we changed the way we do templates, actually mirroring Roboflow's impeccable GTM: [GitHub Link]\n\nThere's an automatic1111 template you can use there on your vast.ai instance or if you wish to give Brev another shot.\n\nI put $50 in credits on your account for pointing out the dead urls. Thank you!!\n\n-Nader",
-              sender: "Nader Khalil",
-              timestamp: "Wednesday, January 17 2024 at 11:54 AM PST",
-            },
-            {
-              message:
-                'Thanks Nader. I originally joined to try out SD on a bigger (more VRAM) GPU than I have in my home machine. Upon joining, there are 3 articles presented, one of which is about deploying SD, but I get an error (looks like Next.js 404) when I click the article. I was asked to upgrade to the new version of Brev UI when logging in but got an error "the selected template requires the old UI" when selecting the Automatic1111 template. Gave up and was able to get Automatic1111 running on vast.ai on my preferred GPU in minutes. Still like the idea behind Brev and I\'d like to try it out sometime.\n\n- Skylar',
-              sender: "Skylar Givens",
-              timestamp: "Mon, Jan 15, 2024 at 9:05 PM",
-            },
-            {
-              message:
-                "Hey Skylar!! Hahaha didn't pay attention to the background, good eye. We love Roboflow.\n\nWe've run into some growth scaling issues which introduced a bunch of instabilities. Sorry if you ran into anything, but we're shipping updates like we're mad making everything way more robust.\n\nPlease let me know if you ran into any difficulties, or if there's ever anything I can do to help :)\n\n-Nader",
-              sender: "Nader Khalil",
-              timestamp: "Mon, Jan 15, 2024 at 2:00 PM",
-            },
-            {
-              message:
-                "Awesome! Love that you kept the Roboflow banner around. I'm at Roboflow and that desk used to be where we worked. With swyx right next door in the enclosed corner office.\n\nExcited to try out Brev!\n\n- Skylar",
-              sender: "Skylar Givens",
-              timestamp: "Sat, Jan 13, 2024 at 5:41 PM",
-            },
-            {
-              message:
-                "Hi Skylar Givens,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
-              sender: "Nader Khalil",
-              timestamp: "Sat, Jan 13, 2024 at 5:12 PM",
-            },
-          ],
-          initial_email: {
-            message:
-              "Hi Skylar Givens,\n\nWelcome to Brev!\n\nThis email is automated but we're real humans at your service 👋\n\nIf you need anything, hop in the discord, reply here, or send me a text! (415) 237-2247\n\nBest,\n\nNader\n\nP.S. How'd you hear about us?",
-            sender: "Nader Khalil",
-            subject: "Re: A very automated email 🤙",
-            timestamp: "Sat, Jan 13, 2024 at 5:12 PM",
-          },
-        },
-      ],
       task: "uncategorized",
     },
     {
       count: 0,
       emails: [],
-      task: "Plan and execute a big release in January.",
+      task: "Increase the supply of GPUs and improve GPU selection options to address the issue of limited availability.",
     },
     {
       count: 0,
       emails: [],
-      task: "Optimize the initial load time of the website.",
+      task: "Address scaling issues and improve platform stability to minimize disruptions and instabilities for users.",
     },
     {
       count: 0,
       emails: [],
-      task: "Improve the account setup process for students.",
+      task: "Continuously update and enhance the platform based on user feedback and needs.",
     },
     {
       count: 0,
       emails: [],
-      task: "Ensure availability of GPUs for all users.",
+      task: "Provide prompt and helpful support to users who encounter difficulties or have questions about the platform.",
     },
     {
       count: 0,
       emails: [],
-      task: "Develop a feature to monitor RAM and CPU usage.",
+      task: "Implement a system to track user feedback and prioritize areas for improvement.",
     },
     {
       count: 0,
       emails: [],
-      task: "Provide support and assistance for coding a mental health chatbot.",
-    },
-    {
-      count: 0,
-      emails: [],
-      task: "Resolve payment issues and provide necessary refunds.",
-    },
-    {
-      count: 0,
-      emails: [],
-      task: "Revisit the flow for adding GCP accounts and permissions.",
-    },
-    {
-      count: 0,
-      emails: [],
-      task: "Schedule a meeting with Zeke Sikelianos to discuss GPU dev envs and address dead URLs.",
-    },
-    {
-      count: 0,
-      emails: [],
-      task: "Improve setup instructions and provide support for users encountering errors and difficulties.",
-    },
-    {
-      count: 0,
-      emails: [],
-      task: "Credit $50 to Skylar Givens' account for pointing out dead URLs.",
+      task: "Improve the flow and permissions required for using Brev with GCP instances.",
     },
   ],
 });
