@@ -1,13 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import fetch from "node-fetch";
-import { subWeeks, format } from "date-fns";
+import { format } from "date-fns";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     console.log("Incoming POST request to /api/orders");
 
     // Define the endpoint URL
     const endpoint = "https://khanafresh.com/wp-json/wc/v3/orders";
+    const requestData = await request.json();
+
+    // Extract start and end dates from the request body
+    const { startDate, endDate } = requestData;
+
+    // If endDate is not provided, default to the current date
+    const finalEndDate = endDate ? endDate : new Date();
 
     // Define the credentials
     const username = "ck_06a78e91d33bd733071fc315ec5df21092aa8efc";
@@ -22,11 +29,8 @@ export async function POST() {
       "Content-Type": "application/json",
     };
 
-    // Calculate the start date of the past week
-    const startDate = format(subWeeks(new Date(), 1), "yyyy-MM-dd'T'HH:mm:ss");
-
     // Construct the query parameters for filtering orders by creation date
-    const queryParams = `after=${startDate}`;
+    const queryParams = `after=${format(new Date(startDate), "yyyy-MM-dd'T'HH:mm:ss")}&before=${format(new Date(finalEndDate), "yyyy-MM-dd'T'HH:mm:ss")}`;
 
     // Construct the full URL with query parameters
     const url = `${endpoint}?${queryParams}`;
