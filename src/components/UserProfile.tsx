@@ -1,6 +1,6 @@
 import React from "react";
 import { User } from "@propelauth/nextjs/client";
-import { UserCircleIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { UserCircle, RefreshCw } from "lucide-react";
 import { Tooltip, Image } from "@nextui-org/react";
 interface UserProfileProps {
   user?: User | null; // Update the type to explicitly allow null
@@ -12,7 +12,7 @@ const UserProfile = ({ user, toolTipsToggle, isLoading }: UserProfileProps) => {
   if (!user) {
     console.log("No user");
     return (
-      <UserCircleIcon
+      <UserCircle
         className="user-icon ml-3"
         style={{
           width: "2rem",
@@ -26,7 +26,7 @@ const UserProfile = ({ user, toolTipsToggle, isLoading }: UserProfileProps) => {
   if (isLoading) {
     console.log("Loading user");
     return (
-      <ArrowPathIcon
+      <RefreshCw
         className="loading-icon ml-3 animate-spin"
         style={{
           width: "2rem",

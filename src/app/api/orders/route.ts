@@ -9,16 +9,15 @@ export async function POST(request: NextRequest) {
     // Define the endpoint URL
     const endpoint = "https://khanafresh.com/wp-json/wc/v3/orders";
     const requestData = await request.json();
-
     // Extract start and end dates from the request body
     const { startDate, endDate } = requestData;
 
     // If endDate is not provided, default to the current date
-    const finalEndDate = endDate ? endDate : new Date();
 
     // Define the credentials
-    const username = "ck_06a78e91d33bd733071fc315ec5df21092aa8efc";
-    const password = "cs_4c72230dd5ceb5eebde14d25fc974c93183f76de";
+
+    const username = process.env.SHEHZAD_USERNAME;
+    const password = process.env.SHEHZAD_PASSWORD;
 
     // Encode the credentials in Base64
     const auth = Buffer.from(`${username}:${password}`).toString("base64");
@@ -30,7 +29,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Construct the query parameters for filtering orders by creation date
-    const queryParams = `after=${format(new Date(startDate), "yyyy-MM-dd'T'HH:mm:ss")}&before=${format(new Date(finalEndDate), "yyyy-MM-dd'T'HH:mm:ss")}`;
+    const queryParams = `after=${format(new Date(startDate), "yyyy-MM-dd'T'HH:mm:ss")}&before=${format(new Date(endDate), "yyyy-MM-dd'T'HH:mm:ss")}`;
 
     // Construct the full URL with query parameters
     const url = `${endpoint}?${queryParams}`;
