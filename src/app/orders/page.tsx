@@ -5,6 +5,8 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import React from "react";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
+import { saveAs } from "file-saver";
+import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
 
 export default function OrdersPage() {
   const { loading, isLoggedIn } = useUser();
@@ -60,15 +62,10 @@ export default function OrdersPage() {
     setOrders([]);
     setOrdersLoading(false);
   };
-  const downloadOrders = async () => {
-    console.log("Inside Download Orders");
-  };
+
   const clearIngredients = async () => {
     setIngredients([]);
     setIngredientsLoading(false);
-  };
-  const downloadIngredients = async () => {
-    console.log("Inside Download Orders");
   };
 
   const getIngredients = async () => {
@@ -108,6 +105,112 @@ export default function OrdersPage() {
       setIngredients({});
       setIngredientsLoading(false);
     }
+  };
+
+  const downloadOrders = async (
+    ordersData: any,
+    startDate: any,
+    endDate: any
+  ) => {
+    console.log("download orders");
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: "Orders Report", bold: true }),
+                new TextRun({
+                  text: ` (from ${startDate} to ${endDate})`,
+                  bold: true,
+                }),
+              ],
+              heading: HeadingLevel.HEADING_1,
+            }),
+            ...ordersData.flatMap((order: any) => {
+              const lines = order.line_items.map((item: any) => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                currency_symbol: order.currency_symbol,
+              }));
+              return [
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: `Order ID: ${order.id}`, bold: true }),
+                    new TextRun({ text: " " }), // Add a space
+                    new TextRun(
+                      `Customer Name: ${order.billing.first_name} ${order.billing.last_name}`
+                    ),
+                    new TextRun({ text: " " }), // Add a space
+                    new TextRun(`Date: ${order.iconic_delivery_meta.date}`),
+                  ],
+                  heading: HeadingLevel.HEADING_2,
+                }),
+                new Paragraph({
+                  children: [new TextRun({ text: "Line Items:", bold: true })],
+                }),
+                ...lines.flatMap((line: any) => [
+                  new Paragraph({ text: `Product Name: ${line.name}` }),
+                  new Paragraph({ text: `Quantity: ${line.quantity}` }),
+                  new Paragraph({
+                    text: `Price: ${line.price} ${line.currency_symbol}`,
+                  }),
+                ]),
+                new Paragraph({}), // Add a line break after line items
+              ];
+            }),
+          ],
+        },
+      ],
+    });
+    console.log(doc);
+    const buffer = await Packer.toBuffer(doc);
+    saveAs(new Blob([buffer]), `orders-${startDate}-${endDate}.docx`);
+  };
+
+  const downloadIngredients = async () => {
+    console.log("download ingredients");
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: "Ingredients Report", bold: true }),
+              ],
+              heading: HeadingLevel.HEADING_1,
+            }),
+            ...Object.entries(ingredients).flatMap(
+              ([ingredient, details]: [any, any]) => [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Ingredient: ${ingredient}`,
+                      bold: true,
+                    }),
+                  ],
+                  heading: HeadingLevel.HEADING_2,
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Quantity: ${details.quantity} ${details.unit}`,
+                    }),
+                  ],
+                }),
+                new Paragraph({}), // Add a line break after each ingredient
+              ]
+            ),
+          ],
+        },
+      ],
+    });
+    console.log(doc);
+    const buffer = await Packer.toBuffer(doc);
+    saveAs(new Blob([buffer]), `ingredients-report.docx`);
   };
   if (isLoggedIn) {
     return (
@@ -248,7 +351,7 @@ export default function OrdersPage() {
                   padding: "5px 10px",
                   borderRadius: "5px",
                 }}
-                onClick={() => downloadOrders()}
+                onClick={() => downloadOrders(orders, startDate, endDate)}
                 color="primary"
               >
                 Download Orders
