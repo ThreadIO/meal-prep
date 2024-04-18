@@ -1,18 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIngredientsForMeals } from "@/helpers/recipe";
 import { getMealsFromOrders } from "@/helpers/order";
+import { getAllRecipesInOrg } from "@/controller/recipe.controller";
 
 export async function POST(request: NextRequest) {
   try {
     console.log("Incoming POST request to /api/ingredients");
     const data = await request.json();
-    const { orders } = data;
+    const { orders, orgid } = data;
     if (orders) {
       const meals = getMealsFromOrders(orders);
       console.log("Meals: ", meals);
-      const ingredients = getIngredientsForMeals(meals);
-      printIngredients(ingredients);
-      return NextResponse.json({ success: true, ingredients }, { status: 200 });
+      const response = await (await getAllRecipesInOrg(orgid)).json();
+      const recipes = response.data;
+      if (recipes) {
+        const ingredients = getIngredientsForMeals(meals, recipes);
+        printIngredients(ingredients);
+        return NextResponse.json(
+          { success: true, ingredients },
+          { status: 200 }
+        );
+      } else {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "An error occurred while fetching recipes",
+          },
+          { status: 500 }
+        );
+      }
     } else {
       console.error("Failed to fetch order data");
       return NextResponse.json(

@@ -7,9 +7,12 @@ import React from "react";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { saveAs } from "file-saver";
 import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
+import { useOrgContext } from "@/components/OrgContext";
+// TO-DO: Make a helper function to tie the react render to how the word doc looks
+// Add SideBar -> https://flowbite-react.com/docs/components/sidebar
 
 export default function OrdersPage() {
-  const { loading, isLoggedIn } = useUser();
+  const { loading, isLoggedIn, user } = useUser();
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); // Default to today's date
   const [startDate, setStartDate] = useState(
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -18,6 +21,11 @@ export default function OrdersPage() {
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [ingredients, setIngredients] = useState<any>({});
   const [ingredientsLoading, setIngredientsLoading] = useState<boolean>(false);
+  const { currentOrg } = useOrgContext();
+  function getOrg() {
+    return user?.getOrg(currentOrg);
+  }
+  const currentOrgId = getOrg()?.orgId as string;
   const getOrders = async () => {
     console.log("Inside Client-side Get Orders");
     console.log("Start Date: ", startDate);
@@ -73,7 +81,9 @@ export default function OrdersPage() {
 
     const requestData = {
       orders: orders,
+      orgid: currentOrgId,
     };
+
     setIngredients({});
     setIngredientsLoading(true);
     try {

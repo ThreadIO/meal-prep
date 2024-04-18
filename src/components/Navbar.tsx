@@ -9,7 +9,7 @@ import {
   Navbar,
   NavbarBrand,
   NavbarContent,
-  // NavbarItem,
+  NavbarItem,
 } from "@nextui-org/react";
 const NavbarComponent = () => {
   const { user } = useUser();
@@ -34,13 +34,18 @@ const NavbarComponent = () => {
           />
         </Link>
       </NavbarBrand>
-      {/* <NavbarContent className="hidden sm:flex gap-4" justify="center">
+      <NavbarContent className="hidden sm:flex gap-4" justify="center">
         <NavbarItem>
           <Link color="foreground" href="/orders">
             Orders
-          </Link> // Removing this for now but will add back later
+          </Link>
         </NavbarItem>
-      </NavbarContent> */}
+        <NavbarItem>
+          <Link color="foreground" href="/recipes">
+            Recipes
+          </Link>
+        </NavbarItem>
+      </NavbarContent>
       <NavbarContent justify="end">
         <button
           onClick={() => setOpenAccount(true)}
