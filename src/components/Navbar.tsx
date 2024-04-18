@@ -3,7 +3,7 @@ import { useUser } from "@propelauth/nextjs/client";
 import { AccountModal } from "@/components/Modals/AccountModal";
 import { useState } from "react";
 import UserProfile from "@/components/UserProfile";
-import BusinessIcon from "@/components/BusinessIcon";
+// import BusinessIcon from "@/components/BusinessIcon";
 import Link from "next/link";
 import {
   Navbar,
@@ -17,7 +17,7 @@ const NavbarComponent = () => {
   return (
     <Navbar maxWidth={"full"}>
       <NavbarBrand>
-        <Link
+        {/* <Link
           href="/"
           style={{
             textDecoration: "none",
@@ -32,7 +32,7 @@ const NavbarComponent = () => {
               zIndex: 50,
             }}
           />
-        </Link>
+        </Link> */}
       </NavbarBrand>
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
         <NavbarItem>

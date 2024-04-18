@@ -5,6 +5,7 @@ import { useUser } from "@propelauth/nextjs/client";
 import BusinessIcon from "@/components/BusinessIcon";
 import UserProfile from "@/components/UserProfile";
 import { AccountModal } from "@/components/Modals/AccountModal";
+import Link from "next/link";
 const SidebarComponent = () => {
   const { user } = useUser();
   const [openAccount, setOpenAccount] = useState(false);
@@ -13,20 +14,32 @@ const SidebarComponent = () => {
     <Sidebar className="h-full w-64 bg-gray-50 dark:bg-gray-800 transition-all duration-300 flex flex-col">
       <div>
         <div className="mt-5 mb-4 flex items-center pl-2.5">
-          <BusinessIcon
-            width={100}
-            height={100}
-            alt="Navigate to home page"
-            className="opacity-100 z-0 img-bkgd"
+          <Link
+            href="/"
             style={{
-              zIndex: 50,
+              textDecoration: "none",
             }}
-          />
+          >
+            <BusinessIcon
+              width={100}
+              height={100}
+              alt="Navigate to home page"
+              className="opacity-100 z-0 img-bkgd"
+              style={{
+                zIndex: 50,
+              }}
+            />
+          </Link>
         </div>
         <Sidebar.ItemGroup className="mt-4 space-y-2 border-t border-gray-200 pt-4 first:mt-0 first:border-t-0 first:pt-0 dark:border-gray-700">
           <SidebarCTA>
             <div className="flex items-center">
-              <div className="mr-2">{user?.email}</div>
+              <div
+                onClick={() => setOpenAccount(true)}
+                className="mr-2 focus:outline-none"
+              >
+                {user?.email}
+              </div>
               <button
                 onClick={() => setOpenAccount(true)}
                 className="focus:outline-none"

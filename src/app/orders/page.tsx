@@ -3,6 +3,7 @@ import { useUser } from "@propelauth/nextjs/client";
 import { Button, Spinner, Input } from "@nextui-org/react";
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import Navbar from "@/components/Navbar";
 import React from "react";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { saveAs } from "file-saver";
@@ -229,7 +230,7 @@ export default function OrdersPage() {
       <div style={{ display: "flex", height: "100vh" }}>
         <Sidebar />
         <div className="flex-1">
-          {/* <Navbar /> */}
+          <Navbar />
           {ordersLoading || ingredientsLoading ? (
             <div
               style={{
