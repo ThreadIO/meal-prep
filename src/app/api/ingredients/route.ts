@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getIngredientsForMeals } from "@/helpers/recipe";
 import { getMealsFromOrders } from "@/helpers/order";
 import { getAllRecipesInOrg } from "@/controller/recipe.controller";
-
+import connect from "@/database/conn";
 export async function POST(request: NextRequest) {
   try {
     console.log("Incoming POST request to /api/ingredients");
+    connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
+      NextResponse.json({
+        success: false,
+        message: "Database connection error",
+        error: err,
+      })
+    );
     const data = await request.json();
     const { orders, orgid } = data;
     if (orders) {
