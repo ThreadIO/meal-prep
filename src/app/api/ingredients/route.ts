@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
       console.log("Meals: ", meals);
       const response = await (await getAllRecipesInOrg(orgid)).json();
       const recipes = response.data;
+      console.log("recipes");
       if (recipes) {
         const ingredients = getIngredientsForMeals(meals, recipes);
         printIngredients(ingredients);
