@@ -13,7 +13,6 @@ export async function getAllRecipes() {
 export async function getAllRecipesInOrg(orgid: string) {
   try {
     const recipes = await Recipe.find({ orgid: orgid });
-    console.log("Recipes: ", recipes);
     return NextResponse.json({ success: true, data: recipes });
   } catch (error) {
     return NextResponse.json({ success: false, error: error }, { status: 400 });
