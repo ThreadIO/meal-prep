@@ -318,9 +318,10 @@ export default function OrdersPage() {
 
     // Function to calculate the sum of quantities for each meal
     const calculateMealSum = () => {
-      const mealSum = {};
+      const mealSum: { [key: string]: number } = {}; // Define mealSum with type annotation
+
       orders.forEach((order) => {
-        order.line_items.forEach((item) => {
+        order.line_items.forEach((item: any) => {
           if (mealSum[item.name]) {
             mealSum[item.name] += item.quantity;
           } else {
@@ -328,14 +329,16 @@ export default function OrdersPage() {
           }
         });
       });
+
       return mealSum;
     };
 
     // Function to render aggregated meal information
-    const renderMealSum = (mealSum) => {
+    const renderMealSum = (mealSum: { [key: string]: number }) => {
       return Object.entries(mealSum).map(([meal, quantity], index) => (
         <div key={index} style={{ marginBottom: "20px" }}>
-          <strong>Meal:</strong> {meal} <strong>Quantity:</strong> {quantity}
+          <strong>Meal:</strong> {meal} <strong>Quantity:</strong>{" "}
+          {quantity !== undefined ? quantity : "N/A"}
         </div>
       ));
     };
@@ -350,19 +353,24 @@ export default function OrdersPage() {
           <br />
           <div style={{ marginLeft: "20px" }}>
             <strong>Line Items:</strong>
-            {order.line_items.map((item, i) => (
-              <div key={i} style={{ marginLeft: "20px", marginTop: "5px" }}>
-                <div>
-                  <strong>Product Name:</strong> {item.name}
+            {order.line_items.map(
+              (
+                item: any,
+                i: number // Provide type annotations for item and i
+              ) => (
+                <div key={i} style={{ marginLeft: "20px", marginTop: "5px" }}>
+                  <div>
+                    <strong>Product Name:</strong> {item.name}
+                  </div>
+                  <div>
+                    <strong>Quantity:</strong> {item.quantity}
+                  </div>
+                  <div>
+                    <strong>Price:</strong> {item.price} {order.currency_symbol}
+                  </div>
                 </div>
-                <div>
-                  <strong>Quantity:</strong> {item.quantity}
-                </div>
-                <div>
-                  <strong>Price:</strong> {item.price} {order.currency_symbol}
-                </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </div>
       ));
