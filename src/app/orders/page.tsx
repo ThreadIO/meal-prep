@@ -20,6 +20,7 @@ export default function OrdersPage() {
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [ingredients, setIngredients] = useState<any>({});
   const [ingredientsLoading, setIngredientsLoading] = useState<boolean>(false);
+  const [showLineItems, setShowLineItems] = useState(true);
 
   const { currentOrg } = useOrgContext();
   function getOrg() {
@@ -313,6 +314,63 @@ export default function OrdersPage() {
   };
 
   const renderOrders = () => {
+    // State variable to toggle between line items and meal quantities
+
+    // Function to calculate the sum of quantities for each meal
+    const calculateMealSum = () => {
+      const mealSum = {};
+      orders.forEach((order) => {
+        order.line_items.forEach((item) => {
+          if (mealSum[item.name]) {
+            mealSum[item.name] += item.quantity;
+          } else {
+            mealSum[item.name] = item.quantity;
+          }
+        });
+      });
+      return mealSum;
+    };
+
+    // Function to render aggregated meal information
+    const renderMealSum = (mealSum) => {
+      return Object.entries(mealSum).map(([meal, quantity], index) => (
+        <div key={index} style={{ marginBottom: "20px" }}>
+          <strong>Meal:</strong> {meal} <strong>Quantity:</strong> {quantity}
+        </div>
+      ));
+    };
+
+    // Function to render individual order details with line items
+    const renderLineItems = () => {
+      return orders.map((order, index) => (
+        <div key={index} style={{ marginBottom: "20px" }}>
+          <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
+          {order.billing.first_name} {order.billing.last_name}{" "}
+          <strong>Date:</strong> {order.iconic_delivery_meta.date}
+          <br />
+          <div style={{ marginLeft: "20px" }}>
+            <strong>Line Items:</strong>
+            {order.line_items.map((item, i) => (
+              <div key={i} style={{ marginLeft: "20px", marginTop: "5px" }}>
+                <div>
+                  <strong>Product Name:</strong> {item.name}
+                </div>
+                <div>
+                  <strong>Quantity:</strong> {item.quantity}
+                </div>
+                <div>
+                  <strong>Price:</strong> {item.price} {order.currency_symbol}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ));
+    };
+
+    // Get meal sums
+    const mealSum = calculateMealSum();
+
     return (
       <div
         style={{
@@ -330,34 +388,27 @@ export default function OrdersPage() {
             overflowY: "auto", // Enable vertical scrolling
           }}
         >
-          {orders.map((order, index) => (
-            <div key={index} style={{ marginBottom: "20px" }}>
-              <strong>Order ID:</strong> {order.id}{" "}
-              <strong>Customer Name:</strong> {order.billing.first_name}{" "}
-              {order.billing.last_name} <strong>Date:</strong>{" "}
-              {order.iconic_delivery_meta.date}
-              <br />
-              <div style={{ marginLeft: "20px" }}>
-                <strong>Line Items:</strong>
-                {order.line_items.map((item: any, i: any) => (
-                  <div key={i} style={{ marginLeft: "20px", marginTop: "5px" }}>
-                    <div>
-                      <strong>Product Name:</strong> {item.name}
-                    </div>
-                    <div>
-                      <strong>Quantity:</strong> {item.quantity}
-                    </div>
-                    <div>
-                      <strong>Price:</strong> {item.price}{" "}
-                      {order.currency_symbol}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+          {/* Toggle between showing line items and meal quantities */}
+          {showLineItems
+            ? renderLineItems()
+            : Object.keys(mealSum).length > 0
+              ? renderMealSum(mealSum)
+              : null}
         </div>
         <div style={{ marginTop: "10px" }}>
+          {/* Button to toggle between line items and meal quantities */}
+          <Button
+            style={{
+              marginRight: "10px",
+              padding: "5px 10px",
+              borderRadius: "5px",
+            }}
+            onClick={() => setShowLineItems((prev) => !prev)}
+            color="primary"
+          >
+            {showLineItems ? "Show Meal Quantities" : "Show Line Items"}
+          </Button>
+          {/* Other buttons */}
           <Button
             style={{
               marginRight: "10px",
