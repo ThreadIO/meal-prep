@@ -21,6 +21,8 @@ export default function OrdersPage() {
   const [ingredients, setIngredients] = useState<any>({});
   const [ingredientsLoading, setIngredientsLoading] = useState<boolean>(false);
   const [showLineItems, setShowLineItems] = useState(true);
+  const [showOrders, setShowOrders] = useState(false);
+  const [showIngredients, setShowIngredients] = useState(false);
 
   const { currentOrg } = useOrgContext();
   function getOrg() {
@@ -28,6 +30,7 @@ export default function OrdersPage() {
   }
   const currentOrgId = getOrg()?.orgId as string;
   const getOrders = async () => {
+    setShowOrders(true);
     console.log("Inside Client-side Get Orders");
     console.log("Start Date: ", startDate);
     console.log("End Date: ", endDate);
@@ -61,29 +64,41 @@ export default function OrdersPage() {
 
       setOrders(ordersData);
       setOrdersLoading(false);
+      setShowOrders(true);
+
+      // Pre-fetch ingredients
+      getIngredients(ordersData);
     } catch (error) {
       console.error("Error fetching orders:", error);
       setOrders([]);
       setOrdersLoading(false);
+      setShowOrders(false);
     }
+  };
+
+  const clear = async () => {
+    clearOrders();
+    clearIngredients();
   };
   const clearOrders = async () => {
     setOrders([]);
     setOrdersLoading(false);
+    setShowOrders(false);
   };
 
   const clearIngredients = async () => {
     setIngredients([]);
     setIngredientsLoading(false);
+    setShowIngredients(false);
   };
 
-  const getIngredients = async () => {
+  const getIngredients = async (ingredients_orders: any[] = orders) => {
     console.log("Inside Client-side Get Ingredients");
-
     const requestData = {
-      orders: orders,
+      orders: ingredients_orders,
       orgid: currentOrgId,
     };
+    console.log("Request Data: ", requestData);
 
     setIngredients({});
     setIngredientsLoading(true);
@@ -224,12 +239,25 @@ export default function OrdersPage() {
     saveAs(new Blob([buffer]), `ingredients-report.docx`);
   };
 
+  const handleShowOrders = () => {
+    setShowOrders(true);
+    setShowIngredients(false);
+  };
+
+  const handleShowIngredients = () => {
+    setShowOrders(false);
+    setShowIngredients(true);
+  };
+
   const renderOrdersContent = () => {
-    if (ordersLoading || ingredientsLoading) {
+    if (
+      (ordersLoading && showOrders) ||
+      (ingredientsLoading && showIngredients)
+    ) {
       return renderLoading();
-    } else if (Object.keys(ingredients).length > 0) {
+    } else if (showIngredients) {
       return renderIngredients();
-    } else if (orders && orders.length) {
+    } else if (showOrders) {
       return renderOrders();
     } else {
       return renderDateInputs();
@@ -303,10 +331,10 @@ export default function OrdersPage() {
               padding: "5px 10px",
               borderRadius: "5px",
             }}
-            onClick={() => clearIngredients()}
+            onClick={() => handleShowOrders()}
             color="primary"
           >
-            Clear Ingredients
+            Show Orders
           </Button>
         </div>
       </div>
@@ -366,7 +394,8 @@ export default function OrdersPage() {
                     <strong>Quantity:</strong> {item.quantity}
                   </div>
                   <div>
-                    <strong>Price:</strong> {item.price} {order.currency_symbol}
+                    <strong>Price:</strong> {item.price.toFixed(2)}{" "}
+                    {order.currency_symbol}
                   </div>
                 </div>
               )
@@ -423,10 +452,10 @@ export default function OrdersPage() {
               padding: "5px 10px",
               borderRadius: "5px",
             }}
-            onClick={() => getIngredients()}
+            onClick={() => handleShowIngredients()}
             color="primary"
           >
-            Get Ingredients
+            Show Ingredients
           </Button>
           <Button
             style={{
@@ -445,7 +474,7 @@ export default function OrdersPage() {
               padding: "5px 10px",
               borderRadius: "5px",
             }}
-            onClick={() => clearOrders()}
+            onClick={() => clear()}
             color="primary"
           >
             Clear Orders
