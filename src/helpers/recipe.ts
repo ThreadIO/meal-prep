@@ -804,7 +804,8 @@ export function getIngredientsForMeals(
       throw new Error(`Meal "${mealName}" not found.`);
     } else {
       meal.ingredients.forEach((ingredient: any) => {
-        const totalQuantity = ingredient.quantity * count;
+        const totalQuantity =
+          (Math.floor(ingredient.quantity * 100) * Math.floor(count)) / 100;
         const ingredientNameLower = ingredient.name.toLowerCase();
         if (ingredientsNeeded[ingredientNameLower]) {
           ingredientsNeeded[ingredientNameLower].quantity += totalQuantity;
