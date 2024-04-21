@@ -77,3 +77,43 @@ export async function getAllUsersInOrg(orgid: string): Promise<User[]> {
   if (!success) throw new Error("Error fetching user");
   return response as User[];
 }
+
+export async function getUser(userid: string) {
+  const { success, data } = await (await fetch(`/api/user/${userid}`)).json();
+  if (!success) throw new Error("Error fetching user");
+  return data;
+}
+
+export async function createUser(
+  userid: string,
+  settings: { client_key: string; client_secret: string }
+) {
+  const { success, data, error } = await (
+    await fetch(`/api/user`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userid: userid,
+        settings: settings,
+      }),
+    })
+  ).json();
+  if (!success) throw new Error("Error creating user: ", error);
+  return data;
+}
+
+export async function patchUser(userid: string, body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/user/${userid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error updating user: ", error);
+  return data;
+}
