@@ -25,7 +25,6 @@ export async function createUser(userid: string, settings: any) {
     const user_response = await getUser(userid);
     console.log("Got user response: ", user_response);
     const data = await user_response.json();
-    console.log("Data: ", data);
     if (data != null && data.data != null) {
       console.log("User already exists...!");
       return NextResponse.json({
@@ -33,6 +32,7 @@ export async function createUser(userid: string, settings: any) {
         error: "User already exists...!",
       });
     }
+    console.log("Data: ", data);
     if (settings.client_key && settings.client_secret) {
       settings.client_key = encryptField(settings.client_key);
       settings.client_secret = encryptField(settings.client_secret);
