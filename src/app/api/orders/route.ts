@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import fetch from "node-fetch";
 import { format } from "date-fns";
-
+import connect from "@/database/conn";
+import { getUser } from "@/controller/user.controller";
+import { decryptField } from "@/helpers/encrypt";
 export async function POST(request: NextRequest) {
   try {
     console.log("Incoming POST request to /api/orders");
@@ -10,14 +12,22 @@ export async function POST(request: NextRequest) {
     const endpoint = "https://khanafresh.com/wp-json/wc/v3/orders";
     const requestData = await request.json();
     // Extract start and end dates from the request body
-    const { startDate, endDate } = requestData;
-
+    const { userid, startDate, endDate } = requestData;
     // If endDate is not provided, default to the current date
-
+    connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
+      NextResponse.json({
+        success: false,
+        message: "Database connection error",
+        error: err,
+      })
+    );
+    const user_response = await (await getUser(userid)).json();
+    const user = user_response.data;
+    const decryptedKey = decryptField(user.settings.client_key);
+    const decryptedSecret = decryptField(user.settings.client_secret);
     // Define the credentials
-
-    const username = process.env.SHEHZAD_USERNAME;
-    const password = process.env.SHEHZAD_PASSWORD;
+    const username = decryptedKey;
+    const password = decryptedSecret;
 
     // Encode the credentials in Base64
     const auth = Buffer.from(`${username}:${password}`).toString("base64");

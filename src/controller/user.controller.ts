@@ -1,9 +1,9 @@
 import User from "@/models/user.model";
 import { NextResponse } from "next/server";
-
+import { encryptField } from "@/helpers/encrypt";
 export async function getUser(userid: string) {
   try {
-    const user = await User.find({ userid: userid });
+    const user = await User.findOne({ userid: userid });
     return NextResponse.json({ success: true, data: user });
   } catch (error) {
     return NextResponse.json({ success: false, error: error }, { status: 400 });
@@ -18,13 +18,20 @@ export async function createUser(userid: string, settings: any) {
         success: false,
         error: "No user id present...!",
       });
+    const user_response = await getUser(userid);
+    const data = await user_response.json();
+    console.log("Data: ", data);
     const existing = await (await getUser(userid)).json();
-    if (existing.data.length > 0) {
+    if (!existing) {
       console.log("User already exists...!");
       return NextResponse.json({
         success: false,
         error: "User already exists...!",
       });
+    }
+    if (settings.client_key && settings.client_secret) {
+      settings.client_key = encryptField(settings.client_key);
+      settings.client_secret = encryptField(settings.client_secret);
     }
     const newUser = {
       userid: userid,
@@ -62,9 +69,20 @@ export async function patchUser(userid: string, body = {}) {
         success: false,
         error: "No user id present...!",
       });
-
+    if (
+      (body as any) &&
+      (body as any).settings &&
+      (body as any).settings.client_key &&
+      (body as any).settings.client_secret
+    ) {
+      (body as any).settings.client_key = encryptField(
+        (body as any).settings.client_key
+      );
+      (body as any).settings.client_secret = encryptField(
+        (body as any).settings.client_secret
+      );
+    }
     await User.updateMany({ userid: userid }, body);
-
     return NextResponse.json({ success: true, updated: userid });
   } catch (error) {
     return NextResponse.json({ success: false, error: error });

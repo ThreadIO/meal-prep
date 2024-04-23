@@ -41,6 +41,8 @@ export const AccountModal = (props: AccountModalProps) => {
   const [settings, setSettings] = useState<any>({});
   const [clientKey, setClientKey] = useState("");
   const [clientSecret, setClientSecret] = useState("");
+  const [oldSettings, setOldSettings] = useState<any>({});
+  const [error, setError] = useState("");
   const { isLoading: userSettingsAreLoading, data: userData } = useQuery(
     ["users", userid || ""],
     () => getUser(userid || "")
@@ -96,24 +98,15 @@ export const AccountModal = (props: AccountModalProps) => {
   }
 
   function handleSetSettings() {
+    console.log("userData: ", userData);
+    if (!clientKey || !clientSecret) {
+      setError("Please input both Client Key/Client Secret");
+      return;
+    }
     if (!user) {
       console.log("Something weird is happenin");
       return;
-    } else if (userSettingsAreLoading) {
-      return (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <Spinner label={"Loading Settings"} />
-          </div>
-        </div>
-      );
-    } else if (userData == 0) {
+    } else if (userData == 0 || userData == null) {
       console.log("Creating new user settings");
       createMutation.mutate({
         userId: user.userId,
@@ -131,7 +124,23 @@ export const AccountModal = (props: AccountModalProps) => {
     return;
   }
   const renderSettings = () => {
-    if (!settings || settings.length == 0) {
+    if (userSettingsAreLoading) {
+      console.log("loading...");
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <Spinner label={"Loading Settings"} />
+          </div>
+        </div>
+      );
+    }
+    if (!settings || settings.length === 0) {
       return (
         <>
           <Input
@@ -145,14 +154,26 @@ export const AccountModal = (props: AccountModalProps) => {
             onChange={(e) => setClientSecret(e.target.value)}
             type={"password"}
           />
+          {error && (
+            <div style={{ color: "red", marginTop: "10px" }}>{error}</div>
+          )}
           <Button
             color="primary"
-            style={{
-              margin: "10px",
+            style={{ margin: "10px" }}
+            onClick={() => {
+              handleSetSettings();
             }}
-            onClick={() => handleSetSettings()}
           >
             Set Settings
+          </Button>
+          <Button
+            color="primary"
+            style={{ margin: "10px" }}
+            onClick={() => {
+              setSettings(oldSettings);
+            }}
+          >
+            Close
           </Button>
         </>
       );
@@ -161,10 +182,11 @@ export const AccountModal = (props: AccountModalProps) => {
         <>
           <Button
             color="primary"
-            style={{
-              margin: "10px",
+            style={{ margin: "10px" }}
+            onClick={() => {
+              setOldSettings(settings);
+              setSettings([]);
             }}
-            onClick={() => setSettings([])}
           >
             Update Client Key/Secret
           </Button>

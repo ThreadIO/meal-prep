@@ -23,6 +23,7 @@ export default function OrdersPage() {
   const [showLineItems, setShowLineItems] = useState(true);
   const [showOrders, setShowOrders] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
+  const [error, setError] = useState<string>("");
 
   const { currentOrg } = useOrgContext();
   function getOrg() {
@@ -36,6 +37,7 @@ export default function OrdersPage() {
     console.log("End Date: ", endDate);
 
     const requestData = {
+      userid: user?.userId,
       startDate: startDate,
       endDate: endDate,
     };
@@ -51,9 +53,14 @@ export default function OrdersPage() {
       });
 
       if (!ordersResponse.ok) {
+        if (ordersResponse.statusText === "Unauthorized") {
+          setError("Incorrect Client Key or Client Secret");
+        } else {
+          setError(`Failed to fetch orders: ${ordersResponse.statusText}`);
+        }
         throw new Error(`Failed to fetch orders: ${ordersResponse.statusText}`);
       }
-
+      setError("");
       const responseData = await ordersResponse.json();
 
       // Assuming responseData contains the orders directly, if not, adjust accordingly
@@ -485,6 +492,14 @@ export default function OrdersPage() {
   };
 
   const renderDateInputs = () => {
+    const renderError = () => {
+      return (
+        <div style={{ textAlign: "center" }}>
+          <p style={{ color: "red" }}>{error}</p>
+        </div>
+      );
+    };
+
     return (
       <div
         style={{
@@ -501,6 +516,7 @@ export default function OrdersPage() {
             alignItems: "center",
           }}
         >
+          {renderError()}
           <div
             style={{
               display: "flex",

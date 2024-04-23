@@ -19,12 +19,10 @@ export async function POST(request: NextRequest) {
     const { orders, orgid } = data;
     if (orders) {
       const meals = getMealsFromOrders(orders);
-      console.log("Meals: ", meals);
       const response = await (await getAllRecipesInOrg(orgid)).json();
       const recipes = response.data;
       if (recipes) {
         const ingredients = getIngredientsForMeals(meals, recipes);
-        printIngredients(ingredients);
         return NextResponse.json(
           { success: true, ingredients },
           { status: 200 }
@@ -58,16 +56,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function printIngredients(ingredients: {
-  [x: string]: { quantity: any; unit: any };
-}) {
-  console.log("Ingredients:");
-  console.log("=============================");
-  Object.keys(ingredients).forEach((ingredient) => {
-    const { quantity, unit } = ingredients[ingredient];
-    console.log(`${ingredient}: ${quantity} ${unit}`);
-  });
-  console.log("=============================");
 }
