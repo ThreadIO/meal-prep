@@ -3,14 +3,17 @@ import { NextResponse } from "next/server";
 import { encryptField } from "@/helpers/encrypt";
 export async function getUser(userid: string) {
   try {
+    console.log("In get user...");
     const user = await User.findOne({ userid: userid });
+    console.log("User: ", user);
     return NextResponse.json({ success: true, data: user });
   } catch (error) {
+    console.log("Error in Get User: ", error);
     return NextResponse.json({ success: false, error: error }, { status: 400 });
   }
 }
 
-/** POST: http://localhost:3000/api/recipe */
+/** POST: http://localhost:3000/api/user */
 export async function createUser(userid: string, settings: any) {
   try {
     if (!userid)
@@ -18,7 +21,9 @@ export async function createUser(userid: string, settings: any) {
         success: false,
         error: "No user id present...!",
       });
+    console.log("In create User...");
     const user_response = await getUser(userid);
+    console.log("Got user response: ", user_response);
     const data = await user_response.json();
     console.log("Data: ", data);
     const existing = await (await getUser(userid)).json();
