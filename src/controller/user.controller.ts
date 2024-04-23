@@ -26,8 +26,7 @@ export async function createUser(userid: string, settings: any) {
     console.log("Got user response: ", user_response);
     const data = await user_response.json();
     console.log("Data: ", data);
-    const existing = await (await getUser(userid)).json();
-    if (!existing) {
+    if (data != null && data.data != null) {
       console.log("User already exists...!");
       return NextResponse.json({
         success: false,
