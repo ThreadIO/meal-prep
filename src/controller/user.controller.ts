@@ -37,7 +37,9 @@ export async function createUser(userid: string, settings: any) {
       userid: userid,
       settings: settings,
     };
+    console.log("New User: ", newUser);
     const user = await User.create(newUser);
+    console.log("User Created: ", user);
     return NextResponse.json({ success: true, data: user });
   } catch (error) {
     return NextResponse.json({ success: false, error: error });
