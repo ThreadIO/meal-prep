@@ -43,6 +43,7 @@ export const AccountModal = (props: AccountModalProps) => {
   const [clientSecret, setClientSecret] = useState("");
   const [oldSettings, setOldSettings] = useState<any>({});
   const [error, setError] = useState("");
+  const [openUpdate, setOpenUpdate] = useState(false);
   const { isLoading: userSettingsAreLoading, data: userData } = useQuery(
     ["users", userid || ""],
     () => getUser(userid || "")
@@ -102,6 +103,8 @@ export const AccountModal = (props: AccountModalProps) => {
     if (!clientKey || !clientSecret) {
       setError("Please input both Client Key/Client Secret");
       return;
+    } else {
+      setError("");
     }
     if (!user) {
       console.log("Something weird is happenin");
@@ -112,6 +115,7 @@ export const AccountModal = (props: AccountModalProps) => {
         userId: user.userId,
         settings: { client_key: clientKey, client_secret: clientSecret },
       });
+      setOpenUpdate(false);
     } else {
       console.log("Updating user settings");
       patchMutation.mutate({
@@ -120,6 +124,7 @@ export const AccountModal = (props: AccountModalProps) => {
           settings: { client_key: clientKey, client_secret: clientSecret },
         },
       });
+      setOpenUpdate(false);
     }
     return;
   }
@@ -140,7 +145,7 @@ export const AccountModal = (props: AccountModalProps) => {
         </div>
       );
     }
-    if (!settings || settings.length === 0) {
+    if (openUpdate) {
       return (
         <>
           <Input
@@ -171,6 +176,7 @@ export const AccountModal = (props: AccountModalProps) => {
             style={{ margin: "10px" }}
             onClick={() => {
               setSettings(oldSettings);
+              setOpenUpdate(false);
             }}
           >
             Close
@@ -186,6 +192,7 @@ export const AccountModal = (props: AccountModalProps) => {
             onClick={() => {
               setOldSettings(settings);
               setSettings([]);
+              setOpenUpdate(true);
             }}
           >
             Update Client Key/Secret
