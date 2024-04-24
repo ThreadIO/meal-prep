@@ -6,8 +6,8 @@ import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import React from "react";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
-// import pkg from "file-saver";a
-// const { saveAs } = pkg;
+import pkg from "file-saver";
+const { saveAs } = pkg;
 import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
 import { useOrgContext } from "@/components/OrgContext";
 
@@ -246,7 +246,7 @@ export default function OrdersPage() {
     console.log(doc);
     const buffer = await Packer.toBuffer(doc);
     console.log(buffer);
-    //saveAs(new Blob([buffer]), `ingredients-report.docx`);
+    saveAs(new Blob([buffer]), `ingredients-report.docx`);
   };
 
   const handleShowOrders = () => {
