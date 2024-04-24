@@ -33,6 +33,7 @@ export async function createUser(userid: string, settings: any) {
     //   });
     // }
     console.log("Data: ", data);
+    console.log("Settings: ", settings);
     if (settings.client_key && settings.client_secret) {
       settings.client_key = encryptField(settings.client_key);
       settings.client_secret = encryptField(settings.client_secret);
