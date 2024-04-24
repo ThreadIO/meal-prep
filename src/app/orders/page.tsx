@@ -6,8 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import React from "react";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
-import pkg from "file-saver";
-const { saveAs } = pkg;
+import { saveAs } from "file-saver";
 import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
 import { useOrgContext } from "@/components/OrgContext";
 
@@ -202,7 +201,7 @@ export default function OrdersPage() {
     console.log(doc);
     const buffer = await Packer.toBuffer(doc);
     console.log("Buffer: ", buffer);
-    //saveAs(new Blob([buffer]), `orders-${startDate}-${endDate}.docx`);
+    saveAs(new Blob([buffer]), `orders-${startDate}-${endDate}.docx`);
   };
 
   const downloadIngredients = async () => {
