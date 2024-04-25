@@ -6,3 +6,5 @@ export async function GET() {
   const prices = await stripe.prices.list({ limit: 4, active: true });
   return NextResponse.json(prices.data.reverse());
 }
+
+export const dynamic = "force-dynamic";
