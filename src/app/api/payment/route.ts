@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
       },
     ],
     mode: "subscription",
-    success_url: "http://localhost:3000",
-    cancel_url: "http://localhost:3000",
+    success_url: process.env.STRIPE_REDIRECT_URI!,
+    cancel_url: process.env.STRIPE_REDIRECT_URI!,
   });
   return NextResponse.json(session.url);
 }
