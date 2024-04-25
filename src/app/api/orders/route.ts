@@ -7,12 +7,11 @@ import { decryptField } from "@/helpers/encrypt";
 export async function POST(request: NextRequest) {
   try {
     console.log("Incoming POST request to /api/orders");
-
-    // Define the endpoint URL
-    const endpoint = "https://khanafresh.com/wp-json/wc/v3/orders";
+    // Define the endpoint URL -> Need to parameterize this in the future
     const requestData = await request.json();
     // Extract start and end dates from the request body
-    const { userid, startDate, endDate } = requestData;
+    const { userid, startDate, endDate, company_url } = requestData;
+    const endpoint = `${company_url}/wp-json/wc/v3/orders`;
     // If endDate is not provided, default to the current date
     connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
       NextResponse.json({
@@ -40,10 +39,9 @@ export async function POST(request: NextRequest) {
 
     // Construct the query parameters for filtering orders by creation date
     const queryParams = `after=${format(new Date(startDate), "yyyy-MM-dd'T'HH:mm:ss")}&before=${format(new Date(endDate), "yyyy-MM-dd'T'HH:mm:ss")}`;
-
     // Construct the full URL with query parameters
     const url = `${endpoint}?${queryParams}`;
-
+    console.log("URL: ", url);
     // Fetch data from the WooCommerce API
     const response = await fetch(url, {
       method: "GET",

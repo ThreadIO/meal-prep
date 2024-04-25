@@ -24,7 +24,7 @@ export default function OrdersPage() {
   const [showOrders, setShowOrders] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [error, setError] = useState<string>("");
-
+  const [companyUrl, setCompanyUrl] = useState<string>("");
   const { currentOrg } = useOrgContext();
   function getOrg() {
     return user?.getOrg(currentOrg);
@@ -38,9 +38,11 @@ export default function OrdersPage() {
 
     const requestData = {
       userid: user?.userId,
+      company_url: companyUrl,
       startDate: startDate,
       endDate: endDate,
     };
+    console.log(JSON.stringify(requestData));
     setOrders([]);
     setOrdersLoading(true);
     try {
@@ -177,7 +179,7 @@ export default function OrdersPage() {
                       `Customer Name: ${order.billing.first_name} ${order.billing.last_name}`
                     ),
                     new TextRun({ text: " " }), // Add a space
-                    new TextRun(`Date: ${order.iconic_delivery_meta.date}`),
+                    new TextRun(`Date: ${order.date_created}`),
                   ],
                   heading: HeadingLevel.HEADING_2,
                 }),
@@ -386,7 +388,7 @@ export default function OrdersPage() {
         <div key={index} style={{ marginBottom: "20px" }}>
           <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
           {order.billing.first_name} {order.billing.last_name}{" "}
-          <strong>Date:</strong> {order.iconic_delivery_meta.date}
+          <strong>Date:</strong> {order.date_created}
           <br />
           <div style={{ marginLeft: "20px" }}>
             <strong>Line Items:</strong>
@@ -518,6 +520,12 @@ export default function OrdersPage() {
             alignItems: "center",
           }}
         >
+          <Input
+            variant="bordered"
+            label="Company URL"
+            defaultValue={companyUrl}
+            onChange={(e) => setCompanyUrl(e.target.value)} // Update state when the date changes
+          ></Input>
           {renderError()}
           <div
             style={{
