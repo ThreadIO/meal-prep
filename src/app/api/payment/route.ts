@@ -18,3 +18,5 @@ export async function POST(request: NextRequest) {
   });
   return NextResponse.json(session.url);
 }
+
+export const dynamic = "force-dynamic";
