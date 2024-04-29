@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Sidebar, SidebarCTA } from "flowbite-react";
-import { ShoppingBag, ShoppingCart } from "lucide-react";
+import { ScanBarcode, ShoppingBag, ShoppingCart } from "lucide-react";
 import { useUser } from "@propelauth/nextjs/client";
 import BusinessIcon from "@/components/BusinessIcon";
 import UserProfile from "@/components/UserProfile";
@@ -67,6 +67,13 @@ const SidebarComponent = () => {
             className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
           >
             Pricing
+          </Sidebar.Item>
+          <Sidebar.Item
+            href="/products"
+            icon={ScanBarcode}
+            className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+          >
+            Product
           </Sidebar.Item>
         </Sidebar.ItemGroup>
       </div>
