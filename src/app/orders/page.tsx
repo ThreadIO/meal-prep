@@ -44,7 +44,7 @@ export default function OrdersPage() {
     setOrders([]);
     setOrdersLoading(true);
     try {
-      const ordersResponse = await fetch("/api/orders", {
+      const ordersResponse = await fetch("/api/woocommerce/getorders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -64,7 +64,7 @@ export default function OrdersPage() {
       const responseData = await ordersResponse.json();
 
       // Assuming responseData contains the orders directly, if not, adjust accordingly
-      const ordersData = responseData.orders || [];
+      const ordersData = responseData.data || [];
 
       console.log("Orders Response: ", ordersResponse);
       console.log("Orders Data: ", ordersData);
