@@ -86,7 +86,7 @@ export async function getUser(userid: string) {
 
 export async function createUser(
   userid: string,
-  settings: { client_key: string; client_secret: string }
+  settings: { client_key: string; client_secret: string; url: string }
 ) {
   const { success, data, error } = await (
     await fetch(`/api/user`, {

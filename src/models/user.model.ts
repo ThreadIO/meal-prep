@@ -5,6 +5,7 @@ const UserSchema = new Schema({
   settings: {
     client_key: String,
     client_secret: String,
+    url: String,
   },
 });
 

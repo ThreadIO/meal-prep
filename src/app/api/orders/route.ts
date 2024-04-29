@@ -10,7 +10,11 @@ export async function POST(request: NextRequest) {
     // Define the endpoint URL -> Need to parameterize this in the future
     const requestData = await request.json();
     // Extract start and end dates from the request body
-    const { userid, startDate, endDate, company_url } = requestData;
+    const { userid, startDate, endDate } = requestData;
+    const user_response = await (await getUser(userid)).json();
+
+    const user = user_response.data;
+    const company_url = user.settings.url;
     const endpoint = `${company_url}/wp-json/wc/v3/orders`;
     // If endDate is not provided, default to the current date
     connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
@@ -20,8 +24,6 @@ export async function POST(request: NextRequest) {
         error: err,
       })
     );
-    const user_response = await (await getUser(userid)).json();
-    const user = user_response.data;
     const decryptedKey = decryptField(user.settings.client_key);
     const decryptedSecret = decryptField(user.settings.client_secret);
     // Define the credentials

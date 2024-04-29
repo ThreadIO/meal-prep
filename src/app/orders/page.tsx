@@ -24,7 +24,6 @@ export default function OrdersPage() {
   const [showOrders, setShowOrders] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [error, setError] = useState<string>("");
-  const [companyUrl, setCompanyUrl] = useState<string>("");
   const { currentOrg } = useOrgContext();
   function getOrg() {
     return user?.getOrg(currentOrg);
@@ -38,7 +37,6 @@ export default function OrdersPage() {
 
     const requestData = {
       userid: user?.userId,
-      company_url: companyUrl,
       startDate: startDate,
       endDate: endDate,
     };
@@ -520,12 +518,6 @@ export default function OrdersPage() {
             alignItems: "center",
           }}
         >
-          <Input
-            variant="bordered"
-            label="Company URL"
-            defaultValue={companyUrl}
-            onChange={(e) => setCompanyUrl(e.target.value)} // Update state when the date changes
-          ></Input>
           {renderError()}
           <div
             style={{

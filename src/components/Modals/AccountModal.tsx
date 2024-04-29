@@ -41,6 +41,7 @@ export const AccountModal = (props: AccountModalProps) => {
   const [settings, setSettings] = useState<any>({});
   const [clientKey, setClientKey] = useState("");
   const [clientSecret, setClientSecret] = useState("");
+  const [url, setUrl] = useState("");
   const [oldSettings, setOldSettings] = useState<any>({});
   const [error, setError] = useState("");
   const [openUpdate, setOpenUpdate] = useState(false);
@@ -59,7 +60,7 @@ export const AccountModal = (props: AccountModalProps) => {
   const createMutation = useMutation(
     (data: {
       userId: string;
-      settings: { client_key: string; client_secret: string };
+      settings: { client_key: string; client_secret: string; url: string };
     }) => createUser(data.userId, data.settings),
     {
       onSuccess: () => {
@@ -113,7 +114,11 @@ export const AccountModal = (props: AccountModalProps) => {
       console.log("Creating new user settings");
       createMutation.mutate({
         userId: user.userId,
-        settings: { client_key: clientKey, client_secret: clientSecret },
+        settings: {
+          client_key: clientKey,
+          client_secret: clientSecret,
+          url: url,
+        },
       });
       setOpenUpdate(false);
     } else {
@@ -121,7 +126,11 @@ export const AccountModal = (props: AccountModalProps) => {
       patchMutation.mutate({
         userid: user.userId,
         body: {
-          settings: { client_key: clientKey, client_secret: clientSecret },
+          settings: {
+            client_key: clientKey,
+            client_secret: clientSecret,
+            url: url,
+          },
         },
       });
       setOpenUpdate(false);
@@ -158,6 +167,11 @@ export const AccountModal = (props: AccountModalProps) => {
             placeholder="Client Secret"
             onChange={(e) => setClientSecret(e.target.value)}
             type={"password"}
+          />
+          <Input
+            value={url}
+            placeholder="Company Url"
+            onChange={(e) => setUrl(e.target.value)}
           />
           {error && (
             <div style={{ color: "red", marginTop: "10px" }}>{error}</div>
