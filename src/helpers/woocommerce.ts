@@ -4,6 +4,18 @@ import { format } from "date-fns";
 import { getUser } from "@/controller/user.controller";
 import { decryptField } from "@/helpers/encrypt";
 
+function getHeaders(client_key: string, client_secret: string) {
+  const decryptedKey = decryptField(client_key);
+  const decryptedSecret = decryptField(client_secret);
+  const auth = Buffer.from(`${decryptedKey}:${decryptedSecret}`).toString(
+    "base64"
+  );
+  return {
+    Authorization: `Basic ${auth}`,
+    "Content-Type": "application/json",
+  };
+}
+
 export async function getAll(
   userid: string,
   object: string,
@@ -21,24 +33,12 @@ export async function getAll(
 
     // Extract necessary data from user settings
     const company_url = user.settings.url;
-    const decryptedKey = decryptField(user.settings.client_key);
-    const decryptedSecret = decryptField(user.settings.client_secret);
-
-    // Define the base endpoint URL
     const endpoint = `${company_url}/wp-json/wc/v3/${object}?per_page=100`;
 
-    // Define the credentials
-    const username = decryptedKey;
-    const password = decryptedSecret;
-
-    // Encode the credentials in Base64
-    const auth = Buffer.from(`${username}:${password}`).toString("base64");
-
-    // Define headers with Basic Authentication
-    const headers = {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/json",
-    };
+    const headers = getHeaders(
+      user.settings.client_key,
+      user.settings.client_secret
+    );
 
     // Fetch data from the WooCommerce API
     let allData: any[] = [];
@@ -99,4 +99,81 @@ export async function getAll(
       { status: 500 }
     );
   }
+}
+
+export async function get(userid: string, object: string, objectid: string) {
+  console.log("Inside getAll woocommerce helper function");
+  console.log("Object: ", object);
+  console.log("Object ID: ", objectid);
+
+  // Retrieve user data
+  const user_response = await (await getUser(userid)).json();
+  const user = user_response.data;
+
+  // Extract necessary data from user settings
+  const company_url = user.settings.url;
+  const headers = getHeaders(
+    user.settings.client_key,
+    user.settings.client_secret
+  );
+  const endpoint = `${company_url}/wp-json/wc/v3/${object}/${objectid}`;
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: headers,
+  });
+  const data = await response.json();
+  return NextResponse.json({ success: true, data: data }, { status: 200 });
+}
+
+export async function post(object: string, userid: string, body: any) {
+  console.log("Inside post woocommerce helper function");
+  console.log("Object: ", object);
+
+  // Retrieve user data
+  const user_response = await (await getUser(userid)).json();
+  const user = user_response.data;
+
+  // Extract necessary data from user settings
+  const company_url = user.settings.url;
+  const headers = getHeaders(
+    user.settings.client_key,
+    user.settings.client_secret
+  );
+  const endpoint = `${company_url}/wp-json/wc/v3/${object}`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  return NextResponse.json({ success: true, data: data }, { status: 200 });
+}
+export async function patch(
+  userid: string,
+  object: string,
+  objectid: string,
+  body: any
+) {
+  console.log("Inside patch woocommerce helper function");
+  console.log("Object: ", object);
+  console.log("Object ID: ", objectid);
+
+  // Retrieve user data
+  const user_response = await (await getUser(userid)).json();
+  const user = user_response.data;
+
+  // Extract necessary data from user settings
+  const company_url = user.settings.url;
+  const headers = getHeaders(
+    user.settings.client_key,
+    user.settings.client_secret
+  );
+  const endpoint = `${company_url}/wp-json/wc/v3/${object}/${objectid}`;
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: headers,
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  return NextResponse.json({ success: true, data: data }, { status: 200 });
 }

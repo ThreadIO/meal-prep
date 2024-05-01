@@ -117,3 +117,17 @@ export async function patchUser(userid: string, body: any) {
   if (!success) throw new Error("Error updating user: ", error);
   return data;
 }
+
+export async function patchProduct(productid: string, body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/product/${productid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error updating user: ", error);
+  return data;
+}

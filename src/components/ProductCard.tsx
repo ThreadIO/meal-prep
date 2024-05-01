@@ -1,6 +1,14 @@
 import Image from "next/image";
-
-const ProductCard = ({ product }: { product: any }) => {
+import { Button } from "@nextui-org/react";
+import { useState } from "react";
+import { EditProductModal } from "@/components/Modals/EditProductModal";
+interface ProductCardProps {
+  product: any;
+  onUpdate: () => void;
+}
+const ProductCard = (props: ProductCardProps) => {
+  const [openEditProduct, setOpenEditProduct] = useState(false);
+  const { product, onUpdate } = props;
   // Check if product.images[0].src is a valid URL
   const isValidUrl = (url: string) => {
     try {
@@ -34,8 +42,22 @@ const ProductCard = ({ product }: { product: any }) => {
     }
   };
 
+  const openEditProductModal = () => {
+    setOpenEditProduct(true);
+  };
+
+  const handleCloseEditProductModal = () => {
+    setOpenEditProduct(false);
+  };
   return (
     <div className="border-gray-100 shadow-2xl border-4 text-center mt-10 max-w-[1040px] bg-white text-black">
+      <EditProductModal
+        product={product}
+        productImage={productImage}
+        open={openEditProduct}
+        onClose={() => handleCloseEditProductModal()}
+        onUpdate={() => onUpdate()}
+      />
       <div className="p-6">
         <div className="h-full flex flex-col">
           <h4 className="text-3xl font-bold">{product.name}</h4>
@@ -62,6 +84,13 @@ const ProductCard = ({ product }: { product: any }) => {
           <div className="mt-6 text-left">
             <div className="mt-6 text-left">{renderDescription()}</div>
           </div>
+          <Button
+            style={{ padding: "5px 10px", borderRadius: "5px" }}
+            onClick={() => openEditProductModal()}
+            color="primary"
+          >
+            Edit
+          </Button>
         </div>
       </div>
     </div>

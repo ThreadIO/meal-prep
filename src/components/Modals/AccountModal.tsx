@@ -139,7 +139,7 @@ export const AccountModal = (props: AccountModalProps) => {
   }
   const renderSettings = () => {
     if (userSettingsAreLoading) {
-      console.log("loading...");
+      console.log("loading user settings...");
       return (
         <div
           style={{

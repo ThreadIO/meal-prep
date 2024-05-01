@@ -47,7 +47,7 @@ const Products = () => {
   };
 
   useEffect(() => {
-    if (isLoggedIn && !loading) {
+    if (isLoggedIn && !loading && !productsLoading) {
       getProducts();
     }
   }, [isLoggedIn, loading]);
@@ -76,7 +76,11 @@ const Products = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto">
           {products.map((product: any) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onUpdate={() => getProducts()}
+            />
           ))}
         </div>
       </div>
