@@ -4,14 +4,16 @@ import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
-import { Spinner } from "@nextui-org/react";
+import { Button, Spinner } from "@nextui-org/react";
 import ProductCard from "@/components/ProductCard";
+import { ProductModal } from "@/components/Modals/ProductModal";
 
 const Products = () => {
   const { loading, isLoggedIn, user } = useUser();
   const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [openProduct, setOpenProduct] = useState(false);
 
   const getProducts = async () => {
     setProductsLoading(true);
@@ -52,6 +54,10 @@ const Products = () => {
     }
   }, [isLoggedIn, loading]);
 
+  const handleCloseProductModal = () => {
+    setOpenProduct(false);
+  };
+
   const renderProductPage = () => {
     if (error) {
       return renderError();
@@ -73,6 +79,12 @@ const Products = () => {
       <div className="overflow-y-auto h-full pb-20">
         <div className="mx-auto max-w-4xl text-center mt-10 items-center">
           <h2 className="text-3xl font-semibold leading-7 mb-6">Products</h2>
+          {/* Container div to center the button */}
+          <div className="flex justify-center">
+            <Button color="primary" onPress={() => setOpenProduct(true)}>
+              Create New
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto">
           {products.map((product: any) => (
@@ -101,6 +113,14 @@ const Products = () => {
         <Sidebar />
         <div className="flex-1">
           <Navbar />
+          <ProductModal
+            product={{}}
+            productImage={{}}
+            open={openProduct}
+            mode={"create"}
+            onClose={() => handleCloseProductModal()}
+            onUpdate={() => getProducts()}
+          />
           {renderProductPage()}
         </div>
       </div>

@@ -118,6 +118,20 @@ export async function patchUser(userid: string, body: any) {
   return data;
 }
 
+export async function createProduct(body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/product`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error creating product: ", error);
+  return data;
+}
+
 export async function patchProduct(productid: string, body: any) {
   const { success, data, error } = await (
     await fetch(`/api/woocommerce/product/${productid}`, {
@@ -128,6 +142,20 @@ export async function patchProduct(productid: string, body: any) {
       body: JSON.stringify(body),
     })
   ).json();
-  if (!success) throw new Error("Error updating user: ", error);
+  if (!success) throw new Error("Error updating product: ", error);
+  return data;
+}
+
+export async function deleteProduct(productid: string, body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/product/${productid}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error deleting product: ", error);
   return data;
 }

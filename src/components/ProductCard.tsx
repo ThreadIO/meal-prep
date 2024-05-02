@@ -1,15 +1,18 @@
 import Image from "next/image";
 import { Button } from "@nextui-org/react";
 import { useState } from "react";
-import { EditProductModal } from "@/components/Modals/EditProductModal";
+import { ProductModal } from "@/components/Modals/ProductModal";
+import { DeleteModal } from "@/components/Modals/DeleteModal";
 interface ProductCardProps {
   product: any;
   onUpdate: () => void;
 }
+
 const ProductCard = (props: ProductCardProps) => {
-  const [openEditProduct, setOpenEditProduct] = useState(false);
+  const [openProduct, setOpenProduct] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
   const { product, onUpdate } = props;
-  // Check if product.images[0].src is a valid URL
+
   const isValidUrl = (url: string) => {
     try {
       new URL(url);
@@ -19,7 +22,6 @@ const ProductCard = (props: ProductCardProps) => {
     }
   };
 
-  // Set productImage to either product image URL or default image URL
   const productImage =
     product.images &&
     product.images.length > 0 &&
@@ -28,7 +30,6 @@ const ProductCard = (props: ProductCardProps) => {
       : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcq_HAOxMgMpwGXabyafUZkB0KUyo8x7fh8Zw8mAgsxA&s";
 
   const renderDescription = () => {
-    // Check if the product description contains HTML tags
     const containsHTML = /<\/?[a-z][\s\S]*>/i.test(product.description);
 
     if (containsHTML) {
@@ -42,29 +43,49 @@ const ProductCard = (props: ProductCardProps) => {
     }
   };
 
-  const openEditProductModal = () => {
-    setOpenEditProduct(true);
+  const openProductModal = () => {
+    setOpenProduct(true);
   };
 
-  const handleCloseEditProductModal = () => {
-    setOpenEditProduct(false);
+  const handleCloseProductModal = () => {
+    setOpenProduct(false);
   };
+
+  const handleCloseDeleteModal = () => {
+    setOpenDelete(false);
+  };
+
   return (
-    <div className="border-gray-100 shadow-2xl border-4 text-center mt-10 max-w-[1040px] bg-white text-black">
-      <EditProductModal
+    <div className="border-gray-100 shadow-2xl border-4 text-center mt-10 max-w-[1040px] bg-white text-black relative">
+      <ProductModal
         product={product}
         productImage={productImage}
-        open={openEditProduct}
-        onClose={() => handleCloseEditProductModal()}
+        open={openProduct}
+        mode="patch"
+        onClose={() => handleCloseProductModal()}
         onUpdate={() => onUpdate()}
       />
+      <DeleteModal
+        object={product}
+        open={openDelete}
+        onClose={() => handleCloseDeleteModal()}
+        onUpdate={() => onUpdate()}
+      />
+      <Button
+        className="flex"
+        color="danger"
+        size="sm"
+        onClick={() => setOpenDelete(true)} // Handle delete action
+      >
+        Delete
+      </Button>
       <div className="p-6">
         <div className="h-full flex flex-col">
           <h4 className="text-3xl font-bold">{product.name}</h4>
           <div className="mt-4 flex-grow">
             <div className="relative w-48 h-48 mx-auto rounded-md overflow-hidden">
               <Image
-                src={productImage} // Use product image or placeholder if not available
+                src={productImage}
                 alt={"Product Image"}
                 layout="fill"
                 objectFit="contain"
@@ -81,12 +102,10 @@ const ProductCard = (props: ProductCardProps) => {
             </h1>
             <h3 className="mt-2">per item</h3>
           </div>
-          <div className="mt-6 text-left">
-            <div className="mt-6 text-left">{renderDescription()}</div>
-          </div>
+          <div className="mt-6 text-left">{renderDescription()}</div>
           <Button
             style={{ padding: "5px 10px", borderRadius: "5px" }}
-            onClick={() => openEditProductModal()}
+            onClick={() => openProductModal()}
             color="primary"
           >
             Edit

@@ -125,7 +125,7 @@ export async function get(userid: string, object: string, objectid: string) {
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
-export async function post(object: string, userid: string, body: any) {
+export async function post(userid: string, object: string, body: any) {
   console.log("Inside post woocommerce helper function");
   console.log("Object: ", object);
 
@@ -148,6 +148,7 @@ export async function post(object: string, userid: string, body: any) {
   const data = await response.json();
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
+
 export async function patch(
   userid: string,
   object: string,
@@ -171,6 +172,36 @@ export async function patch(
   const endpoint = `${company_url}/wp-json/wc/v3/${object}/${objectid}`;
   const response = await fetch(endpoint, {
     method: "PUT",
+    headers: headers,
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  return NextResponse.json({ success: true, data: data }, { status: 200 });
+}
+
+export async function remove(
+  userid: string,
+  object: string,
+  objectid: string,
+  body: any
+) {
+  console.log("Inside patch woocommerce helper function");
+  console.log("Object: ", object);
+  console.log("Object ID: ", objectid);
+
+  // Retrieve user data
+  const user_response = await (await getUser(userid)).json();
+  const user = user_response.data;
+
+  // Extract necessary data from user settings
+  const company_url = user.settings.url;
+  const headers = getHeaders(
+    user.settings.client_key,
+    user.settings.client_secret
+  );
+  const endpoint = `${company_url}/wp-json/wc/v3/${object}/${objectid}`;
+  const response = await fetch(endpoint, {
+    method: "DELETE",
     headers: headers,
     body: JSON.stringify(body),
   });

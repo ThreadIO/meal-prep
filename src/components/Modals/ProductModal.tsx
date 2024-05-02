@@ -10,17 +10,18 @@ import {
 } from "@nextui-org/react";
 import Image from "next/image";
 import { useState } from "react";
-import { patchProduct } from "@/helpers/request";
+import { createProduct, patchProduct } from "@/helpers/request";
 import { useUser } from "@propelauth/nextjs/client";
-interface EditProductModalProps {
+interface ProductModalProps {
   product: any;
   productImage: any;
   open: boolean;
+  mode: "create" | "patch";
   onClose: () => void;
   onUpdate: () => void;
 }
 
-export const EditProductModal = (props: EditProductModalProps) => {
+export const ProductModal = (props: ProductModalProps) => {
   const { product, productImage, open, onClose, onUpdate } = props;
   const [productName, setProductName] = useState(product.name);
   const [loadingSave, setLoadingSave] = useState(false);
@@ -42,7 +43,10 @@ export const EditProductModal = (props: EditProductModalProps) => {
       sale_price: productSalePrice,
       userid: userId,
     };
-    const response = await patchProduct(product.id, body);
+    const response =
+      props.mode === "patch"
+        ? await patchProduct(product.id, body)
+        : await createProduct(body);
     console.log(response);
     onUpdate();
     setLoadingSave(false);
@@ -67,6 +71,21 @@ export const EditProductModal = (props: EditProductModalProps) => {
       return renderModalContent();
     }
   };
+  const renderImage = () => {
+    if (Object.keys(productImage).length !== 0) {
+      return (
+        <div className="relative w-full h-60">
+          <Image
+            src={productImage}
+            alt={"Product Image"}
+            layout="fill"
+            objectFit="contain"
+            objectPosition="center"
+          />
+        </div>
+      );
+    }
+  };
   const renderModalContent = () => {
     return (
       <ModalContent>
@@ -83,15 +102,7 @@ export const EditProductModal = (props: EditProductModalProps) => {
                 onChange={(e) => setProductName(e.target.value)}
               />
             </div>
-            <div className="relative w-full h-60">
-              <Image
-                src={productImage} // Use product image or placeholder if not available
-                alt={"Product Image"}
-                layout="fill"
-                objectFit="contain"
-                objectPosition="center"
-              />
-            </div>
+            {renderImage()}
             <div className="mb-4">
               <strong>Price:</strong>{" "}
               {(parseFloat(product.price) || 0).toLocaleString("en-US", {
@@ -128,7 +139,7 @@ export const EditProductModal = (props: EditProductModalProps) => {
             <Button
               color="primary"
               onPress={() => handleSave()}
-              isLoading={loadingSave}
+              isLoading={loadingSave || loading}
             >
               Save
             </Button>
