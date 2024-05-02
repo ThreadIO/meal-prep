@@ -3,15 +3,17 @@ import { Button } from "@nextui-org/react";
 import { useState } from "react";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import { DeleteModal } from "@/components/Modals/DeleteModal";
+import { deleteProduct } from "@/helpers/request";
 interface ProductCardProps {
   product: any;
   onUpdate: () => void;
+  userId: string;
 }
 
 const ProductCard = (props: ProductCardProps) => {
   const [openProduct, setOpenProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
-  const { product, onUpdate } = props;
+  const { product, userId, onUpdate } = props;
 
   const isValidUrl = (url: string) => {
     try {
@@ -55,6 +57,11 @@ const ProductCard = (props: ProductCardProps) => {
     setOpenDelete(false);
   };
 
+  const handleDelete = async () => {
+    await deleteProduct(product.id, { userid: userId });
+    onUpdate();
+    setOpenDelete(false);
+  };
   return (
     <div className="border-gray-100 shadow-2xl border-4 text-center mt-10 max-w-[1040px] bg-white text-black relative">
       <ProductModal
@@ -69,7 +76,7 @@ const ProductCard = (props: ProductCardProps) => {
         object={product}
         open={openDelete}
         onClose={() => handleCloseDeleteModal()}
-        onUpdate={() => onUpdate()}
+        onDelete={() => handleDelete()}
       />
       <Button
         className="flex"

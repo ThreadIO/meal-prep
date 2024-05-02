@@ -179,13 +179,8 @@ export async function patch(
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
-export async function remove(
-  userid: string,
-  object: string,
-  objectid: string,
-  body: any
-) {
-  console.log("Inside patch woocommerce helper function");
+export async function remove(userid: string, object: string, objectid: string) {
+  console.log("Inside remove woocommerce helper function");
   console.log("Object: ", object);
   console.log("Object ID: ", objectid);
 
@@ -203,7 +198,6 @@ export async function remove(
   const response = await fetch(endpoint, {
     method: "DELETE",
     headers: headers,
-    body: JSON.stringify(body),
   });
   const data = await response.json();
   return NextResponse.json({ success: true, data: data }, { status: 200 });
