@@ -57,14 +57,14 @@ const SidebarComponent = () => {
           />
         </Sidebar.ItemGroup>
         <Sidebar.ItemGroup className="mt-4 space-y-2 border-t border-gray-200 pt-4 first:mt-0 first:border-t-0 first:pt-0 dark:border-gray-700">
-          { betaMode && (
-          <Sidebar.Item
-            href="/customers"
-            icon={Users}
-            className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-          >
-            Customers
-          </Sidebar.Item>
+          {betaMode && (
+            <Sidebar.Item
+              href="/customers"
+              icon={Users}
+              className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+            >
+              Customers
+            </Sidebar.Item>
           )}
           <Sidebar.Item
             href="/orders"
