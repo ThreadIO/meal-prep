@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { Button, Spinner } from "@nextui-org/react";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/components/Product/ProductCard";
 import { ProductModal } from "@/components/Modals/ProductModal";
 
 const Products = () => {
