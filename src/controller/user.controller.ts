@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { encryptField } from "@/helpers/encrypt";
 export async function getUser(userid: string) {
   try {
-    console.log("In get user...");
+    console.log("In get user... ", userid);
     const user = await User.findOne({ userid: userid });
     console.log("User: ", user);
     return NextResponse.json({ success: true, data: user });
