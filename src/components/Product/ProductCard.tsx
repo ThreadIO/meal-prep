@@ -5,6 +5,7 @@ import { ProductModal } from "@/components/Modals/ProductModal";
 import { DeleteModal } from "@/components/Modals/DeleteModal";
 import { deleteProduct } from "@/helpers/request";
 import { Copy } from "lucide-react";
+
 interface ProductCardProps {
   product: any;
   onUpdate: () => void;
@@ -17,7 +18,22 @@ const ProductCard = (props: ProductCardProps) => {
   const [openDelete, setOpenDelete] = useState(false);
   const { product, userId, onUpdate } = props;
 
-  const productImage = product.images[0];
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  let productImage = product.images[0];
+
+  if (!isValidUrl(productImage.src)) {
+    productImage = {
+      src: "https://t3.ftcdn.net/jpg/04/60/01/36/360_F_460013622_6xF8uN6ubMvLx0tAJECBHfKPoNOR5cRa.jpg",
+    };
+  }
 
   const renderDescription = () => {
     const containsHTML = /<\/?[a-z][\s\S]*>/i.test(product.description);
@@ -115,11 +131,7 @@ const ProductCard = (props: ProductCardProps) => {
       <div className="p-6">
         <div className="h-full flex flex-col">
           <h4 className="text-3xl font-bold">{product.name}</h4>
-          <div className="mt-4 flex-grow">
-            <div className="relative w-48 h-48 mx-auto rounded-md overflow-hidden">
-              {renderImage()}
-            </div>
-          </div>
+          <div className="mt-4 flex-grow">{renderImage()}</div>
           <div className="mt-6 flex flex-col items-center justify-center">
             <h1 className="text-5xl font-bold">
               {(parseFloat(product.price) || 0).toLocaleString("en-US", {
