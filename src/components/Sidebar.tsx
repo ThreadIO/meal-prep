@@ -6,6 +6,9 @@ import BusinessIcon from "@/components/BusinessIcon";
 import UserProfile from "@/components/UserProfile";
 import { AccountModal } from "@/components/Modals/AccountModal";
 import Link from "next/link";
+
+const betaMode = false; // Set to true to enable beta mode, false to disable
+
 const SidebarComponent = () => {
   const { user } = useUser();
   const [openAccount, setOpenAccount] = useState(false);
@@ -54,6 +57,7 @@ const SidebarComponent = () => {
           />
         </Sidebar.ItemGroup>
         <Sidebar.ItemGroup className="mt-4 space-y-2 border-t border-gray-200 pt-4 first:mt-0 first:border-t-0 first:pt-0 dark:border-gray-700">
+          { betaMode && (
           <Sidebar.Item
             href="/customers"
             icon={Users}
@@ -61,6 +65,7 @@ const SidebarComponent = () => {
           >
             Customers
           </Sidebar.Item>
+          )}
           <Sidebar.Item
             href="/orders"
             icon={ShoppingBag}
