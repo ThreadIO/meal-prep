@@ -128,7 +128,7 @@ export async function get(userid: string, object: string, objectid: string) {
 export async function post(userid: string, object: string, body: any) {
   console.log("Inside post woocommerce helper function");
   console.log("Object: ", object);
-
+  console.log("Body: ", body);
   // Retrieve user data
   const user_response = await (await getUser(userid)).json();
   const user = user_response.data;

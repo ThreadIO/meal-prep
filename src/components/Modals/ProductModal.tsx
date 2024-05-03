@@ -38,6 +38,7 @@ export const ProductModal = (props: ProductModalProps) => {
     setLoadingSave(true);
     const body = {
       name: productName,
+      images: [productImage],
       description: productDescription,
       regular_price: productRegularPrice,
       sale_price: productSalePrice,
@@ -72,11 +73,11 @@ export const ProductModal = (props: ProductModalProps) => {
     }
   };
   const renderImage = () => {
-    if (Object.keys(productImage).length !== 0) {
+    if (productImage && Object.keys(productImage).length !== 0) {
       return (
         <div className="relative w-full h-60">
           <Image
-            src={productImage}
+            src={productImage.src}
             alt={"Product Image"}
             layout="fill"
             objectFit="contain"

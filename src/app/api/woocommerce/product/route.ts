@@ -14,9 +14,8 @@ export async function POST(request: NextRequest) {
   const requestData = await request.json();
   // Extract start and end dates from the request body
   const { userid } = requestData;
-  console.log("User ID: ", userid);
-  const { name, price, description } = requestData;
-  const body = { name, price, description };
+  const { name, regular_price, description, images } = requestData;
+  const body = { name, regular_price, description, images };
   const create_products_response = post(userid, "products", body);
   return create_products_response;
 }

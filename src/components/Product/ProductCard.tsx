@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import { DeleteModal } from "@/components/Modals/DeleteModal";
 import { deleteProduct } from "@/helpers/request";
+import { Copy } from "lucide-react";
 interface ProductCardProps {
   product: any;
   onUpdate: () => void;
@@ -12,24 +13,11 @@ interface ProductCardProps {
 
 const ProductCard = (props: ProductCardProps) => {
   const [openProduct, setOpenProduct] = useState(false);
+  const [openCopyProduct, setOpenCopyProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const { product, userId, onUpdate } = props;
 
-  const isValidUrl = (url: string) => {
-    try {
-      new URL(url);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  };
-
-  const productImage =
-    product.images &&
-    product.images.length > 0 &&
-    isValidUrl(product.images[0].src)
-      ? product.images[0].src
-      : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTcq_HAOxMgMpwGXabyafUZkB0KUyo8x7fh8Zw8mAgsxA&s";
+  const productImage = product.images[0];
 
   const renderDescription = () => {
     const containsHTML = /<\/?[a-z][\s\S]*>/i.test(product.description);
@@ -53,6 +41,10 @@ const ProductCard = (props: ProductCardProps) => {
     setOpenProduct(false);
   };
 
+  const handleCloseCopyProductModal = () => {
+    setOpenCopyProduct(false);
+  };
+
   const handleCloseDeleteModal = () => {
     setOpenDelete(false);
   };
@@ -62,6 +54,23 @@ const ProductCard = (props: ProductCardProps) => {
     onUpdate();
     setOpenDelete(false);
   };
+
+  const renderImage = () => {
+    if (productImage && Object.keys(productImage).length !== 0) {
+      return (
+        <div className="relative w-full h-60">
+          <Image
+            src={productImage.src}
+            alt={"Product Image"}
+            layout="fill"
+            objectFit="contain"
+            objectPosition="center"
+          />
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="border-gray-100 shadow-2xl border-4 text-center mt-10 max-w-[1040px] bg-white text-black relative">
       <ProductModal
@@ -72,32 +81,43 @@ const ProductCard = (props: ProductCardProps) => {
         onClose={() => handleCloseProductModal()}
         onUpdate={() => onUpdate()}
       />
+      <ProductModal
+        product={product}
+        productImage={productImage}
+        open={openCopyProduct}
+        mode="create"
+        onClose={() => handleCloseCopyProductModal()}
+        onUpdate={() => onUpdate()}
+      />
       <DeleteModal
         object={product}
         open={openDelete}
         onClose={() => handleCloseDeleteModal()}
         onDelete={() => handleDelete()}
       />
-      <Button
-        className="flex"
-        color="danger"
-        size="sm"
-        onClick={() => setOpenDelete(true)} // Handle delete action
-      >
-        Delete
-      </Button>
+      <div className="flex justify-between p-4">
+        <Button
+          color="danger"
+          size="sm"
+          onClick={() => setOpenDelete(true)} // Handle delete action
+        >
+          Delete
+        </Button>
+        <Button
+          color="primary"
+          size="sm"
+          onClick={() => setOpenCopyProduct(true)} // Handle copy action
+          isIconOnly
+        >
+          <Copy />
+        </Button>
+      </div>
       <div className="p-6">
         <div className="h-full flex flex-col">
           <h4 className="text-3xl font-bold">{product.name}</h4>
           <div className="mt-4 flex-grow">
             <div className="relative w-48 h-48 mx-auto rounded-md overflow-hidden">
-              <Image
-                src={productImage}
-                alt={"Product Image"}
-                layout="fill"
-                objectFit="contain"
-                objectPosition="center"
-              />
+              {renderImage()}
             </div>
           </div>
           <div className="mt-6 flex flex-col items-center justify-center">
