@@ -61,21 +61,7 @@ const Products = () => {
   const renderProductPage = () => {
     if (error) {
       return renderError();
-    } else if (productsLoading) {
-      return renderLoading();
     } else {
-      return renderProductContent();
-    }
-  };
-  const renderError = () => {
-    return (
-      <div style={{ textAlign: "center" }}>
-        <p style={{ color: "red" }}>{error}</p>
-      </div>
-    );
-  };
-  const renderProductContent = () => {
-    if (!loading) {
       return (
         <div className="overflow-y-auto h-full pb-20">
           <div className="mx-auto max-w-4xl text-center mt-10 items-center">
@@ -87,19 +73,33 @@ const Products = () => {
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto">
-            {products.map((product: any) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onUpdate={() => getProducts()}
-                userId={user!.userId}
-              />
-            ))}
-          </div>
+          {productsLoading ? renderLoading() : renderProductContent()}
         </div>
       );
     }
+  };
+
+  const renderError = () => {
+    return (
+      <div style={{ textAlign: "center" }}>
+        <p style={{ color: "red" }}>{error}</p>
+      </div>
+    );
+  };
+
+  const renderProductContent = () => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto">
+        {products.map((product: any) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            onUpdate={() => getProducts()}
+            userId={user!.userId}
+          />
+        ))}
+      </div>
+    );
   };
 
   const renderLoading = () => {
