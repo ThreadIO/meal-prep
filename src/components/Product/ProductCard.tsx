@@ -1,5 +1,11 @@
 import Image from "next/image";
-import { Button } from "@nextui-org/react";
+import {
+  Button,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@nextui-org/react";
 import { useState } from "react";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import { DeleteModal } from "@/components/Modals/DeleteModal";
@@ -16,6 +22,8 @@ const ProductCard = (props: ProductCardProps) => {
   const [openProduct, setOpenProduct] = useState(false);
   const [openCopyProduct, setOpenCopyProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState<any>({});
+
   const { product, userId, onUpdate } = props;
 
   const isValidUrl = (url: string) => {
@@ -87,6 +95,76 @@ const ProductCard = (props: ProductCardProps) => {
     }
   };
 
+  // Define totalPrice outside of the renderOptions function
+  let totalPrice = parseFloat(product.price) || 0;
+
+  const renderOptions = () => {
+    if (!product.meta_data) return null;
+    const productAddons = product.meta_data.find(
+      (item: any) => item.key === "_product_addons"
+    );
+    if (!productAddons || !productAddons.value) return null;
+
+    // let addonTotalPrice = 0; // Track the total price for each addon
+
+    return productAddons.value.map((addon: any) => {
+      const addonName = addon.name;
+      const selectedOptionLabel = selectedOptions[addonName] || "Select";
+      const selectedOption = addon.options.find(
+        (option: any) => option.label === selectedOptionLabel
+      );
+      // const selectedOptionPrice = selectedOption
+      //   ? parseFloat(selectedOption.price) || 0
+      //   : 0;
+
+      // Update the total price for this addon
+      // addonTotalPrice += selectedOptionPrice;
+
+      return (
+        <div key={addonName} className="mb-4">
+          <h3 className="text-lg font-semibold mb-2">{addonName}</h3>
+          <Dropdown>
+            <DropdownTrigger>
+              <Button className="capitalize">
+                {selectedOption
+                  ? `${selectedOption.label} +$${selectedOption.price.toLocaleString(
+                      "en-US",
+                      {
+                        style: "currency",
+                        currency: "USD",
+                      }
+                    )}`
+                  : selectedOptionLabel}
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label={addonName}
+              variant="flat"
+              disallowEmptySelection
+              selectionMode="single"
+              selectedKeys={[selectedOptionLabel]}
+              onSelectionChange={(newSelected) =>
+                setSelectedOptions((prev: any) => ({
+                  ...prev,
+                  [addonName]: newSelected,
+                }))
+              }
+            >
+              {addon.options.map((option: any) => (
+                <DropdownItem key={option.label}>
+                  {`${option.label} +$${option.price.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  })}`}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      );
+    });
+  };
+
   return (
     <div className="border-gray-100 shadow-2xl border-4 text-center mt-10 max-w-[1040px] bg-white text-black relative">
       <ProductModal
@@ -112,17 +190,13 @@ const ProductCard = (props: ProductCardProps) => {
         onDelete={() => handleDelete()}
       />
       <div className="flex justify-between p-4">
-        <Button
-          color="danger"
-          size="sm"
-          onClick={() => setOpenDelete(true)} // Handle delete action
-        >
+        <Button color="danger" size="sm" onClick={() => setOpenDelete(true)}>
           Delete
         </Button>
         <Button
           color="primary"
           size="sm"
-          onClick={() => setOpenCopyProduct(true)} // Handle copy action
+          onClick={() => setOpenCopyProduct(true)}
           isIconOnly
         >
           <Copy />
@@ -134,7 +208,7 @@ const ProductCard = (props: ProductCardProps) => {
           <div className="mt-4 flex-grow">{renderImage()}</div>
           <div className="mt-6 flex flex-col items-center justify-center">
             <h1 className="text-5xl font-bold">
-              {(parseFloat(product.price) || 0).toLocaleString("en-US", {
+              {totalPrice.toLocaleString("en-US", {
                 style: "currency",
                 currency: "USD",
               })}
@@ -142,6 +216,7 @@ const ProductCard = (props: ProductCardProps) => {
             <h3 className="mt-2">per item</h3>
           </div>
           <div className="mt-6 text-left">{renderDescription()}</div>
+          {renderOptions()}
           <Button
             style={{ padding: "5px 10px", borderRadius: "5px" }}
             onClick={() => openProductModal()}
