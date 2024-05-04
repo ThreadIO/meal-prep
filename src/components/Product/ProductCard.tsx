@@ -119,7 +119,7 @@ const ProductCard = (props: ProductCardProps) => {
           : null;
 
       if (selectedOption) {
-        const optionPrice = parseFloat(selectedOption.price) || 0;
+        const optionPrice = parseFloat(selectedOption.price || "0"); // Fix: Default to "0" if price is empty string
         totalPrice += optionPrice;
       }
     });
@@ -146,7 +146,7 @@ const ProductCard = (props: ProductCardProps) => {
             <DropdownTrigger>
               <Button className="capitalize">
                 {selectedOption
-                  ? `${selectedOption.label} +$${parseFloat(selectedOption.price).toFixed(2)}`
+                  ? `${selectedOption.label} +$${parseFloat(selectedOption.price || "0").toFixed(2)}` // Fix: Default to "0" if price is empty string
                   : selectedOptionLabel}
               </Button>
             </DropdownTrigger>
@@ -169,7 +169,7 @@ const ProductCard = (props: ProductCardProps) => {
               <DropdownItem key="Select">Select</DropdownItem>
               {addon.options.map((option: any) => (
                 <DropdownItem key={option.label}>
-                  {`${option.label} +$${parseFloat(option.price).toFixed(2)}`}
+                  {`${option.label} +$${parseFloat(option.price || "0").toFixed(2)}`}{" "}
                 </DropdownItem>
               ))}
             </DropdownMenu>
