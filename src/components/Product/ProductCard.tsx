@@ -95,7 +95,6 @@ const ProductCard = (props: ProductCardProps) => {
     }
   };
 
-  // Define totalPrice outside of the renderOptions function
   let totalPrice = parseFloat(product.price) || 0;
 
   const renderOptions = () => {
@@ -105,20 +104,40 @@ const ProductCard = (props: ProductCardProps) => {
     );
     if (!productAddons || !productAddons.value) return null;
 
-    // let addonTotalPrice = 0; // Track the total price for each addon
+    productAddons.value.forEach((addon: any) => {
+      const selectedOptionLabel =
+        selectedOptions[addon.name] || new Set(["Select"]);
+      const selectedLabelString =
+        selectedOptionLabel !== "Select"
+          ? Array.from(selectedOptionLabel)[0]
+          : "";
+      const selectedOption =
+        selectedOptionLabel !== "Select"
+          ? addon.options.find(
+              (option: any) => option.label === selectedLabelString
+            )
+          : null;
+
+      if (selectedOption) {
+        const optionPrice = parseFloat(selectedOption.price) || 0;
+        totalPrice += optionPrice;
+      }
+    });
 
     return productAddons.value.map((addon: any) => {
-      const addonName = addon.name;
-      const selectedOptionLabel = selectedOptions[addonName] || "Select";
-      const selectedOption = addon.options.find(
-        (option: any) => option.label === selectedOptionLabel
-      );
-      // const selectedOptionPrice = selectedOption
-      //   ? parseFloat(selectedOption.price) || 0
-      //   : 0;
-
-      // Update the total price for this addon
-      // addonTotalPrice += selectedOptionPrice;
+      const addonName: string = addon.name;
+      const selectedOptionLabel =
+        selectedOptions[addonName] || new Set(["Select"]);
+      const selectedLabelString =
+        selectedOptionLabel !== "Select"
+          ? Array.from(selectedOptionLabel)[0]
+          : "";
+      const selectedOption =
+        selectedOptionLabel !== "Select"
+          ? addon.options.find(
+              (option: any) => option.label === selectedLabelString
+            )
+          : null;
 
       return (
         <div key={addonName} className="mb-4">
@@ -127,13 +146,7 @@ const ProductCard = (props: ProductCardProps) => {
             <DropdownTrigger>
               <Button className="capitalize">
                 {selectedOption
-                  ? `${selectedOption.label} +$${selectedOption.price.toLocaleString(
-                      "en-US",
-                      {
-                        style: "currency",
-                        currency: "USD",
-                      }
-                    )}`
+                  ? `${selectedOption.label} +$${parseFloat(selectedOption.price).toFixed(2)}`
                   : selectedOptionLabel}
               </Button>
             </DropdownTrigger>
@@ -146,16 +159,17 @@ const ProductCard = (props: ProductCardProps) => {
               onSelectionChange={(newSelected) =>
                 setSelectedOptions((prev: any) => ({
                   ...prev,
-                  [addonName]: newSelected,
+                  [addonName]:
+                    (newSelected as string) === "Select"
+                      ? ""
+                      : (newSelected as string),
                 }))
               }
             >
+              <DropdownItem key="Select">Select</DropdownItem>
               {addon.options.map((option: any) => (
                 <DropdownItem key={option.label}>
-                  {`${option.label} +$${option.price.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  })}`}
+                  {`${option.label} +$${parseFloat(option.price).toFixed(2)}`}
                 </DropdownItem>
               ))}
             </DropdownMenu>
