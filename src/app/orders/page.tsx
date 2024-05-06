@@ -258,6 +258,122 @@ export default function OrdersPage() {
     setShowIngredients(true);
   };
 
+  // Function to generate CSV data from orders
+  const generateCsvData = (orders: any[]) => {
+    const extractDeliveryDate = (metaData: any[]) => {
+      const deliveryDateObj = metaData.find(
+        (item) => item.key === "_orddd_timestamp"
+      );
+      return deliveryDateObj
+        ? new Date(parseInt(deliveryDateObj.value) * 1000)
+        : null; // Convert timestamp to Date object
+    };
+
+    const extractAllergens = (acf: any) => {
+      const allergens = acf?.allergens?.items
+        ?.map((item: any) => item.label.name)
+        .join(", ");
+      return allergens || "";
+    };
+
+    const formatSize = (metaData: any[]) => {
+      const addonsData = metaData.find((item) => item.key === "_addons_data");
+      if (addonsData) {
+        const sizeAddons = addonsData.value.filter(
+          (addon: any) => addon.name === "Size"
+        );
+        const sizes = sizeAddons.map((addon: any) => addon.value);
+        return sizes.join(" | ");
+      }
+      return ""; // Return empty string if size is not found or metadata doesn't contain addons data
+    };
+
+    const csvData = [
+      [
+        "Customer Name",
+        "First Name",
+        "Last Name",
+        "Product Name",
+        "Expiry Date",
+        "calories",
+        "Protein",
+        "Carbs",
+        "Fat",
+        "Ingredients",
+        "Allergens",
+        "Delivery Date",
+        "All Slides",
+      ],
+    ];
+
+    orders.forEach((order) => {
+      const deliveryDate = extractDeliveryDate(order.meta_data);
+      order.line_items.forEach((item: any) => {
+        // Wrap each field in double quotes to handle commas in item names
+        const allergens = extractAllergens(item.product_data.acf);
+        csvData.push([
+          `${order.billing.first_name} ${order.billing.last_name}`,
+          order.billing.first_name,
+          order.billing.last_name,
+          `"${item.name}"`, // Enclose item name in double quotes
+          deliveryDate
+            ? new Date(deliveryDate.getTime() + 4 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .slice(0, 10)
+            : "", // Add 4 days if deliveryDate is not null
+          item.product_data.acf?.facts?.calories || "",
+          item.product_data.acf?.facts?.items?.find(
+            (fact: any) => fact.label === "protein"
+          )?.amount || "",
+          item.product_data.acf?.facts?.items?.find(
+            (fact: any) => fact.label === "carbs"
+          )?.amount || "",
+          item.product_data.acf?.facts?.items?.find(
+            (fact: any) => fact.label === "fat"
+          )?.amount || "",
+          `"${
+            item.product_data.acf?.ingredients?.description?.replace(
+              /<[^>]+>/g,
+              ""
+            ) || ""
+          }"`,
+          allergens,
+          deliveryDate ? deliveryDate.toISOString().slice(0, 10) : "", // Convert deliveryDate to ISO string if not null
+          formatSize(item.meta_data),
+        ]);
+      });
+    });
+
+    return csvData.map((row) => row.join(",")).join("\n");
+  };
+
+  // Function to handle downloading CSV file
+  const downloadCsv = () => {
+    const csvData = generateCsvData(orders);
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, `orders-${startDate}-${endDate}.csv`);
+  };
+
+  // Render CSV download button
+  const renderCsvDownloadButton = () => {
+    if (orders.length > 0) {
+      return (
+        <Button
+          style={{
+            marginRight: "10px",
+            padding: "5px 10px",
+            borderRadius: "5px",
+          }}
+          onClick={() => downloadCsv()}
+          color="primary"
+        >
+          Download Orders CSV
+        </Button>
+      );
+    }
+    return null;
+  };
+
   const renderOrdersContent = () => {
     if (
       (ordersLoading && showOrders) ||
@@ -488,6 +604,7 @@ export default function OrdersPage() {
           >
             Clear Orders
           </Button>
+          {renderCsvDownloadButton()}
         </div>
       </div>
     );

@@ -39,6 +39,7 @@ const Products = () => {
       setError("");
       const responseData = await productsResponse.json();
       const productsData = responseData.data || [];
+      console.log("Products Data: ", productsData);
       setProducts(productsData);
       setProductsLoading(false);
     } catch (error) {
