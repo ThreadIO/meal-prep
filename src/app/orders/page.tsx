@@ -259,7 +259,7 @@ export default function OrdersPage() {
   };
 
   // Function to generate CSV data from orders
-  const generateCsvData = (orders: any[]) => {
+  const generateFullCsvData = (orders: any[]) => {
     const extractDeliveryDate = (metaData: any[]) => {
       const deliveryDateObj = metaData.find(
         (item) => item.key === "_orddd_timestamp"
@@ -288,6 +288,33 @@ export default function OrdersPage() {
       return ""; // Return empty string if size is not found or metadata doesn't contain addons data
     };
 
+    const calculateFacts = (selectedSize: string, metaData: any[]) => {
+      const sizeData = metaData.find((item) => item.name === "Size");
+      if (sizeData) {
+        const selectedOption = sizeData.options.find(
+          (option: any) => option.label === selectedSize
+        );
+        if (selectedOption) {
+          const calories = parseInt(selectedOption.calories) || 0;
+          const protein = parseInt(selectedOption.protein) || 0;
+          const carbs = parseInt(selectedOption.carbs) || 0;
+          const fat = parseInt(selectedOption.fat) || 0;
+          return {
+            calories: calories,
+            protein: protein,
+            carbs: carbs,
+            fat: fat,
+          };
+        }
+      }
+      return {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+      };
+    };
+
     const csvData = [
       [
         "Customer Name",
@@ -311,6 +338,23 @@ export default function OrdersPage() {
       order.line_items.forEach((item: any) => {
         // Wrap each field in double quotes to handle commas in item names
         const allergens = extractAllergens(item.product_data.acf);
+        const selectedSizeRegex = /(\d+\s*cal(?:ories)?)/i; // Match "400cal" or "400 Calories", case insensitive
+        const selectedSizeMatch = selectedSizeRegex.exec(
+          formatSize(item.meta_data)
+        );
+        let selectedSize = "";
+        if (selectedSizeMatch) {
+          selectedSize = selectedSizeMatch[1]; // Use the matched value
+        } else {
+          const sizeOptions = formatSize(item.meta_data).split(" | ");
+          // Prioritize "400cal" if it exists
+          selectedSize =
+            sizeOptions.find((size: any) => size.includes("cal")) || "";
+        }
+        const facts = calculateFacts(
+          selectedSize,
+          item.product_data.product_addons
+        );
         csvData.push([
           `${order.billing.first_name} ${order.billing.last_name}`,
           order.billing.first_name,
@@ -321,16 +365,23 @@ export default function OrdersPage() {
                 .toISOString()
                 .slice(0, 10)
             : "", // Add 4 days if deliveryDate is not null
-          item.product_data.acf?.facts?.calories || "",
-          item.product_data.acf?.facts?.items?.find(
-            (fact: any) => fact.label === "protein"
-          )?.amount || "",
-          item.product_data.acf?.facts?.items?.find(
-            (fact: any) => fact.label === "carbs"
-          )?.amount || "",
-          item.product_data.acf?.facts?.items?.find(
-            (fact: any) => fact.label === "fat"
-          )?.amount || "",
+          (parseInt(item.product_data.acf?.facts?.calories) || 0) +
+            facts.calories, // Add existing calories to calculated calories
+          (parseInt(
+            item.product_data.acf?.facts?.items?.find(
+              (fact: any) => fact.label === "protein"
+            )?.amount
+          ) || 0) + facts.protein, // Add existing protein to calculated protein
+          (parseInt(
+            item.product_data.acf?.facts?.items?.find(
+              (fact: any) => fact.label === "carbs"
+            )?.amount
+          ) || 0) + facts.carbs, // Add existing carbs to calculated carbs
+          (parseInt(
+            item.product_data.acf?.facts?.items?.find(
+              (fact: any) => fact.label === "fat"
+            )?.amount
+          ) || 0) + facts.fat, // Add existing fat to calculated fat
           `"${
             item.product_data.acf?.ingredients?.description?.replace(
               /<[^>]+>/g,
@@ -347,31 +398,62 @@ export default function OrdersPage() {
     return csvData.map((row) => row.join(",")).join("\n");
   };
 
+  const generateFilteredCsvData = (orders: any[]) => {
+    // Filter orders where calories are not zero
+    const filteredOrders = orders.filter((order) =>
+      order.line_items.some((item: any) =>
+        parseInt(item.product_data.acf?.facts?.calories)
+      )
+    );
+    // Generate CSV data from filtered orders
+    const filteredCsvData = generateFullCsvData(filteredOrders);
+    return filteredCsvData;
+  };
+
   // Function to handle downloading CSV file
-  const downloadCsv = () => {
-    const csvData = generateCsvData(orders);
-    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, `orders-${startDate}-${endDate}.csv`);
+  const downloadCsv = (data: string, fileName: string) => {
+    const blob = new Blob([data], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, fileName);
   };
 
   // Render CSV download button
-  const renderCsvDownloadButton = () => {
-    if (orders.length > 0) {
-      return (
+  const renderCsvDownloadButtons = () => {
+    return (
+      <div>
         <Button
           style={{
             marginRight: "10px",
             padding: "5px 10px",
             borderRadius: "5px",
           }}
-          onClick={() => downloadCsv()}
+          onClick={() =>
+            downloadCsv(
+              generateFullCsvData(orders),
+              `orders-${startDate}-${endDate}-full.csv`
+            )
+          }
           color="primary"
         >
-          Download Orders CSV
+          Download Full Labels CSV
         </Button>
-      );
-    }
-    return null;
+        <Button
+          style={{
+            marginRight: "10px",
+            padding: "5px 10px",
+            borderRadius: "5px",
+          }}
+          onClick={() =>
+            downloadCsv(
+              generateFilteredCsvData(orders),
+              `orders-${startDate}-${endDate}-filtered.csv`
+            )
+          }
+          color="primary"
+        >
+          Download Filtered Labels CSV
+        </Button>
+      </div>
+    );
   };
 
   const renderOrdersContent = () => {
@@ -604,7 +686,7 @@ export default function OrdersPage() {
           >
             Clear Orders
           </Button>
-          {renderCsvDownloadButton()}
+          {renderCsvDownloadButtons()}
         </div>
       </div>
     );
