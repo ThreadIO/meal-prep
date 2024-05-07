@@ -416,44 +416,88 @@ export default function OrdersPage() {
     saveAs(blob, fileName);
   };
 
-  // Render CSV download button
+  // Reusable Button component with consistent styling
+  const StyledButton = ({
+    onClick,
+    text,
+  }: {
+    onClick: () => void;
+    text: string;
+  }) => {
+    return (
+      <Button
+        style={{
+          marginRight: "10px",
+          padding: "5px 10px",
+          borderRadius: "5px",
+        }}
+        size="sm"
+        onClick={onClick}
+        color="primary"
+      >
+        {text}
+      </Button>
+    );
+  };
+
+  // Render buttons with StyledButton component
+  const renderButtons = () => {
+    return (
+      <div
+        style={{
+          marginTop: "20px",
+          marginBottom: "20px",
+          display: "flex",
+          flexWrap: "wrap",
+        }}
+      >
+        <StyledButton
+          onClick={() => setShowLineItems((prev) => !prev)}
+          text={showLineItems ? "Show Meal Quantities" : "Show Line Items"}
+        />
+        <StyledButton
+          onClick={() => handleShowIngredients()}
+          text="Show Ingredients"
+        />
+        <StyledButton
+          onClick={() => downloadOrders(orders, startDate, endDate)}
+          text="Download Orders"
+        />
+        <StyledButton onClick={() => clear()} text="Clear Orders" />
+        {renderCsvDownloadButtons()}
+      </div>
+    );
+  };
+
+  // Render buttons for CSV download
   const renderCsvDownloadButtons = () => {
     return (
       <div>
-        <Button
-          style={{
-            marginRight: "10px",
-            padding: "5px 10px",
-            borderRadius: "5px",
-          }}
+        <StyledButton
           onClick={() =>
             downloadCsv(
               generateFullCsvData(orders),
               `orders-${startDate}-${endDate}-full.csv`
             )
           }
-          color="primary"
-        >
-          Download Full Labels CSV
-        </Button>
-        <Button
-          style={{
-            marginRight: "10px",
-            padding: "5px 10px",
-            borderRadius: "5px",
-          }}
+          text="Download Full Labels CSV"
+        />
+        <StyledButton
           onClick={() =>
             downloadCsv(
               generateFilteredCsvData(orders),
               `orders-${startDate}-${endDate}-filtered.csv`
             )
           }
-          color="primary"
-        >
-          Download Filtered Labels CSV
-        </Button>
+          text="Download Filtered Labels CSV"
+        />
       </div>
     );
+  };
+
+  // Render buttons
+  const renderAllButtons = () => {
+    return <div>{renderButtons()}</div>;
   };
 
   const renderOrdersContent = () => {
@@ -632,62 +676,13 @@ export default function OrdersPage() {
             overflowY: "auto", // Enable vertical scrolling
           }}
         >
-          {/* Toggle between showing line items and meal quantities */}
           {showLineItems
             ? renderLineItems()
             : Object.keys(mealSum).length > 0
               ? renderMealSum(mealSum)
               : null}
         </div>
-        <div style={{ marginTop: "10px" }}>
-          {/* Button to toggle between line items and meal quantities */}
-          <Button
-            style={{
-              marginRight: "10px",
-              padding: "5px 10px",
-              borderRadius: "5px",
-            }}
-            onClick={() => setShowLineItems((prev) => !prev)}
-            color="primary"
-          >
-            {showLineItems ? "Show Meal Quantities" : "Show Line Items"}
-          </Button>
-          {/* Other buttons */}
-          <Button
-            style={{
-              marginRight: "10px",
-              padding: "5px 10px",
-              borderRadius: "5px",
-            }}
-            onClick={() => handleShowIngredients()}
-            color="primary"
-          >
-            Show Ingredients
-          </Button>
-          <Button
-            style={{
-              marginRight: "10px",
-              padding: "5px 10px",
-              borderRadius: "5px",
-            }}
-            onClick={() => downloadOrders(orders, startDate, endDate)}
-            color="primary"
-          >
-            Download Orders
-          </Button>
-          <Button
-            style={{
-              marginRight: "10px",
-              padding: "5px 10px",
-              borderRadius: "5px",
-            }}
-            onClick={() => clear()}
-            color="primary"
-          >
-            Clear Orders
-          </Button>
-          {renderCsvDownloadButtons()}
-        </div>
+        <div style={{ marginTop: "10px" }}>{renderAllButtons()}</div>
       </div>
     );
   };
