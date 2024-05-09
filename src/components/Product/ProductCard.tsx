@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "next/legacy/image";
 import {
   Button,
   Dropdown,
@@ -179,6 +179,21 @@ const ProductCard = (props: ProductCardProps) => {
     });
   };
 
+  const renderCategories = () => {
+    return (
+      <div className="flex flex-wrap justify-center mt-4">
+        {product.categories.map((category: any) => (
+          <span
+            key={category.id}
+            className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2"
+          >
+            {category.name}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="border-gray-100 shadow-2xl border-4 text-center mt-10 max-w-[1040px] bg-white text-black relative">
       <ProductModal
@@ -219,6 +234,7 @@ const ProductCard = (props: ProductCardProps) => {
       <div className="p-6">
         <div className="h-full flex flex-col">
           <h4 className="text-3xl font-bold">{product.name}</h4>
+          {renderCategories()}
           <div className="mt-4 flex-grow">{renderImage()}</div>
           <div className="mt-6 flex flex-col items-center justify-center">
             <h1 className="text-5xl font-bold">

@@ -8,7 +8,7 @@ import {
   Button,
   Spinner,
 } from "@nextui-org/react";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import { useState } from "react";
 import { createProduct, patchProduct } from "@/helpers/request";
 import { useUser } from "@propelauth/nextjs/client";
