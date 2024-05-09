@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connect from "@/database/conn";
-import { post } from "@/helpers/woocommerce";
+import { getAll } from "@/helpers/woocommerce";
 export async function POST(request: NextRequest) {
-  console.log("Incoming POST request to /api/woocommerce/product");
+  console.log("Incoming POST request to /api/woocommerce/getproducts");
   connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
     NextResponse.json({
       success: false,
@@ -14,8 +14,6 @@ export async function POST(request: NextRequest) {
   const requestData = await request.json();
   // Extract start and end dates from the request body
   const { userid } = requestData;
-  const { name, regular_price, description, images, categories } = requestData;
-  const body = { name, regular_price, description, images, categories };
-  const create_products_response = post(userid, "products", body);
-  return create_products_response;
+  const get_products_response = getAll(userid, "products/categories");
+  return get_products_response;
 }

@@ -1,38 +1,31 @@
 "use client";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import {
   Button,
   Spinner,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   // Pagination,
 } from "@nextui-org/react";
 import ProductCard from "@/components/Product/ProductCard";
 import { ProductModal } from "@/components/Modals/ProductModal";
-
+import Dropdown from "@/components/Dropdown";
 const Products = () => {
   const { loading, isLoggedIn, user } = useUser();
   const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<any>(new Set(["All"]));
 
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
+  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [openProduct, setOpenProduct] = useState(false);
 
-  const selectedValue = useMemo(
-    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
-    [selectedKeys]
-  );
-
   const getProducts = async () => {
     setProductsLoading(true);
+    await getCategories();
     try {
       const productsResponse = await fetch("/api/woocommerce/getproducts", {
         method: "POST",
@@ -56,14 +49,6 @@ const Products = () => {
       const responseData = await productsResponse.json();
       const productsData = responseData.data || [];
       console.log("Products Data: ", productsData);
-
-      const allCategories: string[] = productsData.flatMap((product: any) =>
-        product.categories.map((category: { name: string }) => category.name)
-      );
-
-      const distinctCategories = Array.from(new Set(allCategories));
-      distinctCategories.unshift("All");
-      setCategories(distinctCategories);
       setProducts(productsData);
       setProductsLoading(false);
     } catch (error) {
@@ -73,6 +58,44 @@ const Products = () => {
     }
   };
 
+  const getCategories = async () => {
+    setCategoriesLoading(true);
+    try {
+      const categoriesResponse = await fetch(
+        "/api/woocommerce/getproducts/getcategories",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userid: user?.userId }),
+        }
+      );
+
+      if (!categoriesResponse.ok) {
+        if (categoriesResponse.statusText === "Unauthorized") {
+          setError("Incorrect Client Key or Client Secret");
+        } else {
+          setError(
+            `Failed to fetch products: ${categoriesResponse.statusText}`
+          );
+        }
+        throw new Error(
+          `Failed to fetch products: ${categoriesResponse.statusText}`
+        );
+      }
+      setError("");
+      const responseData = await categoriesResponse.json();
+      const categoriesData = responseData.data || [];
+      console.log("Categories Data: ", categoriesData);
+      setCategories(categoriesData);
+      setCategoriesLoading(false);
+    } catch (error) {
+      console.error("Error fetching Categories:", error);
+      setCategories([]);
+      setCategoriesLoading(false);
+    }
+  };
   useEffect(() => {
     if (isLoggedIn && !loading && !productsLoading) {
       getProducts();
@@ -85,26 +108,16 @@ const Products = () => {
 
   const renderFilterDropdown = () => {
     return (
-      <Dropdown>
-        <DropdownTrigger>
-          <Button variant="bordered" className="capitalize">
-            {selectedValue}
-          </Button>
-        </DropdownTrigger>
-        <DropdownMenu
-          aria-label="Multiple selection example"
-          variant="flat"
-          closeOnSelect={false}
-          disallowEmptySelection
-          selectionMode="multiple"
-          selectedKeys={selectedKeys}
-          onSelectionChange={setSelectedKeys}
-        >
-          {categories.map((category) => (
-            <DropdownItem key={category}>{category}</DropdownItem>
-          ))}
-        </DropdownMenu>
-      </Dropdown>
+      <Dropdown
+        aria_label="Multiple selection example"
+        variant="flat"
+        closeOnSelect={false}
+        disallowEmptySelection
+        selectionMode="multiple"
+        selectedKeys={selectedKeys}
+        onSelectionChange={setSelectedKeys}
+        items={[{ name: "All" }, ...categories]}
+      />
     );
   };
   const renderProductPage = () => {
@@ -121,7 +134,9 @@ const Products = () => {
               </Button>
             </div>
           </div>
-          {productsLoading ? renderLoading() : renderProductContent()}
+          {productsLoading || categoriesLoading
+            ? renderLoading()
+            : renderProductContent()}
         </div>
       );
     }
@@ -158,6 +173,7 @@ const Products = () => {
               product={product}
               onUpdate={() => getProducts()}
               userId={user!.userId}
+              categories={categories}
             />
           ))}
         </div>
@@ -186,6 +202,7 @@ const Products = () => {
             mode={"create"}
             onClose={() => handleCloseProductModal()}
             onUpdate={() => getProducts()}
+            categories={categories}
           />
           {renderProductPage()}
         </div>

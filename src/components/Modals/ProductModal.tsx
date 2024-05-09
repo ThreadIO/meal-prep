@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { createProduct, patchProduct } from "@/helpers/request";
 import { useUser } from "@propelauth/nextjs/client";
+import Dropdown from "@/components/Dropdown";
 interface ProductModalProps {
   product: any;
   productImage: any;
@@ -19,10 +20,11 @@ interface ProductModalProps {
   mode: "create" | "patch";
   onClose: () => void;
   onUpdate: () => void;
+  categories: any[];
 }
 
 export const ProductModal = (props: ProductModalProps) => {
-  const { product, productImage, open, onClose, onUpdate } = props;
+  const { product, productImage, open, onClose, onUpdate, categories } = props;
   const [productName, setProductName] = useState(product.name);
   const [loadingSave, setLoadingSave] = useState(false);
   const [productDescription, setProductDescription] = useState(
@@ -32,16 +34,25 @@ export const ProductModal = (props: ProductModalProps) => {
     product.regular_price
   );
   const [productSalePrice, setProductSalePrice] = useState(product.sale_price);
+  const [selectedKeys, setSelectedKeys] = useState<any>(
+    new Set(
+      product.categories
+        ? product.categories.map((category: any) => category.name)
+        : []
+    )
+  );
   const { loading, user } = useUser();
   const userId = user?.userId || "";
   const handleSave = async () => {
     setLoadingSave(true);
+    const selectedCategories = mapSelectedCategoriesToObjects();
     const body = {
       name: productName,
       images: [productImage],
       description: productDescription,
       regular_price: productRegularPrice,
       sale_price: productSalePrice,
+      categories: selectedCategories,
       userid: userId,
     };
     const response =
@@ -53,6 +64,28 @@ export const ProductModal = (props: ProductModalProps) => {
     setLoadingSave(false);
     onClose();
   };
+
+  const mapSelectedCategoriesToObjects = () => {
+    const selectedCategoryObjects = categories.filter((category) =>
+      selectedKeys.has(category.name)
+    );
+    return selectedCategoryObjects;
+  };
+  const renderCategoryDropdown = () => {
+    return (
+      <Dropdown
+        aria_label="Multiple selection example"
+        variant="flat"
+        closeOnSelect={false}
+        disallowEmptySelection
+        selectionMode="multiple"
+        selectedKeys={selectedKeys}
+        onSelectionChange={setSelectedKeys}
+        items={categories}
+      />
+    );
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -106,6 +139,7 @@ export const ProductModal = (props: ProductModalProps) => {
                 onChange={(e) => setProductName(e.target.value)}
               />
             </div>
+            {renderCategoryDropdown()}
             {renderImage()}
             <div className="mb-4">
               <strong>Price:</strong>{" "}

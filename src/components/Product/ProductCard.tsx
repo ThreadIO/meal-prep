@@ -20,6 +20,7 @@ interface ProductCardProps {
   product: any;
   onUpdate: () => void;
   userId: string;
+  categories: any[];
 }
 
 const ProductCard = (props: ProductCardProps) => {
@@ -27,9 +28,7 @@ const ProductCard = (props: ProductCardProps) => {
   const [openCopyProduct, setOpenCopyProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<any>({});
-
-  const { product, userId, onUpdate } = props;
-
+  const { product, userId, onUpdate, categories } = props;
   const isValidUrl = (url: string) => {
     try {
       new URL(url);
@@ -212,6 +211,7 @@ const ProductCard = (props: ProductCardProps) => {
         productImage={productImage}
         open={openProduct}
         mode="patch"
+        categories={categories}
         onClose={() => handleCloseProductModal()}
         onUpdate={() => onUpdate()}
       />
@@ -222,6 +222,7 @@ const ProductCard = (props: ProductCardProps) => {
         mode="create"
         onClose={() => handleCloseCopyProductModal()}
         onUpdate={() => onUpdate()}
+        categories={categories}
       />
       <DeleteModal
         object={product}
