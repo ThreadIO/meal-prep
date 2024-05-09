@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/legacy/image";
+import Image from "next/image";
 import { useTheme } from "next-themes";
 
 interface BusinessIconProps {
@@ -26,7 +26,11 @@ const BusinessIcon: React.FC<BusinessIconProps> = ({
       height={height}
       alt={alt}
       className={className}
-      style={style}
+      style={{
+        ...style,
+        maxWidth: "100%",
+        height: "auto",
+      }}
     />
   );
 };

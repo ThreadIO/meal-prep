@@ -8,7 +8,7 @@ import {
   Button,
   Spinner,
 } from "@nextui-org/react";
-import Image from "next/legacy/image";
+import Image from "next/image";
 import { useState } from "react";
 import { createProduct, patchProduct } from "@/helpers/request";
 import { useUser } from "@propelauth/nextjs/client";
@@ -79,9 +79,12 @@ export const ProductModal = (props: ProductModalProps) => {
           <Image
             src={productImage.src}
             alt={"Product Image"}
-            layout="fill"
-            objectFit="contain"
-            objectPosition="center"
+            fill
+            sizes="100vw"
+            style={{
+              objectFit: "contain",
+              objectPosition: "center",
+            }}
           />
         </div>
       );

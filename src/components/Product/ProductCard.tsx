@@ -1,4 +1,4 @@
-import Image from "next/legacy/image";
+import Image from "next/image";
 import {
   Button,
   Dropdown,
@@ -86,9 +86,12 @@ const ProductCard = (props: ProductCardProps) => {
           <Image
             src={productImage.src}
             alt={"Product Image"}
-            layout="fill"
-            objectFit="contain"
-            objectPosition="center"
+            fill
+            sizes="100vw"
+            style={{
+              objectFit: "contain",
+              objectPosition: "center",
+            }}
           />
         </div>
       );
