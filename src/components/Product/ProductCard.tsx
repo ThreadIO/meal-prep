@@ -1,11 +1,15 @@
-import Image from "next/image";
+import React from "react";
 import {
+  Card,
+  CardHeader,
+  CardBody,
   Button,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
 } from "@nextui-org/react";
+import Image from "next/image";
 import { useState } from "react";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import { DeleteModal } from "@/components/Modals/DeleteModal";
@@ -198,7 +202,11 @@ const ProductCard = (props: ProductCardProps) => {
   };
 
   return (
-    <div className="border-gray-100 shadow-2xl border-4 text-center mt-10 max-w-[1040px] bg-white text-black relative">
+    <Card
+      isPressable
+      onPress={() => openProductModal()}
+      className="text-center mt-4"
+    >
       <ProductModal
         product={product}
         productImage={productImage}
@@ -221,7 +229,7 @@ const ProductCard = (props: ProductCardProps) => {
         onClose={() => handleCloseDeleteModal()}
         onDelete={() => handleDelete()}
       />
-      <div className="flex justify-between p-4">
+      <CardHeader className="flex justify-between p-4">
         <Button color="danger" size="sm" onClick={() => setOpenDelete(true)}>
           Delete
         </Button>
@@ -233,33 +241,28 @@ const ProductCard = (props: ProductCardProps) => {
         >
           <Copy />
         </Button>
-      </div>
-      <div className="p-6">
-        <div className="h-full flex flex-col">
-          <h4 className="text-3xl font-bold">{product.name}</h4>
-          {renderCategories()}
-          <div className="mt-4 flex-grow">{renderImage()}</div>
-          <div className="mt-6 flex flex-col items-center justify-center">
-            <h1 className="text-5xl font-bold">
-              {totalPrice.toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-              })}
-            </h1>
-            <h3 className="mt-2">per item</h3>
+      </CardHeader>
+      <CardBody className="text-center">
+        <div className="p-6">
+          <div className="h-full flex flex-col">
+            <h4 className="text-3xl font-bold">{product.name}</h4>
+            {renderCategories()}
+            <div className="mt-4 flex-grow">{renderImage()}</div>
+            <div className="mt-6 flex flex-col items-center justify-center">
+              <h1 className="text-5xl font-bold">
+                {totalPrice.toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                })}
+              </h1>
+              <h3 className="mt-2">per item</h3>
+            </div>
+            <div className="mt-6 text-left">{renderDescription()}</div>
+            {renderOptions()}
           </div>
-          <div className="mt-6 text-left">{renderDescription()}</div>
-          {renderOptions()}
-          <Button
-            style={{ padding: "5px 10px", borderRadius: "5px" }}
-            onClick={() => openProductModal()}
-            color="primary"
-          >
-            Edit
-          </Button>
         </div>
-      </div>
-    </div>
+      </CardBody>
+    </Card>
   );
 };
 
