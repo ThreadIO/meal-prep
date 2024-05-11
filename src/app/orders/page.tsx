@@ -399,12 +399,20 @@ export default function OrdersPage() {
   };
 
   const generateFilteredCsvData = (orders: any[]) => {
-    // Filter orders where calories are not zero
-    const filteredOrders = orders.filter((order) =>
-      order.line_items.some((item: any) =>
-        parseInt(item.product_data.acf?.facts?.calories)
-      )
-    );
+    const filteredOrders: any[] = [];
+
+    orders.forEach((order) => {
+      const filteredLineItems = order.line_items.filter(
+        (item: any) => parseInt(item.product_data.acf?.facts?.calories) > 0
+      );
+
+      if (filteredLineItems.length > 0) {
+        // If there are line items with non-zero calories, include the order with filtered line items
+        const filteredOrder = { ...order, line_items: filteredLineItems };
+        filteredOrders.push(filteredOrder);
+      }
+    });
+
     // Generate CSV data from filtered orders
     const filteredCsvData = generateFullCsvData(filteredOrders);
     return filteredCsvData;
