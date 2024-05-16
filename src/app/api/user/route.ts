@@ -11,8 +11,6 @@ export async function POST(request: NextRequest) {
     })
   );
   const body = JSON.parse(await request.text());
-  console.log("User: ", body.userid);
-  console.log("Settings: ", body.settings);
   const res = await createUser(body.userid, body.settings);
   return res;
 }

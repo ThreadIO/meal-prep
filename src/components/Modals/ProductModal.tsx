@@ -47,8 +47,9 @@ export const ProductModal = (props: ProductModalProps) => {
     setLoadingSave(true);
     const selectedCategories = mapSelectedCategoriesToObjects();
     const body = {
+      ...(product || {}),
       name: productName,
-      images: [productImage],
+      images: product.images,
       description: productDescription,
       regular_price: productRegularPrice,
       sale_price: productSalePrice,

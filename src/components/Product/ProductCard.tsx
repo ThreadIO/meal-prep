@@ -110,28 +110,22 @@ const ProductCard = (props: ProductCardProps) => {
     );
     if (!productAddons || !productAddons.value) return null;
 
-    productAddons.value.forEach((addon: any) => {
-      const selectedOptionLabel =
-        selectedOptions[addon.name] || new Set(["Select"]);
-      const selectedLabelString =
-        selectedOptionLabel !== "Select"
-          ? Array.from(selectedOptionLabel)[0]
-          : "";
-      const selectedOption =
-        selectedOptionLabel !== "Select"
-          ? addon.options.find(
-              (option: any) => option.label === selectedLabelString
-            )
-          : null;
+    // Create a map to store unique addon names and their options
+    const uniqueAddons = new Map<string, any[]>();
 
-      if (selectedOption) {
-        const optionPrice = parseFloat(selectedOption.price || "0"); // Fix: Default to "0" if price is empty string
-        totalPrice += optionPrice;
+    productAddons.value.forEach((addon: any) => {
+      const { name, options } = addon;
+
+      // If the addon name doesn't exist in the map, add it along with its options
+      if (!uniqueAddons.has(name)) {
+        uniqueAddons.set(name, options);
       }
     });
 
-    return productAddons.value.map((addon: any) => {
-      const addonName: string = addon.name;
+    //let totalPrice = 0; // Initialize totalPrice
+
+    // Render dropdowns for unique addon names and their options
+    return Array.from(uniqueAddons).map(([addonName, addonOptions]) => {
       const selectedOptionLabel =
         selectedOptions[addonName] || new Set(["Select"]);
       const selectedLabelString =
@@ -140,10 +134,16 @@ const ProductCard = (props: ProductCardProps) => {
           : "";
       const selectedOption =
         selectedOptionLabel !== "Select"
-          ? addon.options.find(
+          ? addonOptions.find(
               (option: any) => option.label === selectedLabelString
             )
           : null;
+
+      // Update totalPrice with selected option price
+      if (selectedOption) {
+        const optionPrice = parseFloat(selectedOption.price || "0");
+        totalPrice += optionPrice;
+      }
 
       return (
         <div key={addonName} className="mb-4">
@@ -152,7 +152,7 @@ const ProductCard = (props: ProductCardProps) => {
             <DropdownTrigger>
               <Button className="capitalize">
                 {selectedOption
-                  ? `${selectedOption.label} +$${parseFloat(selectedOption.price || "0").toFixed(2)}` // Fix: Default to "0" if price is empty string
+                  ? `${selectedOption.label} +$${parseFloat(selectedOption.price || "0").toFixed(2)}`
                   : selectedOptionLabel}
               </Button>
             </DropdownTrigger>
@@ -173,9 +173,9 @@ const ProductCard = (props: ProductCardProps) => {
               }
             >
               <DropdownItem key="Select">Select</DropdownItem>
-              {addon.options.map((option: any) => (
+              {(addonOptions as any).map((option: any) => (
                 <DropdownItem key={option.label}>
-                  {`${option.label} +$${parseFloat(option.price || "0").toFixed(2)}`}{" "}
+                  {`${option.label} +$${parseFloat(option.price || "0").toFixed(2)}`}
                 </DropdownItem>
               ))}
             </DropdownMenu>
