@@ -9,7 +9,7 @@ import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { saveAs } from "file-saver";
 import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
 import { useOrgContext } from "@/components/OrgContext";
-
+import { not_products } from "@/helpers/utils";
 export default function OrdersPage() {
   const { loading, isLoggedIn, user } = useUser();
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); // Default to today's date
@@ -64,7 +64,15 @@ export default function OrdersPage() {
       const responseData = await ordersResponse.json();
 
       // Assuming responseData contains the orders directly, if not, adjust accordingly
-      const ordersData = responseData.data || [];
+      let ordersData = responseData.data || [];
+
+      // Filter out products listed in not_products
+      ordersData = ordersData.map((order: any) => ({
+        ...order,
+        line_items: order.line_items.filter(
+          (item: any) => !not_products.includes(item.name)
+        ),
+      }));
 
       console.log("Orders Response: ", ordersResponse);
       console.log("Orders Data: ", ordersData);
