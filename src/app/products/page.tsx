@@ -8,6 +8,7 @@ import { Button, Spinner } from "@nextui-org/react";
 import ProductCard from "@/components/Product/ProductCard";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import Dropdown from "@/components/Dropdown";
+
 const Products = () => {
   const { loading, isLoggedIn, user } = useUser();
   const [products, setProducts] = useState<any[]>([]);
@@ -16,6 +17,7 @@ const Products = () => {
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
     new Set(["All"])
   );
+
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
@@ -101,6 +103,7 @@ const Products = () => {
       setCategoriesLoading(false);
     }
   };
+
   useEffect(() => {
     if (isLoggedIn && !loading && !productsLoading) {
       getProducts();
@@ -216,13 +219,13 @@ const Products = () => {
 
     return (
       <div>
-        <div className="text-center mt-5">
-          <p>Select Menu</p>
-          <div className="flex justify-center">{renderFilterDropdown()}</div>
-        </div>
-        <div className="text-center mt-5">
-          <p>Stock Status</p>
-          <div className="flex justify-center">
+        <div className="text-center mt-5 flex justify-center space-x-4">
+          <div>
+            <h3 className="mb-2">Select Menu:</h3>
+            {renderFilterDropdown()}
+          </div>
+          <div>
+            <h3 className="mb-2">Stock Status:</h3>
             {renderStockStatusDropdown()}
           </div>
         </div>
