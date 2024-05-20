@@ -36,7 +36,6 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
   );
   console.log("Product Id: ", context.params.productid);
   const body = JSON.parse(await request.text());
-  console.log("Body: ", body);
   const res = await patch(
     body.userid,
     "products",

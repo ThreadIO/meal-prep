@@ -129,22 +129,22 @@ const Products = () => {
     );
   };
 
-  const getColor = (value: string) => {
-    switch (value) {
-      case "All":
-        return "default";
-      case "In Stock":
-        return "success";
-      case "Out Of Stock":
-        return "danger";
-      case "On Backorder":
-        return "warning";
-      default:
-        return "default";
-    }
-  };
-
   const renderStockStatusDropdown = () => {
+    const getColor = (value: string) => {
+      switch (value) {
+        case "All":
+          return "default";
+        case "In Stock":
+          return "success";
+        case "Out Of Stock":
+          return "danger";
+        case "On Backorder":
+          return "warning";
+        default:
+          return "default";
+      }
+    };
+
     return (
       <Dropdown
         aria_label="Stock Status selection example"

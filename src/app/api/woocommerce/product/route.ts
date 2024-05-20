@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     acf,
     product_addons,
     meta_data,
+    stock_status,
   } = requestData;
   const body = {
     name,
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
     acf,
     product_addons,
     meta_data: meta_data,
+    stock_status,
   };
   const create_products_response = post(userid, "products", body);
   return create_products_response;

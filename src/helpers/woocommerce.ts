@@ -176,6 +176,7 @@ export async function patch(
     body: JSON.stringify(body),
   });
   const data = await response.json();
+  console.log("Data: ", data);
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
