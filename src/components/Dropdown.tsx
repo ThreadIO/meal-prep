@@ -5,8 +5,9 @@ import {
   DropdownMenu,
   DropdownItem,
   Button,
+  Pagination,
 } from "@nextui-org/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 interface DropdownProps {
   // eslint-disable-next-line no-unused-vars
   onSelectionChange: (selectedKeys: any) => void;
@@ -34,6 +35,8 @@ interface DropdownProps {
     | undefined;
 }
 
+const ITEMS_PER_PAGE = 15;
+
 const DropdownComponent = (props: DropdownProps) => {
   const {
     onSelectionChange,
@@ -46,17 +49,42 @@ const DropdownComponent = (props: DropdownProps) => {
     selectedKeys = "default",
     color = "default",
   } = props;
+  const [currentPage, setCurrentPage] = useState(1);
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
     [selectedKeys]
   );
-  return (
-    <Dropdown>
-      <DropdownTrigger>
+
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return items.slice(startIndex, endIndex);
+  }, [currentPage, items]);
+
+  const renderDropdownTrigger = () => {
+    if (totalPages == 1) {
+      return (
         <Button variant="bordered" className="capitalize" color={color}>
           {selectedValue}
         </Button>
-      </DropdownTrigger>
+      );
+    }
+    return (
+      <Button variant="bordered" className="capitalize" color={color}>
+        {selectedValue}
+        <Pagination
+          total={totalPages}
+          page={currentPage}
+          onChange={(page: number) => setCurrentPage(page)}
+          isCompact
+        />
+      </Button>
+    );
+  };
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  return (
+    <Dropdown>
+      <DropdownTrigger>{renderDropdownTrigger()}</DropdownTrigger>
       <DropdownMenu
         aria-label={aria_label}
         variant={variant}
@@ -66,7 +94,7 @@ const DropdownComponent = (props: DropdownProps) => {
         selectedKeys={selectedKeys}
         onSelectionChange={(selectedKeys) => onSelectionChange(selectedKeys)}
       >
-        {items.map((item: any) => (
+        {paginatedItems.map((item: any) => (
           <DropdownItem key={item.name}>{item.name}</DropdownItem>
         ))}
       </DropdownMenu>
