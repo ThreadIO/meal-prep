@@ -4,11 +4,7 @@ import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
-import {
-  Button,
-  Spinner,
-  // Pagination,
-} from "@nextui-org/react";
+import { Button, Spinner } from "@nextui-org/react";
 import ProductCard from "@/components/Product/ProductCard";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import Dropdown from "@/components/Dropdown";
@@ -17,11 +13,20 @@ const Products = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<any>(new Set(["All"]));
-
+  const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
+    new Set(["All"])
+  );
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [openProduct, setOpenProduct] = useState(false);
+
+  const stockStatusOptions = [
+    { display: "All", value: "All" },
+    { display: "In Stock", value: "instock" },
+    { display: "Out Of Stock", value: "outofstock" },
+    { display: "On Backorder", value: "onbackorder" },
+  ];
 
   const getProducts = async () => {
     setProductsLoading(true);
@@ -120,6 +125,38 @@ const Products = () => {
       />
     );
   };
+
+  const getColor = (value: string) => {
+    switch (value) {
+      case "All":
+        return "default";
+      case "In Stock":
+        return "success";
+      case "Out Of Stock":
+        return "danger";
+      case "On Backorder":
+        return "warning";
+      default:
+        return "default";
+    }
+  };
+
+  const renderStockStatusDropdown = () => {
+    return (
+      <Dropdown
+        aria_label="Stock Status selection example"
+        variant="flat"
+        closeOnSelect={false}
+        disallowEmptySelection
+        selectionMode="single"
+        selectedKeys={selectedStockStatus}
+        onSelectionChange={setSelectedStockStatus}
+        items={stockStatusOptions.map((status) => ({ name: status.display }))}
+        color={getColor(Array.from(selectedStockStatus)[0] as string)}
+      />
+    );
+  };
+
   const renderProductPage = () => {
     if (error) {
       return renderError();
@@ -151,22 +188,45 @@ const Products = () => {
   };
 
   const renderProductContent = () => {
-    // Filter products based on selected categories
-    const filteredProducts = selectedKeys.has("All")
-      ? products
-      : products.filter((product) => {
-          const productCategories = product.categories.map(
-            (category: any) => category.name
-          );
-          // Check if any of the product's categories match any of the selected keys
-          return productCategories.some((category: any) =>
-            selectedKeys.has(category)
-          );
-        });
+    const filteredProducts = products
+      .filter((product) => {
+        if (selectedKeys.has("All")) {
+          return true;
+        }
+        const productCategories = product.categories.map(
+          (category: any) => category.name
+        );
+        return productCategories.some((category: any) =>
+          selectedKeys.has(category)
+        );
+      })
+      .filter((product) => {
+        if (selectedStockStatus.has("All")) {
+          return true;
+        }
+        const selectedStockStatusValue = Array.from(selectedStockStatus)[0];
+        const mappedStockStatus = stockStatusOptions.find(
+          (status) => status.display === selectedStockStatusValue
+        )?.value;
+        return (
+          mappedStockStatus === "All" ||
+          product.stock_status === mappedStockStatus
+        );
+      });
+
     return (
       <div>
-        <div className="text-center mt-5">{renderFilterDropdown()}</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto">
+        <div className="text-center mt-5">
+          <p>Select Menu</p>
+          <div className="flex justify-center">{renderFilterDropdown()}</div>
+        </div>
+        <div className="text-center mt-5">
+          <p>Stock Status</p>
+          <div className="flex justify-center">
+            {renderStockStatusDropdown()}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
           {filteredProducts.map((product: any) => (
             <ProductCard
               key={product.id}

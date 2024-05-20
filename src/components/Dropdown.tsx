@@ -23,7 +23,15 @@ interface DropdownProps {
   closeOnSelect?: boolean;
   selectionMode?: "single" | "multiple";
   disallowEmptySelection?: boolean;
-  selectedKeys: any;
+  selectedKeys?: any;
+  color?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "success"
+    | "warning"
+    | "danger"
+    | undefined;
 }
 
 const DropdownComponent = (props: DropdownProps) => {
@@ -35,7 +43,8 @@ const DropdownComponent = (props: DropdownProps) => {
     selectionMode,
     closeOnSelect = false,
     disallowEmptySelection,
-    selectedKeys,
+    selectedKeys = "default",
+    color = "default",
   } = props;
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
@@ -44,7 +53,7 @@ const DropdownComponent = (props: DropdownProps) => {
   return (
     <Dropdown>
       <DropdownTrigger>
-        <Button variant="bordered" className="capitalize">
+        <Button variant="bordered" className="capitalize" color={color}>
           {selectedValue}
         </Button>
       </DropdownTrigger>
@@ -64,5 +73,4 @@ const DropdownComponent = (props: DropdownProps) => {
     </Dropdown>
   );
 };
-
 export default DropdownComponent;
