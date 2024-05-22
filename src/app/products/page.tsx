@@ -191,31 +191,31 @@ const Products = () => {
   };
 
   const renderProductContent = () => {
-    const filteredProducts = products
-      .filter((product) => {
-        if (selectedKeys.has("All")) {
-          return true;
-        }
+    const filteredProducts = products.filter((product) => {
+      // Filter by categories
+      const selectedCategories = Array.from(selectedKeys);
+      if (!selectedCategories.includes("All")) {
         const productCategories = product.categories.map(
           (category: any) => category.name
         );
-        return productCategories.some((category: any) =>
-          selectedKeys.has(category)
-        );
-      })
-      .filter((product) => {
-        if (selectedStockStatus.has("All")) {
-          return true;
+        if (
+          !selectedCategories.every((category) =>
+            productCategories.includes(category)
+          )
+        ) {
+          return false;
         }
-        const selectedStockStatusValue = Array.from(selectedStockStatus)[0];
-        const mappedStockStatus = stockStatusOptions.find(
-          (status) => status.display === selectedStockStatusValue
-        )?.value;
-        return (
-          mappedStockStatus === "All" ||
-          product.stock_status === mappedStockStatus
-        );
-      });
+      }
+      // Filter by stock status
+      const selectedStockStatusValue = Array.from(selectedStockStatus)[0];
+      if (
+        selectedStockStatusValue !== "All" &&
+        product.stock_status !== selectedStockStatusValue
+      ) {
+        return false;
+      }
+      return true;
+    });
 
     return (
       <div>

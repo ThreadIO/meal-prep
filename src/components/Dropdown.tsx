@@ -95,7 +95,9 @@ const DropdownComponent = (props: DropdownProps) => {
         onSelectionChange={(selectedKeys) => onSelectionChange(selectedKeys)}
       >
         {paginatedItems.map((item: any) => (
-          <DropdownItem key={item.name}>{item.name}</DropdownItem>
+          <DropdownItem key={item.name}>
+            {item.name.replace(/&amp;/g, "&")}
+          </DropdownItem>
         ))}
       </DropdownMenu>
     </Dropdown>
