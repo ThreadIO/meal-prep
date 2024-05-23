@@ -8,7 +8,8 @@ import { Button, Spinner } from "@nextui-org/react";
 import ProductCard from "@/components/Product/ProductCard";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import Dropdown from "@/components/Dropdown";
-
+import { getData } from "@/helpers/frontend";
+import { StockStatusOptions } from "@/helpers/utils";
 const Products = () => {
   const { loading, isLoggedIn, user } = useUser();
   const [products, setProducts] = useState<any[]>([]);
@@ -23,85 +24,43 @@ const Products = () => {
   const [error, setError] = useState<string>("");
   const [openProduct, setOpenProduct] = useState(false);
 
-  const stockStatusOptions = [
-    { display: "All", value: "All" },
-    { display: "In Stock", value: "instock" },
-    { display: "Out Of Stock", value: "outofstock" },
-    { display: "On Backorder", value: "onbackorder" },
-  ];
-
   const getProducts = async () => {
-    setProductsLoading(true);
-    await getCategories();
-    try {
-      const productsResponse = await fetch("/api/woocommerce/getproducts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userid: user?.userId }),
-      });
-
-      if (!productsResponse.ok) {
-        if (productsResponse.statusText === "Unauthorized") {
-          setError("Incorrect Client Key or Client Secret");
-        } else {
-          setError(`Failed to fetch products: ${productsResponse.statusText}`);
-        }
-        throw new Error(
-          `Failed to fetch products: ${productsResponse.statusText}`
-        );
-      }
-      setError("");
-      const responseData = await productsResponse.json();
-      const productsData = responseData.data || [];
-      console.log("Products Data: ", productsData);
-      setProducts(productsData);
-      setProductsLoading(false);
-    } catch (error) {
-      console.error("Error fetching Products:", error);
-      setProducts([]);
-      setProductsLoading(false);
-    }
+    const url = "/api/woocommerce/getproducts";
+    const method = "POST";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const body = { userid: user?.userId };
+    getData(
+      "products",
+      url,
+      method,
+      headers,
+      setProducts,
+      setError,
+      setProductsLoading,
+      body,
+      getCategories
+    );
   };
 
   const getCategories = async () => {
-    setCategoriesLoading(true);
-    try {
-      const categoriesResponse = await fetch(
-        "/api/woocommerce/getproducts/getcategories",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ userid: user?.userId }),
-        }
-      );
-
-      if (!categoriesResponse.ok) {
-        if (categoriesResponse.statusText === "Unauthorized") {
-          setError("Incorrect Client Key or Client Secret");
-        } else {
-          setError(
-            `Failed to fetch products: ${categoriesResponse.statusText}`
-          );
-        }
-        throw new Error(
-          `Failed to fetch products: ${categoriesResponse.statusText}`
-        );
-      }
-      setError("");
-      const responseData = await categoriesResponse.json();
-      const categoriesData = responseData.data || [];
-      console.log("Categories Data: ", categoriesData);
-      setCategories(categoriesData);
-      setCategoriesLoading(false);
-    } catch (error) {
-      console.error("Error fetching Categories:", error);
-      setCategories([]);
-      setCategoriesLoading(false);
-    }
+    const url = "/api/woocommerce/getproducts/getcategories";
+    const method = "POST";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const body = { userid: user?.userId };
+    getData(
+      "categories",
+      url,
+      method,
+      headers,
+      setCategories,
+      setError,
+      setCategoriesLoading,
+      body
+    );
   };
 
   useEffect(() => {
@@ -154,7 +113,7 @@ const Products = () => {
         selectionMode="single"
         selectedKeys={selectedStockStatus}
         onSelectionChange={setSelectedStockStatus}
-        items={stockStatusOptions.map((status) => ({ name: status.display }))}
+        items={StockStatusOptions.map((status) => ({ name: status.display }))}
         color={getColor(Array.from(selectedStockStatus)[0] as string)}
       />
     );
@@ -190,8 +149,24 @@ const Products = () => {
     );
   };
 
-  const renderProductContent = () => {
-    const filteredProducts = products
+  const renderLayoutButtons = () => {
+    return <div></div>;
+  };
+
+  const renderProductCards = (products: any) => {
+    return products.map((product: any) => (
+      <ProductCard
+        key={product.id}
+        product={product}
+        onUpdate={() => getProducts()}
+        userId={user!.userId}
+        categories={categories}
+      />
+    ));
+  };
+
+  const getFilteredProducts = () => {
+    return products
       .filter((product) => {
         if (selectedKeys.has("All")) {
           return true;
@@ -208,14 +183,18 @@ const Products = () => {
           return true;
         }
         const selectedStockStatusValue = Array.from(selectedStockStatus)[0];
-        const mappedStockStatus = stockStatusOptions.find(
-          (status) => status.display === selectedStockStatusValue
+        const mappedStockStatus = StockStatusOptions.find(
+          (status: any) => status.display === selectedStockStatusValue
         )?.value;
         return (
           mappedStockStatus === "All" ||
           product.stock_status === mappedStockStatus
         );
       });
+  };
+
+  const renderProductContent = () => {
+    const filteredProducts = getFilteredProducts();
 
     return (
       <div>
@@ -228,17 +207,10 @@ const Products = () => {
             <h3 className="mb-2">Stock Status:</h3>
             {renderStockStatusDropdown()}
           </div>
+          <div>{renderLayoutButtons()}</div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
-          {filteredProducts.map((product: any) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onUpdate={() => getProducts()}
-              userId={user!.userId}
-              categories={categories}
-            />
-          ))}
+          {renderProductCards(filteredProducts)}
         </div>
       </div>
     );

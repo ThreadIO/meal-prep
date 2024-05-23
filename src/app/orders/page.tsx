@@ -10,6 +10,7 @@ import { saveAs } from "file-saver";
 import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
 import { useOrgContext } from "@/components/OrgContext";
 import { not_products } from "@/helpers/utils";
+import { getData } from "@/helpers/frontend";
 export default function OrdersPage() {
   const { loading, isLoggedIn, user } = useUser();
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); // Default to today's date
@@ -29,67 +30,98 @@ export default function OrdersPage() {
     return user?.getOrg(currentOrg);
   }
   const currentOrgId = getOrg()?.orgId as string;
-  const getOrders = async () => {
-    setShowOrders(true);
-    console.log("Inside Client-side Get Orders");
-    console.log("Start Date: ", startDate);
-    console.log("End Date: ", endDate);
 
-    const requestData = {
+  const getOrders = async () => {
+    const url = "/api/woocommerce/getorders";
+    const method = "POST";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const body = {
       userid: user?.userId,
       startDate: startDate,
       endDate: endDate,
     };
-    console.log(JSON.stringify(requestData));
-    setOrders([]);
-    setOrdersLoading(true);
-    try {
-      const ordersResponse = await fetch("/api/woocommerce/getorders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!ordersResponse.ok) {
-        if (ordersResponse.statusText === "Unauthorized") {
-          setError("Incorrect Client Key or Client Secret");
-        } else {
-          setError(`Failed to fetch orders: ${ordersResponse.statusText}`);
-        }
-        throw new Error(`Failed to fetch orders: ${ordersResponse.statusText}`);
-      }
-      setError("");
-      const responseData = await ordersResponse.json();
-
-      // Assuming responseData contains the orders directly, if not, adjust accordingly
-      let ordersData = responseData.data || [];
-
-      // Filter out products listed in not_products
-      ordersData = ordersData.map((order: any) => ({
-        ...order,
-        line_items: order.line_items.filter(
-          (item: any) => !not_products.includes(item.name)
-        ),
-      }));
-
-      console.log("Orders Response: ", ordersResponse);
-      console.log("Orders Data: ", ordersData);
-
-      setOrders(ordersData);
-      setOrdersLoading(false);
-      setShowOrders(true);
-
-      // Pre-fetch ingredients
-      getIngredients(ordersData);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setOrders([]);
-      setOrdersLoading(false);
-      setShowOrders(false);
-    }
+    getData(
+      "orders",
+      url,
+      method,
+      headers,
+      setOrders,
+      setError,
+      setOrdersLoading,
+      body,
+      () => setShowOrders(true),
+      getIngredients,
+      transformOrdersData
+    );
   };
+
+  const transformOrdersData = (ordersData: any) => {
+    return ordersData.map((order: any) => ({
+      ...order,
+      line_items: order.line_items.filter(
+        (item: any) => !not_products.includes(item.name)
+      ),
+    }));
+  };
+
+  // const getOrders = async () => {
+  //   setShowOrders(true);
+  //   const requestData = {
+  //     userid: user?.userId,
+  //     startDate: startDate,
+  //     endDate: endDate,
+  //   };
+  //   setOrders([]);
+  //   setOrdersLoading(true);
+  //   try {
+  //     const ordersResponse = await fetch("/api/woocommerce/getorders", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(requestData),
+  //     });
+
+  //     if (!ordersResponse.ok) {
+  //       if (ordersResponse.statusText === "Unauthorized") {
+  //         setError("Incorrect Client Key or Client Secret");
+  //       } else {
+  //         setError(`Failed to fetch orders: ${ordersResponse.statusText}`);
+  //       }
+  //       throw new Error(`Failed to fetch orders: ${ordersResponse.statusText}`);
+  //     }
+  //     setError("");
+  //     const responseData = await ordersResponse.json();
+
+  //     // Assuming responseData contains the orders directly, if not, adjust accordingly
+  //     let ordersData = responseData.data || [];
+
+  //     // Filter out products listed in not_products
+  //     ordersData = ordersData.map((order: any) => ({
+  //       ...order,
+  //       line_items: order.line_items.filter(
+  //         (item: any) => !not_products.includes(item.name)
+  //       ),
+  //     }));
+
+  //     console.log("Orders Response: ", ordersResponse);
+  //     console.log("Orders Data: ", ordersData);
+
+  //     setOrders(ordersData);
+  //     setOrdersLoading(false);
+  //     setShowOrders(true);
+
+  //     // Pre-fetch ingredients
+  //     getIngredients(ordersData);
+  //   } catch (error) {
+  //     console.error("Error fetching orders:", error);
+  //     setOrders([]);
+  //     setOrdersLoading(false);
+  //     setShowOrders(false);
+  //   }
+  // };
 
   const clear = async () => {
     clearOrders();
@@ -108,45 +140,63 @@ export default function OrdersPage() {
   };
 
   const getIngredients = async (ingredients_orders: any[] = orders) => {
-    console.log("Inside Client-side Get Ingredients");
-    const requestData = {
-      orders: ingredients_orders,
-      orgid: currentOrgId,
+    const url = "/api/ingredients";
+    const method = "POST";
+    const headers = {
+      "Content-Type": "application/json",
     };
-    console.log("Request Data: ", requestData);
-
-    setIngredients({});
-    setIngredientsLoading(true);
-    try {
-      const ingredientsResponse = await fetch("/api/ingredients", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!ingredientsResponse.ok) {
-        throw new Error(
-          `Failed to fetch orders: ${ingredientsResponse.statusText}`
-        );
-      }
-
-      const responseData = await ingredientsResponse.json();
-
-      // Assuming responseData contains the orders directly, if not, adjust accordingly
-      const ingredientsData = responseData.ingredients || [];
-
-      console.log("Ingredients Response: ", ingredientsResponse);
-      console.log("Ingredients Data: ", ingredientsData);
-      setIngredients(ingredientsData);
-      setIngredientsLoading(false);
-    } catch (error) {
-      console.error("Error fetching ingredients:", error);
-      setIngredients({});
-      setIngredientsLoading(false);
-    }
+    const body = { orders: ingredients_orders, orgid: currentOrgId };
+    getData(
+      "ingredients",
+      url,
+      method,
+      headers,
+      setIngredients,
+      setError,
+      setIngredientsLoading,
+      body
+    );
   };
+  // const getIngredients = async (ingredients_orders: any[] = orders) => {
+  //   console.log("Inside Client-side Get Ingredients");
+  //   const requestData = {
+  //     orders: ingredients_orders,
+  //     orgid: currentOrgId,
+  //   };
+  //   console.log("Request Data: ", requestData);
+
+  //   setIngredients({});
+  //   setIngredientsLoading(true);
+  //   try {
+  //     const ingredientsResponse = await fetch("/api/ingredients", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(requestData),
+  //     });
+
+  //     if (!ingredientsResponse.ok) {
+  //       throw new Error(
+  //         `Failed to fetch orders: ${ingredientsResponse.statusText}`
+  //       );
+  //     }
+
+  //     const responseData = await ingredientsResponse.json();
+
+  //     // Assuming responseData contains the orders directly, if not, adjust accordingly
+  //     const ingredientsData = responseData.ingredients || [];
+
+  //     console.log("Ingredients Response: ", ingredientsResponse);
+  //     console.log("Ingredients Data: ", ingredientsData);
+  //     setIngredients(ingredientsData);
+  //     setIngredientsLoading(false);
+  //   } catch (error) {
+  //     console.error("Error fetching ingredients:", error);
+  //     setIngredients({});
+  //     setIngredientsLoading(false);
+  //   }
+  // };
 
   const downloadOrders = async (
     ordersData: any,
