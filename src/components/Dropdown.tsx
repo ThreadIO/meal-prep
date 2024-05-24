@@ -35,7 +35,7 @@ interface DropdownProps {
     | undefined;
 }
 
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 12;
 
 const DropdownComponent = (props: DropdownProps) => {
   const {
@@ -49,6 +49,7 @@ const DropdownComponent = (props: DropdownProps) => {
     selectedKeys = "default",
     color = "default",
   } = props;
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
@@ -62,28 +63,34 @@ const DropdownComponent = (props: DropdownProps) => {
   }, [currentPage, items]);
 
   const renderDropdownTrigger = () => {
-    if (totalPages == 1) {
-      return (
-        <Button variant="bordered" className="capitalize" color={color}>
-          {selectedValue}
-        </Button>
-      );
-    }
     return (
       <Button variant="bordered" className="capitalize" color={color}>
         {selectedValue}
-        <Pagination
-          total={totalPages}
-          page={currentPage}
-          onChange={(page: number) => setCurrentPage(page)}
-          isCompact
-        />
+        {renderPagination()}
       </Button>
+    );
+  };
+
+  const renderPagination = () => {
+    if (totalPages == 1 || !dropdownOpen) {
+      return null;
+    }
+    return (
+      <Pagination
+        total={totalPages}
+        page={currentPage}
+        onChange={(page: number) => setCurrentPage(page)}
+        isCompact
+      />
     );
   };
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
   return (
-    <Dropdown>
+    <Dropdown
+      onOpenChange={(open) => {
+        setDropdownOpen(open);
+      }}
+    >
       <DropdownTrigger>{renderDropdownTrigger()}</DropdownTrigger>
       <DropdownMenu
         aria-label={aria_label}

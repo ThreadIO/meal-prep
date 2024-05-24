@@ -4,12 +4,13 @@ import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
-import { Button, Spinner } from "@nextui-org/react";
+import { Button, Spinner, Tooltip } from "@nextui-org/react";
 import ProductCard from "@/components/Product/ProductCard";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import Dropdown from "@/components/Dropdown";
 import { getData } from "@/helpers/frontend";
 import { StockStatusOptions } from "@/helpers/utils";
+import { LayoutGrid, Table } from "lucide-react";
 const Products = () => {
   const { loading, isLoggedIn, user } = useUser();
   const [products, setProducts] = useState<any[]>([]);
@@ -23,7 +24,7 @@ const Products = () => {
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [openProduct, setOpenProduct] = useState(false);
-
+  const [layout, setLayout] = useState<"grid" | "table">("grid");
   const getProducts = async () => {
     const url = "/api/woocommerce/getproducts";
     const method = "POST";
@@ -150,7 +151,35 @@ const Products = () => {
   };
 
   const renderLayoutButtons = () => {
-    return <div></div>;
+    if (layout === "grid") {
+      return (
+        <div className="mt-10 flex justify-center space-x-4">
+          <Tooltip content="Table Layout">
+            <Button
+              color="primary"
+              isIconOnly
+              onPress={() => setLayout("table")}
+            >
+              <Table />
+            </Button>
+          </Tooltip>
+        </div>
+      );
+    } else {
+      return (
+        <div className="mt-10 flex justify-center space-x-4">
+          <Tooltip content="Grid Layout">
+            <Button
+              color="primary"
+              isIconOnly
+              onPress={() => setLayout("grid")}
+            >
+              <LayoutGrid />
+            </Button>
+          </Tooltip>
+        </div>
+      );
+    }
   };
 
   const renderProductCards = (products: any) => {
@@ -193,6 +222,16 @@ const Products = () => {
       });
   };
 
+  const renderProducts = (filteredProducts: any) => {
+    if (layout === "grid") {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
+          {renderProductCards(filteredProducts)}
+        </div>
+      );
+    }
+  };
+
   const renderProductContent = () => {
     const filteredProducts = getFilteredProducts();
 
@@ -207,11 +246,9 @@ const Products = () => {
             <h3 className="mb-2">Stock Status:</h3>
             {renderStockStatusDropdown()}
           </div>
-          <div>{renderLayoutButtons()}</div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
-          {renderProductCards(filteredProducts)}
-        </div>
+        <div>{renderLayoutButtons()}</div>
+        {renderProducts(filteredProducts)}
       </div>
     );
   };
