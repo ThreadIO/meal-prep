@@ -9,10 +9,11 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createProduct, patchProduct } from "@/helpers/request";
 import { useUser } from "@propelauth/nextjs/client";
 import Dropdown from "@/components/Dropdown";
+
 interface ProductModalProps {
   product: any;
   productImage: any;
@@ -22,6 +23,7 @@ interface ProductModalProps {
   onUpdate: () => void;
   categories: any[];
 }
+
 const stockStatusOptions = [
   { display: "In Stock", value: "instock" },
   { display: "Out Of Stock", value: "outofstock" },
@@ -30,31 +32,42 @@ const stockStatusOptions = [
 
 export const ProductModal = (props: ProductModalProps) => {
   const { product, productImage, open, onClose, onUpdate, categories } = props;
-  const [productName, setProductName] = useState(product.name);
+  const [productName, setProductName] = useState("");
   const [loadingSave, setLoadingSave] = useState(false);
-  const [productDescription, setProductDescription] = useState(
-    product.description
-  );
-  const [productRegularPrice, setProductRegularPrice] = useState(
-    product.regular_price
-  );
-  const [productSalePrice, setProductSalePrice] = useState(product.sale_price);
-  const [selectedKeys, setSelectedKeys] = useState<any>(
-    new Set(
-      product.categories
-        ? product.categories.map((category: any) => category.name)
-        : []
-    )
-  );
+  const [productDescription, setProductDescription] = useState("");
+  const [productRegularPrice, setProductRegularPrice] = useState("");
+  const [productSalePrice, setProductSalePrice] = useState("");
+  const [selectedKeys, setSelectedKeys] = useState<any>(new Set());
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
-    new Set([
-      stockStatusOptions.find(
-        (option) => option.value === (product.stock_status || "instock")
-      )?.display || "In Stock",
-    ])
+    new Set()
   );
+
+  useEffect(() => {
+    if (product) {
+      setProductName(product.name || "");
+      setProductDescription(product.description || "");
+      setProductRegularPrice(product.regular_price || "");
+      setProductSalePrice(product.sale_price || "");
+      setSelectedKeys(
+        new Set(
+          product.categories
+            ? product.categories.map((category: any) => category.name)
+            : []
+        )
+      );
+      setSelectedStockStatus(
+        new Set([
+          stockStatusOptions.find(
+            (option) => option.value === (product.stock_status || "instock")
+          )?.display || "In Stock",
+        ])
+      );
+    }
+  }, [product]);
+
   const { loading, user } = useUser();
   const userId = user?.userId || "";
+
   const handleSave = async () => {
     setLoadingSave(true);
     const selectedCategories = mapSelectedCategoriesToObjects();
@@ -63,7 +76,6 @@ export const ProductModal = (props: ProductModalProps) => {
       (option) => option.display === selectedStockStatusDisplay
     );
     const matchingStockOptionValue = matchingStockOption?.value || "instock";
-    console.log(matchingStockOptionValue);
     const body = {
       ...(product || {}),
       name: productName,
@@ -83,11 +95,9 @@ export const ProductModal = (props: ProductModalProps) => {
       "bundle_layout",
     ];
     ignoredParams.forEach((param) => delete body[param]);
-    const response =
-      props.mode === "patch"
-        ? await patchProduct(product.id, body)
-        : await createProduct(body);
-    console.log(response);
+    props.mode === "patch"
+      ? await patchProduct(product.id, body)
+      : await createProduct(body);
     onUpdate();
     setLoadingSave(false);
     onClose();
@@ -163,6 +173,7 @@ export const ProductModal = (props: ProductModalProps) => {
       return renderModalContent();
     }
   };
+
   const renderImage = () => {
     if (productImage && Object.keys(productImage).length !== 0) {
       return (
@@ -181,6 +192,7 @@ export const ProductModal = (props: ProductModalProps) => {
       );
     }
   };
+
   const renderModalContent = () => {
     return (
       <ModalContent>
@@ -192,7 +204,7 @@ export const ProductModal = (props: ProductModalProps) => {
             <div className="mb-4">
               <strong>Name:</strong>
               <Input
-                defaultValue={productName}
+                value={productName}
                 fullWidth
                 onChange={(e) => setProductName(e.target.value)}
               />
@@ -210,7 +222,7 @@ export const ProductModal = (props: ProductModalProps) => {
             <div className="mb-4">
               <strong>Regular Price:</strong>{" "}
               <Input
-                defaultValue={productRegularPrice}
+                value={productRegularPrice}
                 fullWidth
                 onChange={(e) => setProductRegularPrice(e.target.value)}
               />
@@ -218,7 +230,7 @@ export const ProductModal = (props: ProductModalProps) => {
             <div className="mb-4">
               <strong>Sale Price:</strong>{" "}
               <Input
-                defaultValue={productSalePrice}
+                value={productSalePrice}
                 fullWidth
                 onChange={(e) => setProductSalePrice(e.target.value)}
               />
@@ -226,7 +238,7 @@ export const ProductModal = (props: ProductModalProps) => {
             <div className="mb-4">
               <strong>Description:</strong>
               <Input
-                defaultValue={productDescription}
+                value={productDescription}
                 fullWidth
                 onChange={(e) => setProductDescription(e.target.value)}
               />
@@ -245,6 +257,7 @@ export const ProductModal = (props: ProductModalProps) => {
       </ModalContent>
     );
   };
+
   return (
     <Modal isOpen={open} onOpenChange={onClose} size="full">
       {renderContent()}

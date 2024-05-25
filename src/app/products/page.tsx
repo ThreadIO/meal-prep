@@ -26,7 +26,7 @@ const Products = () => {
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [openProduct, setOpenProduct] = useState(false);
-  const [layout, setLayout] = useState<"grid" | "table">("grid");
+  const [layout, setLayout] = useState<"grid" | "table">("table");
   const getProducts = async () => {
     const url = "/api/woocommerce/getproducts";
     const method = "POST";

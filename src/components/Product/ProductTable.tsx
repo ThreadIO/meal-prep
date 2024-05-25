@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Button,
   Image,
@@ -31,16 +31,16 @@ const ProductTable = (props: ProductTableProps) => {
   const [product, setProduct] = useState<any>({});
   const { products, userId, onUpdate, categories } = props;
 
-  useEffect(() => {
-    if (product && Object.keys(product).length > 0) {
-      if (openProduct) {
-        console.log("Product: ", product);
-        setOpenProduct(true);
-      } else if (openCopyProduct) {
-        setOpenCopyProduct(true);
-      }
-    }
-  }, [product]);
+  //   useEffect(() => {
+  //     if (product && Object.keys(product).length > 0) {
+  //       if (openProduct) {
+  //         console.log("Product: ", product);
+  //         setOpenProduct(true);
+  //       } else if (openCopyProduct) {
+  //         setOpenCopyProduct(true);
+  //       }
+  //     }
+  //   }, [product]);
 
   const getProductImage = (product: any) => {
     const isValidUrl = (url: string) => {
@@ -110,7 +110,7 @@ const ProductTable = (props: ProductTableProps) => {
               style={{
                 objectFit: "contain",
                 objectPosition: "center",
-                width: "0px", // Adjust the width to make the image smaller
+                width: "70px", // Adjust the width to make the image smaller
               }}
             />
           </div>
@@ -164,50 +164,43 @@ const ProductTable = (props: ProductTableProps) => {
     }
   };
 
+  const modals = (product: any) => {
+    if (product) {
+      return (
+        <>
+          <ProductModal
+            product={product}
+            productImage={getProductImage(product)}
+            open={openProduct}
+            mode="patch"
+            categories={categories}
+            onClose={() => handleCloseProductModal()}
+            onUpdate={() => onUpdate()}
+          />
+          <ProductModal
+            product={product}
+            productImage={getProductImage(product)}
+            open={openCopyProduct}
+            mode="create"
+            onClose={() => handleCloseCopyProductModal()}
+            onUpdate={() => onUpdate()}
+            categories={categories}
+          />
+          <DeleteModal
+            object={product}
+            open={openDelete}
+            onClose={() => handleCloseDeleteModal()}
+            onDelete={() => handleDelete(product)}
+          />
+        </>
+      );
+    }
+  };
+
   return (
-    <div>
-      <ProductModal
-        product={product}
-        productImage={getProductImage(product)}
-        open={openProduct}
-        mode="patch"
-        categories={categories}
-        onClose={() => handleCloseProductModal()}
-        onUpdate={() => onUpdate()}
-      />
-      <ProductModal
-        product={product}
-        productImage={getProductImage(product)}
-        open={openCopyProduct}
-        mode="create"
-        onClose={() => handleCloseCopyProductModal()}
-        onUpdate={() => onUpdate()}
-        categories={categories}
-      />
-      <DeleteModal
-        object={product}
-        open={openDelete}
-        onClose={() => handleCloseDeleteModal()}
-        onDelete={() => handleDelete(product)}
-      />
-      <Table
-        isHeaderSticky
-        isStriped
-        aria-label="Table of Products"
-        bottomContent={
-          <div className="flex w-full justify-center">
-            {/* <Pagination
-              isCompact
-              showControls
-              showShadow
-              color="primary"
-              page={page}
-              total={Math.ceil(documents.length / rowsPerPage)}
-              onChange={(page) => setPage(page)}
-            /> */}
-          </div>
-        }
-      >
+    <div className="mt-4 mr-4 ml-4">
+      {modals(product)}
+      <Table isHeaderSticky isStriped aria-label="Table of Products">
         <TableHeader columns={columns}>
           {(column) => (
             <TableColumn key={column.key}>{column.label}</TableColumn>
