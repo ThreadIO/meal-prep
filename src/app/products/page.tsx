@@ -10,7 +10,9 @@ import { ProductModal } from "@/components/Modals/ProductModal";
 import Dropdown from "@/components/Dropdown";
 import { getData } from "@/helpers/frontend";
 import { StockStatusOptions } from "@/helpers/utils";
-import { LayoutGrid, Table } from "lucide-react";
+import { LayoutGrid, Table as TableIcon } from "lucide-react";
+import ProductTable from "@/components/Product/ProductTable";
+
 const Products = () => {
   const { loading, isLoggedIn, user } = useUser();
   const [products, setProducts] = useState<any[]>([]);
@@ -160,7 +162,7 @@ const Products = () => {
               isIconOnly
               onPress={() => setLayout("table")}
             >
-              <Table />
+              <TableIcon />
             </Button>
           </Tooltip>
         </div>
@@ -228,6 +230,15 @@ const Products = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
           {renderProductCards(filteredProducts)}
         </div>
+      );
+    } else {
+      return (
+        <ProductTable
+          products={filteredProducts}
+          onUpdate={() => getProducts()}
+          userId={user!.userId}
+          categories={categories}
+        />
       );
     }
   };

@@ -15,3 +15,30 @@ export const StockStatusOptions = [
   { display: "Out Of Stock", value: "outofstock" },
   { display: "On Backorder", value: "onbackorder" },
 ];
+
+export const columns = [
+  {
+    key: "image",
+    label: "IMAGE",
+  },
+  {
+    key: "name",
+    label: "NAME",
+  },
+  {
+    key: "categories",
+    label: "CATEGORIES",
+  },
+  {
+    key: "stock_status",
+    label: "STOCK STATUS",
+  },
+  {
+    key: "price",
+    label: "PRICE",
+  },
+  {
+    key: "actions",
+    label: "ACTIONS",
+  },
+];
