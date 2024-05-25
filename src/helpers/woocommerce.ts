@@ -203,3 +203,28 @@ export async function remove(userid: string, object: string, objectid: string) {
   const data = await response.json();
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
+
+export async function filterAddOns(product_addons: any, meta_data: any) {
+  // Extract names from the product_addons array
+  const addonNames = product_addons.map((addon: any) => addon.name);
+
+  // Filter out the object with key "_product_addons" and include only relevant items
+  const filteredMetaData = meta_data.filter(
+    (item: any) => item.key !== "_product_addons"
+  );
+
+  const productAddonsMetadata = meta_data.find(
+    (item: any) => item.key === "_product_addons"
+  );
+
+  if (productAddonsMetadata && productAddonsMetadata.value) {
+    const matchedAddons = productAddonsMetadata.value.filter((addon: any) =>
+      addonNames.includes(addon.name)
+    );
+    filteredMetaData.push({
+      ...productAddonsMetadata,
+      value: matchedAddons,
+    });
+  }
+  return filteredMetaData;
+}
