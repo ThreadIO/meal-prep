@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connect from "@/database/conn";
-import { post, filterAddOns } from "@/helpers/woocommerce";
+import { post, filterProductAddons } from "@/helpers/woocommerce";
 
 export async function POST(request: NextRequest) {
   console.log("Incoming POST request to /api/woocommerce/product");
@@ -32,7 +32,9 @@ export async function POST(request: NextRequest) {
     stock_status,
   } = requestData;
 
-  const filteredMetaData = filterAddOns(product_addons, meta_data);
+  // Use the helper function to filter and process meta_data
+  const filteredMetaData = filterProductAddons(meta_data, product_addons);
+  console.log("filteredMetaData: ", filteredMetaData);
 
   const body = {
     name,

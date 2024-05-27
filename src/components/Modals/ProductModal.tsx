@@ -41,6 +41,7 @@ export const ProductModal = (props: ProductModalProps) => {
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
     new Set()
   );
+  const [productAddons, setProductAddons] = useState<any[]>([]);
 
   useEffect(() => {
     if (product) {
@@ -62,6 +63,7 @@ export const ProductModal = (props: ProductModalProps) => {
           )?.display || "In Stock",
         ])
       );
+      setProductAddons(product.product_addons || []);
     }
   }, [product]);
 
@@ -86,6 +88,7 @@ export const ProductModal = (props: ProductModalProps) => {
       categories: selectedCategories,
       stock_status: matchingStockOptionValue,
       userid: userId,
+      product_addons: productAddons,
     };
     const ignoredParams = [
       "composite_layout",
@@ -108,6 +111,12 @@ export const ProductModal = (props: ProductModalProps) => {
       selectedKeys.has(category.name)
     );
     return selectedCategoryObjects;
+  };
+
+  const handleAddonChange = (index: number, field: string, value: any) => {
+    const updatedAddons = [...productAddons];
+    updatedAddons[0].options[index][field] = value;
+    setProductAddons(updatedAddons);
   };
 
   const renderCategoryDropdown = () => {
@@ -151,6 +160,72 @@ export const ProductModal = (props: ProductModalProps) => {
         items={stockStatusOptions.map((status) => ({ name: status.display }))}
         color={getColor(Array.from(selectedStockStatus)[0] as string)}
       />
+    );
+  };
+
+  const renderNutritionFacts = () => {
+    if (productAddons.length === 0 || !productAddons[0].options) {
+      return null;
+    }
+
+    return (
+      <div className="mb-4 overflow-y-scroll max-h-60">
+        <strong>Nutrition Facts:</strong>
+        {productAddons[0].options.map((option: any, index: number) => (
+          <div key={index} className="mb-4">
+            <div className="mb-2">
+              <strong>Label:</strong>
+              <Input
+                value={option.label}
+                fullWidth
+                onChange={(e) =>
+                  handleAddonChange(index, "label", e.target.value)
+                }
+              />
+            </div>
+            <div className="mb-2">
+              <strong>Carbs:</strong>
+              <Input
+                value={option.carbs}
+                fullWidth
+                onChange={(e) =>
+                  handleAddonChange(index, "carbs", e.target.value)
+                }
+              />
+            </div>
+            <div className="mb-2">
+              <strong>Fat:</strong>
+              <Input
+                value={option.fat}
+                fullWidth
+                onChange={(e) =>
+                  handleAddonChange(index, "fat", e.target.value)
+                }
+              />
+            </div>
+            <div className="mb-2">
+              <strong>Protein:</strong>
+              <Input
+                value={option.protein}
+                fullWidth
+                onChange={(e) =>
+                  handleAddonChange(index, "protein", e.target.value)
+                }
+              />
+            </div>
+            <div className="mb-2">
+              <strong>Price:</strong>
+              <Input
+                value={option.price}
+                fullWidth
+                onChange={(e) =>
+                  handleAddonChange(index, "price", e.target.value)
+                }
+              />
+            </div>
+          </div>
+        ))}
+      </div>
     );
   };
 
@@ -212,6 +287,7 @@ export const ProductModal = (props: ProductModalProps) => {
             {renderCategoryDropdown()}
             {renderImage()}
             {renderStockStatusDropdown()}
+            {renderNutritionFacts()}
             <div className="mb-4">
               <strong>Price:</strong>{" "}
               {(parseFloat(product.price) || 0).toLocaleString("en-US", {

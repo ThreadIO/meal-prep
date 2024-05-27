@@ -204,14 +204,14 @@ export async function remove(userid: string, object: string, objectid: string) {
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
-export async function filterAddOns(product_addons: any, meta_data: any) {
-  // Extract names from the product_addons array
-  const addonNames = product_addons.map((addon: any) => addon.name);
-
-  // Filter out the object with key "_product_addons" and include only relevant items
-  const filteredMetaData = meta_data.filter(
+export function filterProductAddons(meta_data: any, product_addons: any) {
+  // Filter out the object with key "_product_addons"
+  let filteredMetaData = meta_data.filter(
     (item: any) => item.key !== "_product_addons"
   );
+
+  // Extract names from the product_addons array
+  const addonNames = product_addons.map((addon: any) => addon.name);
 
   const productAddonsMetadata = meta_data.find(
     (item: any) => item.key === "_product_addons"
@@ -226,5 +226,6 @@ export async function filterAddOns(product_addons: any, meta_data: any) {
       value: matchedAddons,
     });
   }
+
   return filteredMetaData;
 }
