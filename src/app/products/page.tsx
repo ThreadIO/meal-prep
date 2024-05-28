@@ -77,6 +77,23 @@ const Products = () => {
   };
 
   const renderFilterDropdown = () => {
+    const handleSelectionChange = (keys: Set<any>) => {
+      // Convert set to array for easier manipulation
+      const newSelectedKeys = new Set(keys);
+      // Check if "All" is selected and there are other selections
+      if (newSelectedKeys.has("All")) {
+        // Only keep "All" in the selection
+        if (selectedKeys.has("All")) {
+          newSelectedKeys.delete("All");
+          setSelectedKeys(newSelectedKeys);
+        } else {
+          setSelectedKeys(new Set(["All"]));
+        }
+      } else {
+        setSelectedKeys(newSelectedKeys);
+      }
+    };
+
     return (
       <Dropdown
         aria_label="Multiple selection example"
@@ -85,8 +102,11 @@ const Products = () => {
         disallowEmptySelection
         selectionMode="multiple"
         selectedKeys={selectedKeys}
-        onSelectionChange={setSelectedKeys}
-        items={[{ name: "All" }, ...categories]}
+        onSelectionChange={handleSelectionChange}
+        items={[
+          { name: "All" },
+          ...categories.map((category) => ({ name: category.name })),
+        ]}
       />
     );
   };
