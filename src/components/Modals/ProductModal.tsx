@@ -88,6 +88,7 @@ export const ProductModal = (props: ProductModalProps) => {
       stock_status: matchingStockOptionValue,
       userid: userId,
       product_addons: productAddons,
+      acf: acf,
     };
 
     const ignoredParams = [

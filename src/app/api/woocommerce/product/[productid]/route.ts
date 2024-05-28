@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
     );
     body.meta_data = filtered_meta_data;
   }
-
+  console.log("Body: ", body.acf);
   const res = await patch(
     body.userid,
     "products",
