@@ -176,7 +176,6 @@ export async function patch(
     body: JSON.stringify(body),
   });
   const data = await response.json();
-  console.log("Data: ", data);
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
@@ -211,19 +210,14 @@ export function filterProductAddons(meta_data: any, product_addons: any) {
   );
 
   // Extract names from the product_addons array
-  const addonNames = product_addons.map((addon: any) => addon.name);
-
   const productAddonsMetadata = meta_data.find(
     (item: any) => item.key === "_product_addons"
   );
 
   if (productAddonsMetadata && productAddonsMetadata.value) {
-    const matchedAddons = productAddonsMetadata.value.filter((addon: any) =>
-      addonNames.includes(addon.name)
-    );
     filteredMetaData.push({
       ...productAddonsMetadata,
-      value: matchedAddons,
+      value: product_addons,
     });
   }
 

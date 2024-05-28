@@ -36,7 +36,6 @@ export const ProductModal = (props: ProductModalProps) => {
   const [loadingSave, setLoadingSave] = useState(false);
   const [productDescription, setProductDescription] = useState("");
   const [productRegularPrice, setProductRegularPrice] = useState("");
-  const [productSalePrice, setProductSalePrice] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<any>(new Set());
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
     new Set()
@@ -48,7 +47,6 @@ export const ProductModal = (props: ProductModalProps) => {
       setProductName(product.name || "");
       setProductDescription(product.description || "");
       setProductRegularPrice(product.regular_price || "");
-      setProductSalePrice(product.sale_price || "");
       setSelectedKeys(
         new Set(
           product.categories
@@ -84,12 +82,12 @@ export const ProductModal = (props: ProductModalProps) => {
       images: product.images,
       description: productDescription,
       regular_price: productRegularPrice,
-      sale_price: productSalePrice,
       categories: selectedCategories,
       stock_status: matchingStockOptionValue,
       userid: userId,
       product_addons: productAddons,
     };
+
     const ignoredParams = [
       "composite_layout",
       "composite_add_to_cart_form_location",
@@ -301,14 +299,6 @@ export const ProductModal = (props: ProductModalProps) => {
                 value={productRegularPrice}
                 fullWidth
                 onChange={(e) => setProductRegularPrice(e.target.value)}
-              />
-            </div>
-            <div className="mb-4">
-              <strong>Sale Price:</strong>{" "}
-              <Input
-                value={productSalePrice}
-                fullWidth
-                onChange={(e) => setProductSalePrice(e.target.value)}
               />
             </div>
             <div className="mb-4">
