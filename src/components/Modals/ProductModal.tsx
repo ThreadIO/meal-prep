@@ -172,13 +172,23 @@ export const ProductModal = (props: ProductModalProps) => {
     return (
       <div className="mb-4">
         <strong>Options:</strong>
-        <div className="overflow-y-auto max-h-60">
+        <div className="overflow-y-auto max-h-60 min-h-50">
           {productAddons[0].options.map((option: any, index: number) => (
             <div key={index} className="mb-4">
               <div className="mb-2">
                 <strong>Label:</strong>
                 <Input
                   value={option.label}
+                  fullWidth
+                  onChange={(e) =>
+                    handleAddonChange(index, "label", e.target.value)
+                  }
+                />
+              </div>
+              <div className="mb-2">
+                <strong>Calories:</strong>
+                <Input
+                  value={option.calories}
                   fullWidth
                   onChange={(e) =>
                     handleAddonChange(index, "label", e.target.value)
@@ -237,11 +247,27 @@ export const ProductModal = (props: ProductModalProps) => {
       return null;
     }
 
-    return (
-      <div className="mb-4">
-        <strong>Nutrition Facts:</strong>
-        <div className="overflow-y-auto max-h-60">
-          {Object.keys(acf).map((key) => (
+    const renderFields = (obj: any) => {
+      return Object.keys(obj).map((key) => {
+        const value = obj[key];
+        if (value === null) {
+          return null;
+        } else if (typeof value === "object") {
+          return (
+            <div key={key} className="mb-2">
+              {isNaN(parseInt(key)) && ( // Check if the key is not an index
+                <strong>
+                  {key
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (char) => char.toUpperCase())}
+                  :
+                </strong>
+              )}
+              {renderFields(value)}
+            </div>
+          );
+        } else {
+          return (
             <div key={key} className="mb-2">
               <strong>
                 {key
@@ -249,51 +275,27 @@ export const ProductModal = (props: ProductModalProps) => {
                   .replace(/\b\w/g, (char) => char.toUpperCase())}
                 :
               </strong>
-              {acf[key].items && acf[key].items.length > 0 ? (
-                <ul>
-                  {acf[key].items.map((item: any, index: number) => (
-                    <li key={index}>
-                      {Object.keys(item).map((subKey) => (
-                        <div key={subKey} className="mb-2">
-                          <strong>
-                            {subKey
-                              .replace(/_/g, " ")
-                              .replace(/\b\w/g, (char) => char.toUpperCase())}
-                            :
-                          </strong>
-                          <Input
-                            value={item[subKey]}
-                            fullWidth
-                            onChange={(e) => {
-                              const updatedItems = [...acf[key].items];
-                              updatedItems[index][subKey] = e.target.value;
-                              setACF({
-                                ...acf,
-                                [key]: { ...acf[key], items: updatedItems },
-                              });
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="mb-2">
-                  <Input
-                    value={acf[key].description || ""}
-                    fullWidth
-                    onChange={(e) =>
-                      setACF({
-                        ...acf,
-                        [key]: { ...acf[key], description: e.target.value },
-                      })
-                    }
-                  />
-                </div>
-              )}
+              <Input
+                value={value}
+                fullWidth
+                onChange={(e) => {
+                  setACF({
+                    ...acf,
+                    [key]: e.target.value,
+                  });
+                }}
+              />
             </div>
-          ))}
+          );
+        }
+      });
+    };
+
+    return (
+      <div className="mb-4">
+        <strong>Nutrition Facts:</strong>
+        <div className="overflow-y-auto max-h-60 min-h-50">
+          {renderFields(acf)}
         </div>
       </div>
     );
