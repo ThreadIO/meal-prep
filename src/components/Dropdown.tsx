@@ -64,7 +64,15 @@ const DropdownComponent = (props: DropdownProps) => {
 
   const renderDropdownTrigger = () => {
     return (
-      <Button variant="bordered" className="capitalize" color={color}>
+      // <button>
+      //   {selectedValue}
+      //   {renderPagination()}
+      // </button>
+      <Button
+        variant="bordered"
+        className="capitalize min-h-[40px]"
+        color={color}
+      >
         {selectedValue}
         {renderPagination()}
       </Button>
@@ -87,7 +95,7 @@ const DropdownComponent = (props: DropdownProps) => {
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
   return (
     <Dropdown
-      onOpenChange={(open) => {
+      onOpenChange={(open: boolean) => {
         setDropdownOpen(open);
       }}
     >

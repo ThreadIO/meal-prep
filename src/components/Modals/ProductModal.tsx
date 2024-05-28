@@ -41,6 +41,7 @@ export const ProductModal = (props: ProductModalProps) => {
     new Set()
   );
   const [productAddons, setProductAddons] = useState<any[]>([]);
+  const [acf, setACF] = useState<any>({});
 
   useEffect(() => {
     if (product) {
@@ -62,6 +63,7 @@ export const ProductModal = (props: ProductModalProps) => {
         ])
       );
       setProductAddons(product.product_addons || []);
+      setACF(product.acf || {});
     }
   }, [product]);
 
@@ -161,68 +163,137 @@ export const ProductModal = (props: ProductModalProps) => {
     );
   };
 
-  const renderNutritionFacts = () => {
+  const renderOptions = () => {
     if (productAddons.length === 0 || !productAddons[0].options) {
       return null;
     }
 
     return (
-      <div className="mb-4 overflow-y-scroll max-h-60">
+      <div className="mb-4">
+        <strong>Options:</strong>
+        <div className="overflow-y-auto max-h-60">
+          {productAddons[0].options.map((option: any, index: number) => (
+            <div key={index} className="mb-4">
+              <div className="mb-2">
+                <strong>Label:</strong>
+                <Input
+                  value={option.label}
+                  fullWidth
+                  onChange={(e) =>
+                    handleAddonChange(index, "label", e.target.value)
+                  }
+                />
+              </div>
+              <div className="mb-2">
+                <strong>Carbs:</strong>
+                <Input
+                  value={option.carbs}
+                  fullWidth
+                  onChange={(e) =>
+                    handleAddonChange(index, "carbs", e.target.value)
+                  }
+                />
+              </div>
+              <div className="mb-2">
+                <strong>Fat:</strong>
+                <Input
+                  value={option.fat}
+                  fullWidth
+                  onChange={(e) =>
+                    handleAddonChange(index, "fat", e.target.value)
+                  }
+                />
+              </div>
+              <div className="mb-2">
+                <strong>Protein:</strong>
+                <Input
+                  value={option.protein}
+                  fullWidth
+                  onChange={(e) =>
+                    handleAddonChange(index, "protein", e.target.value)
+                  }
+                />
+              </div>
+              <div className="mb-2">
+                <strong>Price:</strong>
+                <Input
+                  value={option.price}
+                  fullWidth
+                  onChange={(e) =>
+                    handleAddonChange(index, "price", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderNutritionFacts = () => {
+    if (Object.keys(acf).length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mb-4">
         <strong>Nutrition Facts:</strong>
-        {productAddons[0].options.map((option: any, index: number) => (
-          <div key={index} className="mb-4">
-            <div className="mb-2">
-              <strong>Label:</strong>
-              <Input
-                value={option.label}
-                fullWidth
-                onChange={(e) =>
-                  handleAddonChange(index, "label", e.target.value)
-                }
-              />
+        <div className="overflow-y-auto max-h-60">
+          {Object.keys(acf).map((key) => (
+            <div key={key} className="mb-2">
+              <strong>
+                {key
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (char) => char.toUpperCase())}
+                :
+              </strong>
+              {acf[key].items && acf[key].items.length > 0 ? (
+                <ul>
+                  {acf[key].items.map((item: any, index: number) => (
+                    <li key={index}>
+                      {Object.keys(item).map((subKey) => (
+                        <div key={subKey} className="mb-2">
+                          <strong>
+                            {subKey
+                              .replace(/_/g, " ")
+                              .replace(/\b\w/g, (char) => char.toUpperCase())}
+                            :
+                          </strong>
+                          <Input
+                            value={item[subKey]}
+                            fullWidth
+                            onChange={(e) => {
+                              const updatedItems = [...acf[key].items];
+                              updatedItems[index][subKey] = e.target.value;
+                              setACF({
+                                ...acf,
+                                [key]: { ...acf[key], items: updatedItems },
+                              });
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="mb-2">
+                  <Input
+                    value={acf[key].description || ""}
+                    fullWidth
+                    onChange={(e) =>
+                      setACF({
+                        ...acf,
+                        [key]: { ...acf[key], description: e.target.value },
+                      })
+                    }
+                  />
+                </div>
+              )}
             </div>
-            <div className="mb-2">
-              <strong>Carbs:</strong>
-              <Input
-                value={option.carbs}
-                fullWidth
-                onChange={(e) =>
-                  handleAddonChange(index, "carbs", e.target.value)
-                }
-              />
-            </div>
-            <div className="mb-2">
-              <strong>Fat:</strong>
-              <Input
-                value={option.fat}
-                fullWidth
-                onChange={(e) =>
-                  handleAddonChange(index, "fat", e.target.value)
-                }
-              />
-            </div>
-            <div className="mb-2">
-              <strong>Protein:</strong>
-              <Input
-                value={option.protein}
-                fullWidth
-                onChange={(e) =>
-                  handleAddonChange(index, "protein", e.target.value)
-                }
-              />
-            </div>
-            <div className="mb-2">
-              <strong>Price:</strong>
-              <Input
-                value={option.price}
-                fullWidth
-                onChange={(e) =>
-                  handleAddonChange(index, "price", e.target.value)
-                }
-              />
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   };
@@ -250,12 +321,12 @@ export const ProductModal = (props: ProductModalProps) => {
   const renderImage = () => {
     if (productImage && Object.keys(productImage).length !== 0) {
       return (
-        <div className="relative w-full h-60">
+        <div className="relative h-60 mb-4 flex justify-center items-center">
           <Image
             src={productImage.src}
             alt={"Product Image"}
-            fill
-            sizes="100vw"
+            width={100}
+            height={100}
             style={{
               objectFit: "contain",
               objectPosition: "center",
@@ -282,10 +353,11 @@ export const ProductModal = (props: ProductModalProps) => {
                 onChange={(e) => setProductName(e.target.value)}
               />
             </div>
-            {renderCategoryDropdown()}
             {renderImage()}
+            {renderCategoryDropdown()}
             {renderStockStatusDropdown()}
             {renderNutritionFacts()}
+            {renderOptions()}
             <div className="mb-4">
               <strong>Price:</strong>{" "}
               {(parseFloat(product.price) || 0).toLocaleString("en-US", {
@@ -330,3 +402,5 @@ export const ProductModal = (props: ProductModalProps) => {
     </Modal>
   );
 };
+
+export default ProductModal;
