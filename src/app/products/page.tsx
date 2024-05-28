@@ -8,6 +8,7 @@ import { Button, Spinner, Tooltip } from "@nextui-org/react";
 import ProductCard from "@/components/Product/ProductCard";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import Dropdown from "@/components/Dropdown";
+import FilterDropdown from "@/components/FilterDropdown";
 import { getData } from "@/helpers/frontend";
 import { StockStatusOptions } from "@/helpers/utils";
 import { LayoutGrid, Table as TableIcon } from "lucide-react";
@@ -77,36 +78,28 @@ const Products = () => {
   };
 
   const renderFilterDropdown = () => {
-    const handleSelectionChange = (keys: Set<any>) => {
-      // Convert set to array for easier manipulation
-      const newSelectedKeys = new Set(keys);
-      // Check if "All" is selected and there are other selections
-      if (newSelectedKeys.has("All")) {
-        // Only keep "All" in the selection
-        if (selectedKeys.has("All")) {
-          newSelectedKeys.delete("All");
-          setSelectedKeys(newSelectedKeys);
-        } else {
-          setSelectedKeys(new Set(["All"]));
-        }
-      } else {
-        setSelectedKeys(newSelectedKeys);
-      }
-    };
+    // const handleSelectionChange = (keys: Set<any>) => {
+    //   // Convert set to array for easier manipulation
+    //   const newSelectedKeys = new Set(keys);
+    //   // Check if "All" is selected and there are other selections
+    //   if (newSelectedKeys.has("All")) {
+    //     // Only keep "All" in the selection
+    //     if (selectedKeys.has("All")) {
+    //       newSelectedKeys.delete("All");
+    //       setSelectedKeys(newSelectedKeys);
+    //     } else {
+    //       setSelectedKeys(new Set(["All"]));
+    //     }
+    //   } else {
+    //     setSelectedKeys(newSelectedKeys);
+    //   }
+    // };
 
     return (
-      <Dropdown
-        aria_label="Multiple selection example"
-        variant="flat"
-        closeOnSelect={false}
-        disallowEmptySelection
-        selectionMode="multiple"
+      <FilterDropdown
         selectedKeys={selectedKeys}
-        onSelectionChange={handleSelectionChange}
-        items={[
-          { name: "All" },
-          ...categories.map((category) => ({ name: category.name })),
-        ]}
+        setSelectedKeys={setSelectedKeys}
+        categories={categories}
       />
     );
   };
