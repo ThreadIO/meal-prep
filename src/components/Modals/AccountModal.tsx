@@ -9,10 +9,6 @@ import {
   Button,
   Input,
   Spinner,
-  // Dropdown,
-  // DropdownTrigger,
-  // DropdownMenu,
-  // DropdownItem,
 } from "@nextui-org/react";
 import {
   useLogoutFunction,
@@ -42,8 +38,10 @@ export const AccountModal = (props: AccountModalProps) => {
   const [clientKey, setClientKey] = useState("");
   const [clientSecret, setClientSecret] = useState("");
   const [url, setUrl] = useState("");
+  const [username, setUsername] = useState("");
+  const [applicationPassword, setApplicationPassword] = useState("");
   const [oldSettings, setOldSettings] = useState<any>({});
-  const [error, setError] = useState("");
+  // const [error, setError] = useState("");
   const [openUpdate, setOpenUpdate] = useState(false);
   const { isLoading: userSettingsAreLoading, data: userData } = useQuery(
     ["users", userid || ""],
@@ -53,6 +51,11 @@ export const AccountModal = (props: AccountModalProps) => {
   useEffect(() => {
     if (!userSettingsAreLoading && userData && userData.success !== false) {
       setSettings(userData);
+      setClientKey(userData.settings.client_key || "");
+      setClientSecret(userData.settings.client_secret || "");
+      setUrl(userData.settings.url || "");
+      setUsername(userData.settings.username || "");
+      setApplicationPassword(userData.settings.application_password || "");
     }
   }, [userData, userSettingsAreLoading]);
 
@@ -60,7 +63,13 @@ export const AccountModal = (props: AccountModalProps) => {
   const createMutation = useMutation(
     (data: {
       userId: string;
-      settings: { client_key: string; client_secret: string; url: string };
+      settings: {
+        client_key: string;
+        client_secret: string;
+        url: string;
+        username: string;
+        application_password: string;
+      };
     }) => createUser(data.userId, data.settings),
     {
       onSuccess: () => {
@@ -101,42 +110,43 @@ export const AccountModal = (props: AccountModalProps) => {
 
   function handleSetSettings() {
     console.log("userData: ", userData);
-    if (!clientKey || !clientSecret) {
-      setError("Please input both Client Key/Client Secret");
-      return;
-    } else {
-      setError("");
-    }
+    // if (!clientKey || !clientSecret) {
+    //   setError("Please input both Client Key/Client Secret");
+    //   return;
+    // } else {
+    //   setError("");
+    // }
     if (!user) {
       console.log("Something weird is happenin");
       return;
-    } else if (userData == 0 || userData == null) {
+    }
+
+    const updateBody: any = {};
+    if (clientKey) updateBody.client_key = clientKey;
+    if (clientSecret) updateBody.client_secret = clientSecret;
+    if (url) updateBody.url = url;
+    if (username) updateBody.username = username;
+    if (applicationPassword)
+      updateBody.application_password = applicationPassword;
+
+    if (userData == 0 || userData == null) {
       console.log("Creating new user settings");
       createMutation.mutate({
         userId: user.userId,
-        settings: {
-          client_key: clientKey,
-          client_secret: clientSecret,
-          url: url,
-        },
+        settings: updateBody,
       });
       setOpenUpdate(false);
     } else {
       console.log("Updating user settings");
       patchMutation.mutate({
         userid: user.userId,
-        body: {
-          settings: {
-            client_key: clientKey,
-            client_secret: clientSecret,
-            url: url,
-          },
-        },
+        body: { settings: updateBody },
       });
       setOpenUpdate(false);
     }
     return;
   }
+
   const renderSettings = () => {
     if (userSettingsAreLoading) {
       console.log("loading user settings...");
@@ -173,9 +183,20 @@ export const AccountModal = (props: AccountModalProps) => {
             placeholder="Company Url"
             onChange={(e) => setUrl(e.target.value)}
           />
-          {error && (
+          <Input
+            value={username}
+            placeholder="Username"
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <Input
+            value={applicationPassword}
+            placeholder="Application Password"
+            onChange={(e) => setApplicationPassword(e.target.value)}
+            type={"password"}
+          />
+          {/* {error && (
             <div style={{ color: "red", marginTop: "10px" }}>{error}</div>
-          )}
+          )} */}
           <Button
             color="primary"
             style={{ margin: "10px" }}
@@ -226,9 +247,6 @@ export const AccountModal = (props: AccountModalProps) => {
                 Account Information
               </ModalHeader>
               <ModalBody>
-                {/* {user?.getOrgs()?.length ??
-                  (0 > 1 && (
-                  ))} */}
                 {renderSettings()}
                 <Button
                   color="primary"

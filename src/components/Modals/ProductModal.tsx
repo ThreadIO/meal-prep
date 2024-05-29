@@ -487,7 +487,6 @@ export const ProductModal = (props: ProductModalProps) => {
     }
   };
 
-  console.log("Render ACF: ", acf);
   const renderModalContent = () => {
     return (
       <ModalContent>

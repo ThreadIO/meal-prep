@@ -1,6 +1,7 @@
 import User from "@/models/user.model";
 import { NextResponse } from "next/server";
 import { encryptField } from "@/helpers/encrypt";
+
 export async function getUser(userid: string) {
   try {
     const user = await User.findOne({ userid: userid });
@@ -33,9 +34,16 @@ export async function createUser(userid: string, settings: any) {
     // }
     console.log("Data: ", data);
     console.log("Settings: ", settings);
-    if (settings.client_key && settings.client_secret) {
+    if (
+      settings.client_key &&
+      settings.client_secret &&
+      settings.application_password
+    ) {
       settings.client_key = encryptField(settings.client_key);
       settings.client_secret = encryptField(settings.client_secret);
+      settings.application_password = encryptField(
+        settings.application_password
+      );
     }
     const newUser = {
       userid: userid,
@@ -67,7 +75,7 @@ export async function deleteUser(userid: string) {
   }
 }
 
-export async function patchUser(userid: string, body = {}) {
+export async function patchUser(userid: string, body: any = {}) {
   try {
     console.log("UserId ID: ", userid);
     if (!userid)
@@ -75,21 +83,42 @@ export async function patchUser(userid: string, body = {}) {
         success: false,
         error: "No user id present...!",
       });
-    if (
-      (body as any) &&
-      (body as any).settings &&
-      (body as any).settings.client_key &&
-      (body as any).settings.client_secret
-    ) {
-      (body as any).settings.client_key = encryptField(
-        (body as any).settings.client_key
-      );
-      (body as any).settings.client_secret = encryptField(
-        (body as any).settings.client_secret
-      );
+
+    const updateFields: any = {};
+
+    if (body.settings) {
+      if (body.settings.client_key) {
+        updateFields["settings.client_key"] = encryptField(
+          body.settings.client_key
+        );
+      }
+      if (body.settings.client_secret) {
+        updateFields["settings.client_secret"] = encryptField(
+          body.settings.client_secret
+        );
+      }
+      if (body.settings.url) {
+        updateFields["settings.url"] = body.settings.url;
+      }
+      if (body.settings.username) {
+        updateFields["settings.username"] = body.settings.username;
+      }
+      if (body.settings.application_password) {
+        updateFields["settings.application_password"] = encryptField(
+          body.settings.application_password
+        );
+      }
     }
-    await User.updateMany({ userid: userid }, body);
-    return NextResponse.json({ success: true, updated: userid });
+
+    if (Object.keys(updateFields).length > 0) {
+      await User.updateOne({ userid: userid }, { $set: updateFields });
+      return NextResponse.json({ success: true, updated: userid });
+    } else {
+      return NextResponse.json({
+        success: false,
+        error: "No valid fields to update",
+      });
+    }
   } catch (error) {
     return NextResponse.json({ success: false, error: error });
   }

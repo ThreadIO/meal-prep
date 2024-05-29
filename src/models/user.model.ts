@@ -6,6 +6,8 @@ const UserSchema = new Schema({
     client_key: String,
     client_secret: String,
     url: String,
+    username: String,
+    application_password: String,
   },
 });
 
