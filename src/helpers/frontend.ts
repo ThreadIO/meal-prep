@@ -74,3 +74,7 @@ export const getCategories = async (
     body
   );
 };
+
+export const findObjectByValue = (array: any[], key: string, value: any) => {
+  return array.find((obj) => obj[key] === value);
+};

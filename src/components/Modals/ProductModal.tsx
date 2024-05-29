@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import { createProduct, patchProduct } from "@/helpers/request";
 import { useUser } from "@propelauth/nextjs/client";
 import Dropdown from "@/components/Dropdown";
+import { findObjectByValue } from "@/helpers/frontend";
 
 interface ProductModalProps {
   product: any;
@@ -242,64 +243,64 @@ export const ProductModal = (props: ProductModalProps) => {
     );
   };
 
-  const renderNutritionFacts = () => {
-    if (Object.keys(acf).length === 0) {
-      return null;
-    }
+  // const renderNutritionFacts = () => {
+  //   if (Object.keys(acf).length === 0) {
+  //     return null;
+  //   }
 
-    const renderFields = (obj: any) => {
-      return Object.keys(obj).map((key) => {
-        const value = obj[key];
-        if (value === null) {
-          return null;
-        } else if (typeof value === "object") {
-          return (
-            <div key={key} className="mb-2">
-              {isNaN(parseInt(key)) && ( // Check if the key is not an index
-                <strong>
-                  {key
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (char) => char.toUpperCase())}
-                  :
-                </strong>
-              )}
-              {renderFields(value)}
-            </div>
-          );
-        } else {
-          return (
-            <div key={key} className="mb-2">
-              <strong>
-                {key
-                  .replace(/_/g, " ")
-                  .replace(/\b\w/g, (char) => char.toUpperCase())}
-                :
-              </strong>
-              <Input
-                value={value}
-                fullWidth
-                onChange={(e) => {
-                  setACF({
-                    ...acf,
-                    [key]: e.target.value,
-                  });
-                }}
-              />
-            </div>
-          );
-        }
-      });
-    };
+  //   const renderFields = (obj: any) => {
+  //     return Object.keys(obj).map((key) => {
+  //       const value = obj[key];
+  //       if (value === null) {
+  //         return null;
+  //       } else if (typeof value === "object") {
+  //         return (
+  //           <div key={key} className="mb-2">
+  //             {isNaN(parseInt(key)) && ( // Check if the key is not an index
+  //               <strong>
+  //                 {key
+  //                   .replace(/_/g, " ")
+  //                   .replace(/\b\w/g, (char) => char.toUpperCase())}
+  //                 :
+  //               </strong>
+  //             )}
+  //             {renderFields(value)}
+  //           </div>
+  //         );
+  //       } else {
+  //         return (
+  //           <div key={key} className="mb-2">
+  //             <strong>
+  //               {key
+  //                 .replace(/_/g, " ")
+  //                 .replace(/\b\w/g, (char) => char.toUpperCase())}
+  //               :
+  //             </strong>
+  //             <Input
+  //               value={value}
+  //               fullWidth
+  //               onChange={(e) => {
+  //                 setACF({
+  //                   ...acf,
+  //                   [key]: e.target.value,
+  //                 });
+  //               }}
+  //             />
+  //           </div>
+  //         );
+  //       }
+  //     });
+  //   };
 
-    return (
-      <div className="mb-4">
-        <strong>Nutrition Facts:</strong>
-        <div className="overflow-y-auto max-h-60 min-h-50">
-          {renderFields(acf)}
-        </div>
-      </div>
-    );
-  };
+  //   return (
+  //     <div className="mb-4">
+  //       <strong>Nutrition Facts:</strong>
+  //       <div className="overflow-y-auto max-h-60 min-h-50">
+  //         {renderFields(acf)}
+  //       </div>
+  //     </div>
+  //   );
+  // };
 
   const renderContent = () => {
     if (loading) {
@@ -340,6 +341,137 @@ export const ProductModal = (props: ProductModalProps) => {
     }
   };
 
+  const renderPriceDetails = () => {
+    return (
+      <>
+        <div className="mb-4">
+          <strong>Price:</strong>{" "}
+          {(parseFloat(product.price) || 0).toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+          })}
+        </div>
+        <div className="mb-4">
+          <strong>Regular Price:</strong>{" "}
+          <Input
+            value={productRegularPrice}
+            fullWidth
+            onChange={(e) => setProductRegularPrice(e.target.value)}
+          />
+        </div>
+      </>
+    );
+  };
+
+  const renderDescription = () => {
+    return (
+      <div className="mb-4">
+        <strong>Description:</strong>
+        <Input
+          value={productDescription}
+          fullWidth
+          onChange={(e) => setProductDescription(e.target.value)}
+        />
+      </div>
+    );
+  };
+
+  const renderProductSettings = () => {
+    if (acf && acf.facts) {
+      const items = acf.facts.items;
+      const fatObj = findObjectByValue(items, "label", "fat");
+      const carbsObj = findObjectByValue(items, "label", "carbs");
+      const proteinObj = findObjectByValue(items, "label", "protein");
+      return (
+        <>
+          <div className="mb-4">
+            <strong>Product Settings: </strong>
+          </div>
+          <div className="mb-2">
+            <strong>Nutrition Facts: </strong>
+          </div>
+          <div className="mb-2">
+            <strong>Calories: </strong>
+            <Input
+              value={acf.facts.calories}
+              fullWidth
+              onChange={(e) => {
+                setACF({
+                  ...acf,
+                  facts: {
+                    ...acf.facts,
+                    calories: e.target.value,
+                  },
+                });
+              }}
+            />
+          </div>
+          <div className="mb-2">
+            <strong>Fat: </strong>
+            <Input
+              value={fatObj.amount}
+              fullWidth
+              onChange={(e) => {
+                setACF({
+                  ...acf,
+                  facts: {
+                    ...acf.facts,
+                    items: acf.facts.items.map((item: any) =>
+                      item.label === "fat"
+                        ? { ...item, amount: e.target.value }
+                        : item
+                    ),
+                  },
+                });
+              }}
+            />
+          </div>
+          <div className="mb-2">
+            <strong>Carbs: </strong>
+            <Input
+              value={carbsObj.amount}
+              fullWidth
+              onChange={(e) => {
+                setACF({
+                  ...acf,
+                  facts: {
+                    ...acf.facts,
+                    items: acf.facts.items.map((item: any) =>
+                      item.label === "carbs"
+                        ? { ...item, amount: e.target.value }
+                        : item
+                    ),
+                  },
+                });
+              }}
+            />
+          </div>
+          <div className="mb-2">
+            <strong>Protein: </strong>
+            <Input
+              value={proteinObj.amount}
+              fullWidth
+              onChange={(e) => {
+                setACF({
+                  ...acf,
+                  facts: {
+                    ...acf.facts,
+                    items: acf.facts.items.map((item: any) =>
+                      item.label === "protein"
+                        ? { ...item, amount: e.target.value }
+                        : item
+                    ),
+                  },
+                });
+              }}
+            />
+          </div>
+        </>
+      );
+    }
+  };
+
+  console.log("Render ACF: ", acf);
   const renderModalContent = () => {
     return (
       <ModalContent>
@@ -359,31 +491,11 @@ export const ProductModal = (props: ProductModalProps) => {
             {renderImage()}
             {renderCategoryDropdown()}
             {renderStockStatusDropdown()}
-            {renderNutritionFacts()}
+            {/* {renderNutritionFacts()} */}
+            {renderPriceDetails()}
+            {renderDescription()}
+            {renderProductSettings()}
             {renderOptions()}
-            <div className="mb-4">
-              <strong>Price:</strong>{" "}
-              {(parseFloat(product.price) || 0).toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-              })}
-            </div>
-            <div className="mb-4">
-              <strong>Regular Price:</strong>{" "}
-              <Input
-                value={productRegularPrice}
-                fullWidth
-                onChange={(e) => setProductRegularPrice(e.target.value)}
-              />
-            </div>
-            <div className="mb-4">
-              <strong>Description:</strong>
-              <Input
-                value={productDescription}
-                fullWidth
-                onChange={(e) => setProductDescription(e.target.value)}
-              />
-            </div>
           </ModalBody>
           <ModalFooter>
             <Button
