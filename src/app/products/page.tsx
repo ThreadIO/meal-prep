@@ -9,7 +9,7 @@ import ProductCard from "@/components/Product/ProductCard";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import Dropdown from "@/components/Dropdown";
 import FilterDropdown from "@/components/FilterDropdown";
-import { getData } from "@/helpers/frontend";
+import { getData, getCategories } from "@/helpers/frontend";
 import { StockStatusOptions } from "@/helpers/utils";
 import { LayoutGrid, Table as TableIcon } from "lucide-react";
 import ProductTable from "@/components/Product/ProductTable";
@@ -44,26 +44,9 @@ const Products = () => {
       setError,
       setProductsLoading,
       body,
-      getCategories
-    );
-  };
-
-  const getCategories = async () => {
-    const url = "/api/woocommerce/getproducts/getcategories";
-    const method = "POST";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    const body = { userid: user?.userId };
-    getData(
-      "categories",
-      url,
-      method,
-      headers,
-      setCategories,
-      setError,
-      setCategoriesLoading,
-      body
+      () => {
+        getCategories(user, setCategories, setError, setCategoriesLoading);
+      }
     );
   };
 
@@ -78,23 +61,6 @@ const Products = () => {
   };
 
   const renderFilterDropdown = () => {
-    // const handleSelectionChange = (keys: Set<any>) => {
-    //   // Convert set to array for easier manipulation
-    //   const newSelectedKeys = new Set(keys);
-    //   // Check if "All" is selected and there are other selections
-    //   if (newSelectedKeys.has("All")) {
-    //     // Only keep "All" in the selection
-    //     if (selectedKeys.has("All")) {
-    //       newSelectedKeys.delete("All");
-    //       setSelectedKeys(newSelectedKeys);
-    //     } else {
-    //       setSelectedKeys(new Set(["All"]));
-    //     }
-    //   } else {
-    //     setSelectedKeys(newSelectedKeys);
-    //   }
-    // };
-
     return (
       <FilterDropdown
         selectedKeys={selectedKeys}

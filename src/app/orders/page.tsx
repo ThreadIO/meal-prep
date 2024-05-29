@@ -1,7 +1,7 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
 import { Button, Spinner, Input } from "@nextui-org/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import React from "react";
@@ -10,7 +10,8 @@ import { saveAs } from "file-saver";
 import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
 import { useOrgContext } from "@/components/OrgContext";
 import { not_products } from "@/helpers/utils";
-import { getData } from "@/helpers/frontend";
+import { getCategories, getData } from "@/helpers/frontend";
+import FilterDropdown from "@/components/FilterDropdown";
 export default function OrdersPage() {
   const { loading, isLoggedIn, user } = useUser();
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); // Default to today's date
@@ -18,7 +19,11 @@ export default function OrdersPage() {
     new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
   );
   const [orders, setOrders] = useState<any[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
+  const [selectedKeys, setSelectedKeys] = useState<any>(new Set(["All"]));
   const [ingredients, setIngredients] = useState<any>({});
   const [ingredientsLoading, setIngredientsLoading] = useState<boolean>(false);
   const [showLineItems, setShowLineItems] = useState(true);
@@ -47,13 +52,53 @@ export default function OrdersPage() {
       url,
       method,
       headers,
-      setOrders,
+      (data) => {
+        setOrders(data);
+        setFilteredOrders(data);
+      },
       setError,
       setOrdersLoading,
       body,
-      () => setShowOrders(true),
+      () => {
+        setShowOrders(true);
+        getCategories(user, setCategories, setError, setCategoriesLoading);
+      },
       getIngredients,
       transformOrdersData
+    );
+  };
+
+  useEffect(() => {
+    const filtered = getFilteredOrders(orders, selectedKeys);
+    setFilteredOrders(filtered);
+  }, [selectedKeys, orders]);
+
+  const getFilteredOrders = (orders: any[], selectedKeys: Set<string>) => {
+    return orders
+      .map((order) => ({
+        ...order,
+        line_items: order.line_items.filter((item: any) => {
+          if (selectedKeys.has("All")) {
+            return true;
+          }
+          const itemCategories = item.product_data.categories.map(
+            (category: any) => category.name
+          );
+          return Array.from(selectedKeys).every((selectedCategory: any) =>
+            itemCategories.includes(selectedCategory)
+          );
+        }),
+      }))
+      .filter((order) => order.line_items.length > 0); // Ensure orders with no matching line items are filtered out
+  };
+
+  const renderFilterDropdown = () => {
+    return (
+      <FilterDropdown
+        selectedKeys={selectedKeys}
+        setSelectedKeys={setSelectedKeys}
+        categories={categories}
+      />
     );
   };
 
@@ -359,20 +404,18 @@ export default function OrdersPage() {
     return csvData.map((row) => row.join(",")).join("\n");
   };
 
-  const generateFilteredCsvData = (orders: any[]) => {
-    const filteredOrders: any[] = [];
+  const generateFilteredCsvData = (filteredOrders: any[]) => {
+    // orders.forEach((order) => {
+    //   const filteredLineItems = order.line_items.filter(
+    //     (item: any) => parseInt(item.product_data.acf?.facts?.calories) > 0
+    //   );
 
-    orders.forEach((order) => {
-      const filteredLineItems = order.line_items.filter(
-        (item: any) => parseInt(item.product_data.acf?.facts?.calories) > 0
-      );
-
-      if (filteredLineItems.length > 0) {
-        // If there are line items with non-zero calories, include the order with filtered line items
-        const filteredOrder = { ...order, line_items: filteredLineItems };
-        filteredOrders.push(filteredOrder);
-      }
-    });
+    //   if (filteredLineItems.length > 0) {
+    //     // If there are line items with non-zero calories, include the order with filtered line items
+    //     const filteredOrder = { ...order, line_items: filteredLineItems };
+    //     filteredOrders.push(filteredOrder);
+    //   }
+    // });
 
     // Generate CSV data from filtered orders
     const filteredCsvData = generateFullCsvData(filteredOrders);
@@ -454,7 +497,7 @@ export default function OrdersPage() {
         <StyledButton
           onClick={() =>
             downloadCsv(
-              generateFilteredCsvData(orders),
+              generateFilteredCsvData(filteredOrders),
               `orders-${startDate}-${endDate}-filtered.csv`
             )
           }
@@ -472,7 +515,8 @@ export default function OrdersPage() {
   const renderOrdersContent = () => {
     if (
       (ordersLoading && showOrders) ||
-      (ingredientsLoading && showIngredients)
+      (ingredientsLoading && showIngredients) ||
+      categoriesLoading
     ) {
       return renderLoading();
     } else if (showIngredients) {
@@ -568,7 +612,7 @@ export default function OrdersPage() {
     const calculateMealSum = () => {
       const mealSum: { [key: string]: number } = {}; // Define mealSum with type annotation
 
-      orders.forEach((order) => {
+      filteredOrders.forEach((order) => {
         order.line_items.forEach((item: any) => {
           if (mealSum[item.name]) {
             mealSum[item.name] += item.quantity;
@@ -593,7 +637,7 @@ export default function OrdersPage() {
 
     // Function to render individual order details with line items
     const renderLineItems = () => {
-      return orders.map((order, index) => (
+      return filteredOrders.map((order, index) => (
         <div key={index} style={{ marginBottom: "20px" }}>
           <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
           {order.billing.first_name} {order.billing.last_name}{" "}
@@ -636,6 +680,7 @@ export default function OrdersPage() {
           alignItems: "center",
         }}
       >
+        {renderFilterDropdown()}
         <div
           style={{
             display: "flex",

@@ -50,3 +50,27 @@ export const getData = async (
     setLoading(false); // This directly uses the setLoading parameter
   }
 };
+
+export const getCategories = async (
+  user: any,
+  setCategories: (categories: any) => void,
+  setError: (error: any) => void,
+  setCategoriesLoading: (loading: boolean) => void
+) => {
+  const url = "/api/woocommerce/getproducts/getcategories";
+  const method = "POST";
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  const body = { userid: user?.userId };
+  getData(
+    "categories",
+    url,
+    method,
+    headers,
+    setCategories,
+    setError,
+    setCategoriesLoading,
+    body
+  );
+};
