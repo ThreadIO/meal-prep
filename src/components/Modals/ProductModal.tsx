@@ -391,6 +391,22 @@ export const ProductModal = (props: ProductModalProps) => {
             <strong>Nutrition Facts: </strong>
           </div>
           <div className="mb-2">
+            <strong>Ingredients: </strong>
+            <Input
+              value={acf.ingredients.description}
+              fullWidth
+              onChange={(e) => {
+                setACF({
+                  ...acf,
+                  ingredients: {
+                    ...acf.ingredients,
+                    description: e.target.value,
+                  },
+                });
+              }}
+            />
+          </div>
+          <div className="mb-2">
             <strong>Calories: </strong>
             <Input
               value={acf.facts.calories}
