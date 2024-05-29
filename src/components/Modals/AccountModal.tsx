@@ -51,11 +51,7 @@ export const AccountModal = (props: AccountModalProps) => {
   useEffect(() => {
     if (!userSettingsAreLoading && userData && userData.success !== false) {
       setSettings(userData);
-      setClientKey(userData.settings.client_key || "");
-      setClientSecret(userData.settings.client_secret || "");
       setUrl(userData.settings.url || "");
-      setUsername(userData.settings.username || "");
-      setApplicationPassword(userData.settings.application_password || "");
     }
   }, [userData, userSettingsAreLoading]);
 

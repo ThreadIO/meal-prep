@@ -4,12 +4,12 @@ import { format } from "date-fns";
 import { getUser } from "@/controller/user.controller";
 import { decryptField } from "@/helpers/encrypt";
 
-function getHeaders(client_key: string, client_secret: string) {
-  const decryptedKey = decryptField(client_key);
-  const decryptedSecret = decryptField(client_secret);
-  const auth = Buffer.from(`${decryptedKey}:${decryptedSecret}`).toString(
-    "base64"
-  );
+function getHeaders(username: string, application_password: string) {
+  const decryptedUsername = decryptField(username);
+  const decryptedApplicationPassword = decryptField(application_password);
+  const auth = Buffer.from(
+    `${decryptedUsername}:${decryptedApplicationPassword}`
+  ).toString("base64");
   return {
     Authorization: `Basic ${auth}`,
     "Content-Type": "application/json",
@@ -36,8 +36,8 @@ export async function getAll(
     const endpoint = `${company_url}/wp-json/wp/v2/${object}?per_page=100`;
 
     const headers = getHeaders(
-      user.settings.client_key,
-      user.settings.client_secret
+      user.settings.username,
+      user.settings.application_password
     );
 
     // Fetch data from the wordpress API
@@ -113,8 +113,8 @@ export async function get(userid: string, object: string, objectid: string) {
   // Extract necessary data from user settings
   const company_url = user.settings.url;
   const headers = getHeaders(
-    user.settings.client_key,
-    user.settings.client_secret
+    user.settings.username,
+    user.settings.application_password
   );
   const endpoint = `${company_url}/wp-json/wp/v2/${object}/${objectid}`;
   const response = await fetch(endpoint, {
@@ -136,8 +136,8 @@ export async function post(userid: string, object: string, body: any) {
   // Extract necessary data from user settings
   const company_url = user.settings.url;
   const headers = getHeaders(
-    user.settings.client_key,
-    user.settings.client_secret
+    user.settings.username,
+    user.settings.application_password
   );
   const endpoint = `${company_url}/wp-json/wp/v2/${object}`;
   const response = await fetch(endpoint, {
@@ -146,6 +146,37 @@ export async function post(userid: string, object: string, body: any) {
     body: JSON.stringify(body),
   });
   const data = await response.json();
+  return NextResponse.json({ success: true, data: data }, { status: 200 });
+}
+
+export async function post_one(
+  userid: string,
+  object: string,
+  objectid: string,
+  body: any,
+  filters: string = ""
+) {
+  console.log("Inside post wordpress helper function");
+  console.log("Object: ", object);
+  console.log("Body: ", body);
+  // Retrieve user data
+  const user_response = await (await getUser(userid)).json();
+  const user = user_response.data;
+
+  // Extract necessary data from user settings
+  const company_url = user.settings.url;
+  const headers = getHeaders(
+    user.settings.username,
+    user.settings.application_password
+  );
+  const endpoint = `${company_url}/wp-json/wp/v2/${object}/${objectid}${filters}`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  console.log("WP Data: ", data);
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
@@ -166,8 +197,8 @@ export async function patch(
   // Extract necessary data from user settings
   const company_url = user.settings.url;
   const headers = getHeaders(
-    user.settings.client_key,
-    user.settings.client_secret
+    user.settings.username,
+    user.settings.application_password
   );
   const endpoint = `${company_url}/wp-json/wp/v2/${object}/${objectid}`;
   const response = await fetch(endpoint, {
@@ -191,8 +222,8 @@ export async function remove(userid: string, object: string, objectid: string) {
   // Extract necessary data from user settings
   const company_url = user.settings.url;
   const headers = getHeaders(
-    user.settings.client_key,
-    user.settings.client_secret
+    user.settings.username,
+    user.settings.application_password
   );
   const endpoint = `${company_url}/wp-json/wp/v2/${object}/${objectid}`;
   const response = await fetch(endpoint, {
@@ -222,4 +253,68 @@ export function filterProductAddons(meta_data: any, product_addons: any) {
   }
 
   return filteredMetaData;
+}
+
+export function convertACF(wc_acf: any) {
+  console.log("Converting ACF: ", wc_acf);
+
+  const productSettings: any[] = [];
+
+  // Transform Nutrition Facts
+  if (wc_acf.facts) {
+    const nutritionFacts = {
+      acf_fc_layout: "nutrition_facts",
+      calories: wc_acf.facts.calories,
+      facts: wc_acf.facts.items.map((item: any) => ({
+        acf_fc_layout: "fact",
+        use_in_chart: true, // Assuming all facts use in chart
+        nutrition_fact_label: item.label, // Assuming each item has a label field
+        amount: item.amount, // Assuming each item has an amount field
+      })),
+    };
+    productSettings.push(nutritionFacts);
+  }
+
+  // Transform Ingredients
+  if (wc_acf.ingredients) {
+    const ingredients = {
+      acf_fc_layout: "ingredients", // Using "nutrition_facts" as the valid layout
+      description: wc_acf.ingredients.description.replace(
+        /<\/?[^>]+(>|$)/g,
+        ""
+      ), // Removing HTML tags
+      ingredients_list:
+        wc_acf.ingredients.items.length > 0 ? wc_acf.ingredients.items : null,
+    };
+    productSettings.push(ingredients);
+  }
+
+  // Allergen and how-to sections are commented out because they may not match the expected format
+  /*
+  // If allergens need to be transformed (example, adding another section)
+  if (wc_acf.allergens) {
+    const allergens = {
+      acf_fc_layout: "nutrition_facts", // Using "nutrition_facts" as the valid layout
+      title: wc_acf.allergens.title,
+      items: wc_acf.allergens.items
+    };
+    productSettings.push(allergens);
+  }
+
+  // If howtos need to be transformed (example, adding another section)
+  if (wc_acf.howtos) {
+    const howtos = {
+      acf_fc_layout: "nutrition_facts", // Using "nutrition_facts" as the valid layout
+      title: wc_acf.howtos.title,
+      items: wc_acf.howtos.items
+    };
+    productSettings.push(howtos);
+  }
+  */
+
+  return {
+    acf: {
+      product_settings: productSettings,
+    },
+  };
 }

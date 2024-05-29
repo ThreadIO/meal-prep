@@ -37,10 +37,12 @@ export async function createUser(userid: string, settings: any) {
     if (
       settings.client_key &&
       settings.client_secret &&
+      settings.username &&
       settings.application_password
     ) {
       settings.client_key = encryptField(settings.client_key);
       settings.client_secret = encryptField(settings.client_secret);
+      settings.application_password = encryptField(settings.username);
       settings.application_password = encryptField(
         settings.application_password
       );
@@ -101,7 +103,9 @@ export async function patchUser(userid: string, body: any = {}) {
         updateFields["settings.url"] = body.settings.url;
       }
       if (body.settings.username) {
-        updateFields["settings.username"] = body.settings.username;
+        updateFields["settings.username"] = encryptField(
+          body.settings.username
+        );
       }
       if (body.settings.application_password) {
         updateFields["settings.application_password"] = encryptField(

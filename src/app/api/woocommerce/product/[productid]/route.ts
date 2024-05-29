@@ -1,5 +1,6 @@
 import connect from "@/database/conn";
 import { patch, remove, filterProductAddons } from "@/helpers/woocommerce";
+import { post_one, convertACF } from "@/helpers/wordpress";
 import { NextRequest, NextResponse } from "next/server";
 interface Params {
   productid: string;
@@ -52,12 +53,22 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
     body.meta_data = filtered_meta_data;
   }
 
-  console.log("Body acf: ", body.acf);
   const res = await patch(
     body.userid,
     "products",
     context.params.productid,
     body
+  );
+
+  // This is a workaround to update the ACF fields
+  const acf_body = convertACF(body.acf);
+
+  await post_one(
+    body.userid,
+    "product",
+    context.params.productid,
+    acf_body,
+    "?_fields=acf"
   );
 
   return res;
