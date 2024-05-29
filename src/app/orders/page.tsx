@@ -152,62 +152,42 @@ export default function OrdersPage() {
     endDate: any
   ) => {
     console.log("download orders");
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({ text: "Orders Report", bold: true }),
-                new TextRun({
-                  text: ` (from ${startDate} to ${endDate})`,
-                  bold: true,
-                }),
-              ],
-              heading: HeadingLevel.HEADING_1,
-            }),
-            ...ordersData.flatMap((order: any) => {
-              const lines = order.line_items.map((item: any) => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price,
-                currency_symbol: order.currency_symbol,
-              }));
-              return [
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: `Order ID: ${order.id}`, bold: true }),
-                    new TextRun({ text: " " }), // Add a space
-                    new TextRun(
-                      `Customer Name: ${order.billing.first_name} ${order.billing.last_name}`
-                    ),
-                    new TextRun({ text: " " }), // Add a space
-                    new TextRun(`Date: ${order.date_created}`),
-                  ],
-                  heading: HeadingLevel.HEADING_2,
-                }),
-                new Paragraph({
-                  children: [new TextRun({ text: "Line Items:", bold: true })],
-                }),
-                ...lines.flatMap((line: any) => [
-                  new Paragraph({ text: `Product Name: ${line.name}` }),
-                  new Paragraph({ text: `Quantity: ${line.quantity}` }),
-                  new Paragraph({
-                    text: `Price: ${line.price} ${line.currency_symbol}`,
-                  }),
-                ]),
-                new Paragraph({}), // Add a line break after line items
-              ];
-            }),
-          ],
-        },
-      ],
+
+    // CSV Header
+    let csvContent =
+      "Delivery Dates Range:, " + startDate + " - " + endDate + "\n\n";
+    csvContent += "Meal & Side Name(s), QTY.\n";
+
+    // Extract and format data into CSV format
+    const lines = ordersData.flatMap((order: any) => {
+      return order.line_items.map((item: any) => {
+        return `${item.name}, ${item.quantity}`;
+      });
     });
-    console.log(doc);
-    const buffer = await Packer.toBuffer(doc);
-    console.log("Buffer: ", buffer);
-    saveAs(new Blob([buffer]), `orders-${startDate}-${endDate}.docx`);
+
+    // Add each line to the CSV content
+    csvContent += lines.join("\n") + "\n\n";
+
+    // Calculate total quantity
+    const totalQuantity = ordersData.reduce((total: any, order: any) => {
+      return (
+        total +
+        order.line_items.reduce((subTotal: any, item: any) => {
+          return subTotal + item.quantity;
+        }, 0)
+      );
+    }, 0);
+
+    // Add total quantity to the CSV content
+    csvContent += `Total Qty., ${totalQuantity}`;
+
+    console.log(csvContent);
+
+    // Create a Blob from the CSV content
+    const blob = new Blob([csvContent], { type: "text/csv" });
+
+    // Save the CSV file
+    saveAs(blob, `orders-${startDate}-${endDate}.csv`);
   };
 
   const downloadIngredients = async () => {
@@ -264,17 +244,17 @@ export default function OrdersPage() {
     setShowIngredients(true);
   };
 
+  const extractDeliveryDate = (metaData: any[]) => {
+    const deliveryDateObj = metaData.find(
+      (item) => item.key === "_orddd_timestamp"
+    );
+    return deliveryDateObj
+      ? new Date(parseInt(deliveryDateObj.value) * 1000)
+      : null; // Convert timestamp to Date object
+  };
+
   // Function to generate CSV data from orders
   const generateFullCsvData = (orders: any[]) => {
-    const extractDeliveryDate = (metaData: any[]) => {
-      const deliveryDateObj = metaData.find(
-        (item) => item.key === "_orddd_timestamp"
-      );
-      return deliveryDateObj
-        ? new Date(parseInt(deliveryDateObj.value) * 1000)
-        : null; // Convert timestamp to Date object
-    };
-
     const extractAllergens = (acf: any) => {
       const allergens = acf?.allergens?.items
         ?.map((item: any) => item.label.name)
@@ -641,7 +621,8 @@ export default function OrdersPage() {
         <div key={index} style={{ marginBottom: "20px" }}>
           <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
           {order.billing.first_name} {order.billing.last_name}{" "}
-          <strong>Date:</strong> {order.date_created}
+          <strong>Delivery Date:</strong>{" "}
+          {extractDeliveryDate(order.meta_data)?.toDateString()}
           <br />
           <div style={{ marginLeft: "20px" }}>
             <strong>Line Items:</strong>
