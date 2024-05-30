@@ -425,7 +425,7 @@ export const ProductModal = (props: ProductModalProps) => {
           <div className="mb-2">
             <strong>Fat: </strong>
             <Input
-              value={fatObj.amount}
+              value={fatObj?.amount || ""}
               fullWidth
               onChange={(e) => {
                 setACF({
@@ -445,7 +445,7 @@ export const ProductModal = (props: ProductModalProps) => {
           <div className="mb-2">
             <strong>Carbs: </strong>
             <Input
-              value={carbsObj.amount}
+              value={carbsObj?.amount || ""}
               fullWidth
               onChange={(e) => {
                 setACF({
@@ -465,7 +465,7 @@ export const ProductModal = (props: ProductModalProps) => {
           <div className="mb-2">
             <strong>Protein: </strong>
             <Input
-              value={proteinObj.amount}
+              value={proteinObj?.amount || ""}
               fullWidth
               onChange={(e) => {
                 setACF({
