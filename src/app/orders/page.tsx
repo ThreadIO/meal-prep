@@ -667,7 +667,7 @@ export default function OrdersPage() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            maxHeight: "80vh", // Set the max height to 80% of the screen height
+            maxHeight: "70vh", // Set the max height to 80% of the screen height
             overflowY: "auto", // Enable vertical scrolling
           }}
         >
