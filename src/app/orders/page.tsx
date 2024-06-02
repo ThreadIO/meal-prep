@@ -161,7 +161,8 @@ export default function OrdersPage() {
     // Extract and format data into CSV format
     const lines = ordersData.flatMap((order: any) => {
       return order.line_items.map((item: any) => {
-        return `${item.name}, ${item.quantity}`;
+        // Enclose the name in double quotes to handle commas within the name
+        return `"${item.name}", ${item.quantity}`;
       });
     });
 
