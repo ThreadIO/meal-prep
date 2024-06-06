@@ -276,6 +276,9 @@ export default function OrdersPage() {
     };
 
     const calculateFacts = (selectedSize: string, metaData: any[]) => {
+      if (!metaData) {
+        return null;
+      }
       const sizeData = metaData.find((item) => item.name === "Size");
       if (sizeData) {
         const selectedOption = sizeData.options.find(
@@ -320,6 +323,7 @@ export default function OrdersPage() {
       ],
     ];
 
+    console.log("Generating CSV data for: ", orders);
     orders.forEach((order) => {
       const deliveryDate = extractDeliveryDate(order.meta_data);
       order.line_items.forEach((item: any) => {
@@ -353,22 +357,22 @@ export default function OrdersPage() {
                 .slice(0, 10)
             : "", // Add 4 days if deliveryDate is not null
           (parseInt(item.product_data.acf?.facts?.calories) || 0) +
-            facts.calories, // Add existing calories to calculated calories
+            (facts ? facts.calories : 0), // Add existing calories to calculated calories, with null check for 'facts'
           (parseInt(
             item.product_data.acf?.facts?.items?.find(
               (fact: any) => fact.label === "protein"
             )?.amount
-          ) || 0) + facts.protein, // Add existing protein to calculated protein
+          ) || 0) + (facts ? facts.protein : 0), // Add existing protein to calculated protein, with null check for 'facts'
           (parseInt(
             item.product_data.acf?.facts?.items?.find(
               (fact: any) => fact.label === "carbs"
             )?.amount
-          ) || 0) + facts.carbs, // Add existing carbs to calculated carbs
+          ) || 0) + (facts ? facts.carbs : 0), // Add existing carbs to calculated carbs, with null check for 'facts'
           (parseInt(
             item.product_data.acf?.facts?.items?.find(
               (fact: any) => fact.label === "fat"
             )?.amount
-          ) || 0) + facts.fat, // Add existing fat to calculated fat
+          ) || 0) + (facts ? facts.fat : 0), // Add existing fat to calculated fat, with null check for 'facts'
           `"${
             item.product_data.acf?.ingredients?.description?.replace(
               /<[^>]+>/g,
