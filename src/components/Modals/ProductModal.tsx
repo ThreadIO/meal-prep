@@ -81,10 +81,10 @@ export const ProductModal = (props: ProductModalProps) => {
     const matchingStockOptionValue = matchingStockOption?.value || "instock";
     const body = {
       ...(product || {}),
-      name: productName,
+      name: String(productName),
       images: product.images,
-      description: productDescription,
-      regular_price: productRegularPrice,
+      description: String(productDescription),
+      regular_price: String(productRegularPrice),
       categories: selectedCategories,
       stock_status: matchingStockOptionValue,
       userid: userId,

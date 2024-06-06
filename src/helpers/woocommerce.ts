@@ -176,6 +176,7 @@ export async function patch(
     body: JSON.stringify(body),
   });
   const data = await response.json();
+  console.log("Patch Data: ", data);
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
@@ -205,6 +206,8 @@ export async function remove(userid: string, object: string, objectid: string) {
 
 export function filterProductAddons(meta_data: any, product_addons: any) {
   // Filter out the object with key "_product_addons"
+  if (!meta_data) return [];
+  if (!product_addons) return meta_data;
   let filteredMetaData = meta_data.filter(
     (item: any) => item.key !== "_product_addons"
   );

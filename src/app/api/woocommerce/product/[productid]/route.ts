@@ -59,17 +59,18 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
     context.params.productid,
     body
   );
-
   // This is a workaround to update the ACF fields
-  const acf_body = convertACF(body.acf);
+  if (body.acf.length > 0) {
+    console.log("ACF fields found");
+    const acf_body = convertACF(body.acf);
 
-  await post_one(
-    body.userid,
-    "product",
-    context.params.productid,
-    acf_body,
-    "?_fields=acf"
-  );
-
+    await post_one(
+      body.userid,
+      "product",
+      context.params.productid,
+      acf_body,
+      "?_fields=acf"
+    );
+  }
   return res;
 }
