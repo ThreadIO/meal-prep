@@ -298,14 +298,6 @@ export default function OrdersPage() {
     return nextDeliveryDate; // Return the Date object
   };
 
-  // Example usage:
-  const order = {
-    shipping_lines: [{ method_title: "Free Delivery - Sunday Delivery" }],
-    date_paid: "2024-06-06T18:16:57",
-  };
-
-  console.log(threadDeliveryDate(order)); // Outputs: Date object representing "06/09/2024" (assuming 06/06/2024 is a Thursday)
-
   const extractDeliveryDate = (metaData: any[]) => {
     const deliveryDateObj = metaData.find(
       (item) => item.key === "_orddd_timestamp"

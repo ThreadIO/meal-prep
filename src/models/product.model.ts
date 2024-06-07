@@ -5,6 +5,7 @@ const ProductSchema = new Schema({
   url: String,
   product_name: String,
   stock_status: String,
+  image: String,
   calories: Number,
   protein: Number,
   fat: Number,
