@@ -685,7 +685,7 @@ export default function OrdersPage() {
             friendlyDate(threadDeliveryDate(order))}
           <br />
           <div style={{ marginLeft: "20px" }}>
-            <strong>Line Items:</strong>å
+            <strong>Line Items:</strong>
             {order.line_items.map(
               (
                 item: any,

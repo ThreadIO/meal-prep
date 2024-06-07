@@ -6,10 +6,14 @@ const ProductSchema = new Schema({
   product_name: String,
   stock_status: String,
   image: String,
-  calories: Number,
-  protein: Number,
-  fat: Number,
-  carbs: Number,
+  categories: [String],
+  nutrition_facts: {
+    calories: Number,
+    protein: Number,
+    fat: Number,
+    carbs: Number,
+    ingredients: String,
+  },
   add_ons: [
     {
       add_on_name: String,
