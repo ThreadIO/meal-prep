@@ -10,7 +10,7 @@ import { saveAs } from "file-saver";
 import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
 import { useOrgContext } from "@/components/OrgContext";
 import { not_products } from "@/helpers/utils";
-import { getCategories, getData } from "@/helpers/frontend";
+import { getCategories, getData, friendlyDate } from "@/helpers/frontend";
 import FilterDropdown from "@/components/FilterDropdown";
 export default function OrdersPage() {
   const { loading, isLoggedIn, user } = useUser();
@@ -245,6 +245,67 @@ export default function OrdersPage() {
     setShowIngredients(true);
   };
 
+  const threadDeliveryDate = (order: any): Date | null => {
+    const shippingLines = order.shipping_lines;
+    if (!shippingLines || shippingLines.length === 0) {
+      return null; // Handle case where there are no shipping lines
+    }
+
+    const shippingLineItem = shippingLines[0];
+    const methodTitle = shippingLineItem.method_title;
+    if (!methodTitle) {
+      return null; // Handle case where there is no method_title
+    }
+
+    // Regular expression to find the day in the method_title
+    const dayRegex =
+      /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/;
+    const matchedDay = methodTitle.match(dayRegex);
+    if (!matchedDay) {
+      return null; // Handle case where no day is found
+    }
+
+    const dayOfWeek = matchedDay[0];
+    const datePaid = new Date(order.date_paid);
+    if (isNaN(datePaid.getTime())) {
+      return null; // Handle invalid date_paid
+    }
+
+    // Helper function to find the next occurrence of a specific day of the week
+    const getNextDayOfWeek = (date: Date, dayName: string): Date => {
+      const daysOfWeek = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const targetDay = daysOfWeek.indexOf(dayName);
+      const currentDay = date.getDay();
+      let daysUntilNext = (targetDay - currentDay + 7) % 7;
+      if (daysUntilNext === 0) {
+        daysUntilNext = 7; // Move to the next week if the day is today
+      }
+      const nextDate = new Date(date);
+      nextDate.setDate(date.getDate() + daysUntilNext);
+      return nextDate;
+    };
+
+    const nextDeliveryDate = getNextDayOfWeek(datePaid, dayOfWeek);
+
+    return nextDeliveryDate; // Return the Date object
+  };
+
+  // Example usage:
+  const order = {
+    shipping_lines: [{ method_title: "Free Delivery - Sunday Delivery" }],
+    date_paid: "2024-06-06T18:16:57",
+  };
+
+  console.log(threadDeliveryDate(order)); // Outputs: Date object representing "06/09/2024" (assuming 06/06/2024 is a Thursday)
+
   const extractDeliveryDate = (metaData: any[]) => {
     const deliveryDateObj = metaData.find(
       (item) => item.key === "_orddd_timestamp"
@@ -325,7 +386,8 @@ export default function OrdersPage() {
 
     console.log("Generating CSV data for: ", orders);
     orders.forEach((order) => {
-      const deliveryDate = extractDeliveryDate(order.meta_data);
+      const deliveryDate =
+        extractDeliveryDate(order.meta_data) || threadDeliveryDate(order);
       order.line_items.forEach((item: any) => {
         // Wrap each field in double quotes to handle commas in item names
         const allergens = extractAllergens(item.product_data.acf);
@@ -627,10 +689,11 @@ export default function OrdersPage() {
           <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
           {order.billing.first_name} {order.billing.last_name}{" "}
           <strong>Delivery Date:</strong>{" "}
-          {extractDeliveryDate(order.meta_data)?.toDateString()}
+          {friendlyDate(extractDeliveryDate(order.meta_data)) ||
+            friendlyDate(threadDeliveryDate(order))}
           <br />
           <div style={{ marginLeft: "20px" }}>
-            <strong>Line Items:</strong>
+            <strong>Line Items:</strong>å
             {order.line_items.map(
               (
                 item: any,

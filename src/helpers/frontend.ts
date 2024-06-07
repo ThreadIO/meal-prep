@@ -78,3 +78,14 @@ export const getCategories = async (
 export const findObjectByValue = (array: any[], key: string, value: any) => {
   return array.find((obj) => obj[key] === value);
 };
+
+export const friendlyDate = (date: Date | null): string => {
+  if (date === null) {
+    return "";
+  }
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+};
