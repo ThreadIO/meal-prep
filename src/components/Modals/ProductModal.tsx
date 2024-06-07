@@ -14,6 +14,7 @@ import { createProduct, patchProduct } from "@/helpers/request";
 import { useUser } from "@propelauth/nextjs/client";
 import Dropdown from "@/components/Dropdown";
 import { findObjectByValue } from "@/helpers/frontend";
+import { stockStatusOptions } from "@/helpers/utils";
 
 interface ProductModalProps {
   product: any;
@@ -24,12 +25,6 @@ interface ProductModalProps {
   onUpdate: () => void;
   categories: any[];
 }
-
-const stockStatusOptions = [
-  { display: "In Stock", value: "instock" },
-  { display: "Out Of Stock", value: "outofstock" },
-  { display: "On Backorder", value: "onbackorder" },
-];
 
 export const ProductModal = (props: ProductModalProps) => {
   const { product, productImage, open, onClose, onUpdate, categories } = props;

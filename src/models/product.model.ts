@@ -4,6 +4,7 @@ const ProductSchema = new Schema({
   productid: String,
   url: String,
   product_name: String,
+  stock_status: String,
   calories: Number,
   protein: Number,
   fat: Number,

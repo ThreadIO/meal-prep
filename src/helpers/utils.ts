@@ -42,3 +42,9 @@ export const columns = [
     label: "ACTIONS",
   },
 ];
+
+export const stockStatusOptions = [
+  { display: "In Stock", value: "instock" },
+  { display: "Out Of Stock", value: "outofstock" },
+  { display: "On Backorder", value: "onbackorder" },
+];
