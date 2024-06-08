@@ -11,6 +11,7 @@ import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
 import { useOrgContext } from "@/components/OrgContext";
 import { not_products } from "@/helpers/utils";
 import { getCategories, getData, friendlyDate } from "@/helpers/frontend";
+import { filterOrdersByDate, getDeliveryDate } from "@/helpers/date";
 import FilterDropdown from "@/components/FilterDropdown";
 export default function OrdersPage() {
   const { loading, isLoggedIn, user } = useUser();
@@ -30,6 +31,8 @@ export default function OrdersPage() {
   const [showOrders, setShowOrders] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [error, setError] = useState<string>("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+
   const { currentOrg } = useOrgContext();
   function getOrg() {
     return user?.getOrg(currentOrg);
@@ -71,9 +74,19 @@ export default function OrdersPage() {
   useEffect(() => {
     const filtered = getFilteredOrders(orders, selectedKeys);
     setFilteredOrders(filtered);
-  }, [selectedKeys, orders]);
+  }, [selectedKeys, orders, deliveryDate]);
 
   const getFilteredOrders = (orders: any[], selectedKeys: Set<string>) => {
+    const filteredByStatus = filterOrdersByStatus(orders);
+    const filteredByCategory = filterOrdersByCategory(
+      filteredByStatus,
+      selectedKeys
+    );
+    const filteredByDate = filterOrdersByDate(filteredByCategory, deliveryDate);
+    return filteredByDate;
+  };
+
+  const filterOrdersByCategory = (orders: any[], selectedKeys: Set<string>) => {
     return orders
       .map((order) => ({
         ...order,
@@ -89,7 +102,13 @@ export default function OrdersPage() {
           );
         }),
       }))
-      .filter((order) => order.line_items.length > 0); // Ensure orders with no matching line items are filtered out
+      .filter((order) => order.line_items.length > 0);
+  };
+
+  const filterOrdersByStatus = (orders: any[]) => {
+    return orders
+      .filter((order) => order.status === "processing") // Filter orders with status "processing"
+      .filter((order) => order.line_items.length > 0); // Keep orders with at least one line item
   };
 
   const renderFilterDropdown = () => {
@@ -245,66 +264,23 @@ export default function OrdersPage() {
     setShowIngredients(true);
   };
 
-  const threadDeliveryDate = (order: any): Date | null => {
-    const shippingLines = order.shipping_lines;
-    if (!shippingLines || shippingLines.length === 0) {
-      return null; // Handle case where there are no shipping lines
-    }
-
-    const shippingLineItem = shippingLines[0];
-    const methodTitle = shippingLineItem.method_title;
-    if (!methodTitle) {
-      return null; // Handle case where there is no method_title
-    }
-
-    // Regular expression to find the day in the method_title
-    const dayRegex =
-      /\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/;
-    const matchedDay = methodTitle.match(dayRegex);
-    if (!matchedDay) {
-      return null; // Handle case where no day is found
-    }
-
-    const dayOfWeek = matchedDay[0];
-    const datePaid = new Date(order.date_paid);
-    if (isNaN(datePaid.getTime())) {
-      return null; // Handle invalid date_paid
-    }
-
-    // Helper function to find the next occurrence of a specific day of the week
-    const getNextDayOfWeek = (date: Date, dayName: string): Date => {
-      const daysOfWeek = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-      const targetDay = daysOfWeek.indexOf(dayName);
-      const currentDay = date.getDay();
-      let daysUntilNext = (targetDay - currentDay + 7) % 7;
-      if (daysUntilNext === 0) {
-        daysUntilNext = 7; // Move to the next week if the day is today
-      }
-      const nextDate = new Date(date);
-      nextDate.setDate(date.getDate() + daysUntilNext);
-      return nextDate;
-    };
-
-    const nextDeliveryDate = getNextDayOfWeek(datePaid, dayOfWeek);
-
-    return nextDeliveryDate; // Return the Date object
-  };
-
-  const extractDeliveryDate = (metaData: any[]) => {
-    const deliveryDateObj = metaData.find(
-      (item) => item.key === "_orddd_timestamp"
+  const renderDeliveryDateInputs = () => {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <Input
+          type="date"
+          label="Delivery Date"
+          value={deliveryDate}
+          onChange={(e) => setDeliveryDate(e.target.value)}
+        />
+      </div>
     );
-    return deliveryDateObj
-      ? new Date(parseInt(deliveryDateObj.value) * 1000)
-      : null; // Convert timestamp to Date object
   };
 
   // Function to generate CSV data from orders
@@ -378,8 +354,7 @@ export default function OrdersPage() {
 
     console.log("Generating CSV data for: ", orders);
     orders.forEach((order) => {
-      const deliveryDate =
-        extractDeliveryDate(order.meta_data) || threadDeliveryDate(order);
+      const deliveryDate = getDeliveryDate(order);
       order.line_items.forEach((item: any) => {
         // Wrap each field in double quotes to handle commas in item names
         const allergens = extractAllergens(item.product_data.acf);
@@ -681,8 +656,7 @@ export default function OrdersPage() {
           <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
           {order.billing.first_name} {order.billing.last_name}{" "}
           <strong>Delivery Date:</strong>{" "}
-          {friendlyDate(extractDeliveryDate(order.meta_data)) ||
-            friendlyDate(threadDeliveryDate(order))}
+          {friendlyDate(getDeliveryDate(order)) || "N/A"}
           <br />
           <div style={{ marginLeft: "20px" }}>
             <strong>Line Items:</strong>
@@ -721,6 +695,7 @@ export default function OrdersPage() {
           alignItems: "center",
         }}
       >
+        {renderDeliveryDateInputs()}
         {renderFilterDropdown()}
         <div
           style={{
