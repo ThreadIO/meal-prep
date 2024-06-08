@@ -1,6 +1,6 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
-import { Button, Spinner, Input } from "@nextui-org/react";
+import { Button, Spinner, DatePicker } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
@@ -12,13 +12,15 @@ import { useOrgContext } from "@/components/OrgContext";
 import { not_products } from "@/helpers/utils";
 import { getCategories, getData, friendlyDate } from "@/helpers/frontend";
 import { filterOrdersByDate, getDeliveryDate } from "@/helpers/date";
+import { today, getLocalTimeZone } from "@internationalized/date";
 import FilterDropdown from "@/components/FilterDropdown";
+
 export default function OrdersPage() {
   const { loading, isLoggedIn, user } = useUser();
-  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10)); // Default to today's date
+  const [endDate, setEndDate] = useState(today(getLocalTimeZone())); // Default to today's date
   const [startDate, setStartDate] = useState(
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-  );
+    today(getLocalTimeZone()).subtract({ weeks: 1 })
+  ); // Default to a week ago
   const [orders, setOrders] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
@@ -31,7 +33,7 @@ export default function OrdersPage() {
   const [showOrders, setShowOrders] = useState(false);
   const [showIngredients, setShowIngredients] = useState(false);
   const [error, setError] = useState<string>("");
-  const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState<any>();
 
   const { currentOrg } = useOrgContext();
   function getOrg() {
@@ -47,8 +49,8 @@ export default function OrdersPage() {
     };
     const body = {
       userid: user?.userId,
-      startDate: startDate,
-      endDate: endDate,
+      startDate: startDate.toString(),
+      endDate: endDate.toString(),
     };
     getData(
       "orders",
@@ -72,6 +74,7 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
+    console.log("Local time zone: ", getLocalTimeZone());
     const filtered = getFilteredOrders(orders, selectedKeys);
     setFilteredOrders(filtered);
   }, [selectedKeys, orders, deliveryDate]);
@@ -273,11 +276,10 @@ export default function OrdersPage() {
           alignItems: "center",
         }}
       >
-        <Input
-          type="date"
+        <DatePicker
           label="Delivery Date"
           value={deliveryDate}
-          onChange={(e) => setDeliveryDate(e.target.value)}
+          onChange={(e) => setDeliveryDate(e)}
         />
       </div>
     );
@@ -750,7 +752,19 @@ export default function OrdersPage() {
               gap: "10px",
             }}
           >
-            <Input
+            <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(e) => setStartDate(e)}
+              maxValue={endDate.copy().subtract({ days: 1 })}
+            />
+            <DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(e) => setEndDate(e)}
+              minValue={startDate.copy().add({ days: 1 })}
+            />
+            {/* <Input
               type="date"
               variant="bordered"
               label="Start Date"
@@ -769,7 +783,7 @@ export default function OrdersPage() {
               min={new Date(startDate) // Set min to one day after start date
                 .toISOString()
                 .slice(0, 10)}
-            ></Input>
+            ></Input> */}
           </div>
           <div
             style={{

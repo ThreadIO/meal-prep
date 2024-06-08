@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@nextui-org/navbar": "^2.0.28",
-    "@nextui-org/react": "^2.2.9",
+    "@nextui-org/react": "^2.4.1",
+    "@nextui-org/spinner": "^2.0.29",
     "@propelauth/nextjs": "^0.0.111",
     "@propelauth/react": "^2.0.19",
     "@tailwindcss/forms": "^0.5.7",

@@ -1,19 +1,22 @@
-export const filterOrdersByDate = (orders: any, orderDeliveryDate: any) => {
+import { CalendarDate, parseDate, isSameDay } from "@internationalized/date";
+export const filterOrdersByDate = (
+  orders: any,
+  orderDeliveryDate: CalendarDate
+) => {
+  console.log("Order Delivery Date: ", orderDeliveryDate);
   if (!orderDeliveryDate) return orders;
-
-  const start = new Date(orderDeliveryDate);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(orderDeliveryDate);
-  end.setHours(23, 59, 59, 999);
   console.log("order Delivery Date", orderDeliveryDate);
-  console.log("start", start);
-  console.log("end", end);
   return orders.filter((order: any) => {
     const deliveryDate = getDeliveryDate(order);
     if (!deliveryDate) return false;
-    const normalizedDeliveryDate = new Date(deliveryDate);
-    normalizedDeliveryDate.setHours(0, 0, 0, 0); // Normalize to start of the day
-    return normalizedDeliveryDate >= start && normalizedDeliveryDate <= end;
+
+    // Extract only the date part as YYYY-MM-DD
+    const isoDateString = deliveryDate.toISOString().split("T")[0];
+
+    // Parse date in the correct format
+    const parsedDeliveryDate = parseDate(isoDateString);
+
+    return isSameDay(parsedDeliveryDate, orderDeliveryDate);
   });
 };
 
