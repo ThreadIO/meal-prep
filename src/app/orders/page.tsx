@@ -180,31 +180,39 @@ export default function OrdersPage() {
       "Delivery Dates Range:, " + startDate + " - " + endDate + "\n\n";
     csvContent += "Meal & Side Name(s), QTY.\n";
 
-    // Extract and format data into CSV format
-    const lines = ordersData.flatMap((order: any) => {
-      return order.line_items.map((item: any) => {
-        // Enclose the name in double quotes to handle commas within the name
-        return `"${item.name}", ${item.quantity}`;
+    // Group items by name and sort alphabetically
+    const itemQuantities = ordersData.reduce((acc: any, order: any) => {
+      order.line_items.forEach((item: any) => {
+        if (acc[item.name]) {
+          acc[item.name] += item.quantity;
+        } else {
+          acc[item.name] = item.quantity;
+        }
       });
-    });
+      return acc;
+    }, {});
+
+    // Sort items alphabetically by name
+    const sortedItemQuantities = Object.entries(itemQuantities).sort(
+      ([nameA], [nameB]) => nameA.localeCompare(nameB)
+    );
+
+    // Construct CSV lines from sorted grouped data
+    const lines = sortedItemQuantities.map(
+      ([name, quantity]) => `"${name}", ${quantity}`
+    );
 
     // Add each line to the CSV content
     csvContent += lines.join("\n") + "\n\n";
 
     // Calculate total quantity
-    const totalQuantity = ordersData.reduce((total: any, order: any) => {
-      return (
-        total +
-        order.line_items.reduce((subTotal: any, item: any) => {
-          return subTotal + item.quantity;
-        }, 0)
-      );
-    }, 0);
+    const totalQuantity = sortedItemQuantities.reduce(
+      (sum, [, quantity]: any) => sum + quantity,
+      0
+    );
 
     // Add total quantity to the CSV content
     csvContent += `Total Qty., ${totalQuantity}`;
-
-    console.log(csvContent);
 
     // Create a Blob from the CSV content
     const blob = new Blob([csvContent], { type: "text/csv" });
