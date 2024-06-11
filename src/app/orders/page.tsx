@@ -705,17 +705,37 @@ export default function OrdersPage() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          paddingTop: "20px", // Add some padding to the top
         }}
       >
-        {renderDeliveryDateInputs()}
-        {renderFilterDropdown()}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "20px", // Space between columns
+            width: "100%", // Take full width to center align better
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <h3 style={{ marginBottom: "10px" }}>Delivery Date:</h3>
+            {renderDeliveryDateInputs()}
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <h3 style={{ marginBottom: "10px" }}>Select Menu:</h3>
+            {renderFilterDropdown()}
+          </div>
+        </div>
+
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            maxHeight: "70vh", // Set the max height to 80% of the screen height
-            overflowY: "auto", // Enable vertical scrolling
+            maxHeight: "70vh", // Ensure vertical scrolling
+            overflowY: "auto",
+            marginTop: "20px", // Space between the sections
+            width: "100%", // Take full width for better content display
           }}
         >
           {showLineItems
@@ -724,6 +744,7 @@ export default function OrdersPage() {
               ? renderMealSum(mealSum)
               : null}
         </div>
+
         <div style={{ marginTop: "10px" }}>{renderAllButtons()}</div>
       </div>
     );
