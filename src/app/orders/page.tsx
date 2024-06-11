@@ -668,6 +668,8 @@ export default function OrdersPage() {
           <strong>Delivery Date:</strong>{" "}
           {friendlyDate(getDeliveryDate(order)) || "N/A"}
           <br />
+          <strong>Status: </strong>
+          {order.status}
           <div style={{ marginLeft: "20px" }}>
             <strong>Line Items:</strong>
             {order.line_items.map(
