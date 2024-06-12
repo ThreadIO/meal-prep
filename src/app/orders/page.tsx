@@ -705,7 +705,11 @@ export default function OrdersPage() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          paddingTop: "20px", // Add some padding to the top
+          paddingTop: "20px",
+          position: "relative",
+          minHeight: "100vh",
+          boxSizing: "border-box",
+          paddingBottom: "60px",
         }}
       >
         <div
@@ -713,8 +717,8 @@ export default function OrdersPage() {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            gap: "20px", // Space between columns
-            width: "100%", // Take full width to center align better
+            gap: "20px",
+            width: "100%",
           }}
         >
           <div style={{ textAlign: "center" }}>
@@ -732,10 +736,10 @@ export default function OrdersPage() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            maxHeight: "70vh", // Ensure vertical scrolling
+            maxHeight: "65vh",
             overflowY: "auto",
-            marginTop: "20px", // Space between the sections
-            width: "100%", // Take full width for better content display
+            marginTop: "20px",
+            width: "100%",
           }}
         >
           {showLineItems
@@ -745,7 +749,20 @@ export default function OrdersPage() {
               : null}
         </div>
 
-        <div style={{ marginTop: "10px" }}>{renderAllButtons()}</div>
+        <div
+          style={{
+            position: "fixed",
+            bottom: "0",
+            width: "100%",
+            padding: "10px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            boxSizing: "border-box", // Ensure padding is included in total height
+          }}
+        >
+          {renderAllButtons()}
+        </div>
       </div>
     );
   };
