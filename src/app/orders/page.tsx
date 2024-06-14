@@ -666,7 +666,10 @@ export default function OrdersPage() {
       return filteredOrders.map((order, index) => (
         <div key={index} style={{ marginBottom: "20px" }}>
           <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
-          {order.billing.first_name} {order.billing.last_name}{" "}
+          {order.billing.first_name} {order.billing.last_name} <br />
+          <strong>Order Date: </strong>
+          {friendlyDate(order.date_created, true) || "N/A"}
+          <br />
           <strong>Delivery Date:</strong>{" "}
           {friendlyDate(getDeliveryDate(order)) || "N/A"}
           <br />

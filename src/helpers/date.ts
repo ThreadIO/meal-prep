@@ -31,7 +31,6 @@ const extractDeliveryDate = (metaData: any[]) => {
   if (!deliveryDateObj) return null;
 
   const deliveryDate = new Date(parseInt(deliveryDateObj.value) * 1000);
-  deliveryDate.setHours(0, 0, 0, 0); // Normalize to start of the day
   return deliveryDate;
 };
 
@@ -62,7 +61,11 @@ const threadDeliveryDate = (order: any): Date | null => {
   }
 
   // Helper function to find the next occurrence of a specific day of the week
-  const getNextDayOfWeek = (date: Date, dayName: string): Date => {
+  const getNextDayOfWeek = (
+    date: Date,
+    dayName: string,
+    afterCutoff: boolean
+  ): Date => {
     const daysOfWeek = [
       "Sunday",
       "Monday",
@@ -79,11 +82,20 @@ const threadDeliveryDate = (order: any): Date | null => {
       daysUntilNext = 7; // Move to the next week if the day is today
     }
     const nextDate = new Date(date);
-    nextDate.setDate(date.getDate() + daysUntilNext);
+    nextDate.setDate(date.getDate() + daysUntilNext + (afterCutoff ? 7 : 0)); // Add 7 days if after the cutoff
     return nextDate;
   };
 
-  const nextDeliveryDate = getNextDayOfWeek(datePaid, dayOfWeek);
+  // Calculate cutoff time (Friday at 12 AM) -> This needs to be parameterized
+  const cutoffDate = new Date(datePaid);
+  cutoffDate.setDate(
+    cutoffDate.getDate() + ((5 - cutoffDate.getDay() + 7) % 7)
+  ); // Set to next Friday
+  cutoffDate.setHours(0, 0, 0, 0); // Set to 12 AM
+
+  const isAfterCutoff = datePaid >= cutoffDate; // Check if datePaid is after the cutoff
+
+  const nextDeliveryDate = getNextDayOfWeek(datePaid, dayOfWeek, isAfterCutoff);
   nextDeliveryDate.setHours(0, 0, 0, 0); // Set to the beginning of the day
   return nextDeliveryDate; // Return the Date object
 };
