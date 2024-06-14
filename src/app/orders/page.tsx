@@ -353,14 +353,14 @@ export default function OrdersPage() {
         "Last Name",
         "Product Name",
         "Expiry Date",
-        "calories",
+        "Calories",
         "Protein",
         "Carbs",
         "Fat",
         "Ingredients",
         "Allergens",
         "Delivery Date",
-        "All Slides",
+        "All Sizes",
       ],
     ];
 
@@ -368,62 +368,64 @@ export default function OrdersPage() {
     orders.forEach((order) => {
       const deliveryDate = getDeliveryDate(order);
       order.line_items.forEach((item: any) => {
-        // Wrap each field in double quotes to handle commas in item names
-        const allergens = extractAllergens(item.product_data.acf);
-        const selectedSizeRegex = /(\d+\s*cal(?:ories)?)/i; // Match "400cal" or "400 Calories", case insensitive
-        const selectedSizeMatch = selectedSizeRegex.exec(
-          formatSize(item.meta_data)
-        );
-        let selectedSize = "";
-        if (selectedSizeMatch) {
-          selectedSize = selectedSizeMatch[1]; // Use the matched value
-        } else {
-          const sizeOptions = formatSize(item.meta_data).split(" | ");
-          // Prioritize "400cal" if it exists
-          selectedSize =
-            sizeOptions.find((size: any) => size.includes("cal")) || "";
+        // Generate a label for each instance of the line item
+        for (let i = 0; i < item.quantity; i++) {
+          const allergens = extractAllergens(item.product_data.acf);
+          const selectedSizeRegex = /(\d+\s*cal(?:ories)?)/i; // Match "400cal" or "400 Calories", case insensitive
+          const selectedSizeMatch = selectedSizeRegex.exec(
+            formatSize(item.meta_data)
+          );
+          let selectedSize = "";
+          if (selectedSizeMatch) {
+            selectedSize = selectedSizeMatch[1]; // Use the matched value
+          } else {
+            const sizeOptions = formatSize(item.meta_data).split(" | ");
+            // Prioritize "400cal" if it exists
+            selectedSize =
+              sizeOptions.find((size: any) => size.includes("cal")) || "";
+          }
+          const facts = calculateFacts(
+            selectedSize,
+            item.product_data.product_addons
+          );
+          csvData.push([
+            `${order.billing.first_name} ${order.billing.last_name}`,
+            order.billing.first_name,
+            order.billing.last_name,
+            `"${item.name}"`, // Enclose item name in double quotes
+            deliveryDate
+              ? new Date(deliveryDate.getTime() + 4 * 24 * 60 * 60 * 1000)
+                  .toISOString()
+                  .slice(0, 10)
+              : "", // Add 4 days if deliveryDate is not null
+            (parseInt(item.product_data.acf?.facts?.calories) || 0) +
+              (facts ? facts.calories : 0), // Add existing calories to calculated calories, with null check for 'facts'
+            (parseInt(
+              item.product_data.acf?.facts?.items?.find(
+                (fact: any) => fact.label === "protein"
+              )?.amount
+            ) || 0) + (facts ? facts.protein : 0), // Add existing protein to calculated protein, with null check for 'facts'
+            (parseInt(
+              item.product_data.acf?.facts?.items?.find(
+                (fact: any) => fact.label === "carbs"
+              )?.amount
+            ) || 0) + (facts ? facts.carbs : 0), // Add existing carbs to calculated carbs, with null check for 'facts'
+            (parseInt(
+              item.product_data.acf?.facts?.items?.find(
+                (fact: any) => fact.label === "fat"
+              )?.amount
+            ) || 0) + (facts ? facts.fat : 0), // Add existing fat to calculated fat, with null check for 'facts'
+            `"${
+              item.product_data.acf?.ingredients?.description?.replace(
+                /<[^>]+>/g,
+                ""
+              ) || ""
+            }"`,
+            allergens,
+            deliveryDate ? deliveryDate.toISOString().slice(0, 10) : "", // Convert deliveryDate to ISO string if not null
+            formatSize(item.meta_data),
+          ]);
         }
-        const facts = calculateFacts(
-          selectedSize,
-          item.product_data.product_addons
-        );
-        csvData.push([
-          `${order.billing.first_name} ${order.billing.last_name}`,
-          order.billing.first_name,
-          order.billing.last_name,
-          `"${item.name}"`, // Enclose item name in double quotes
-          deliveryDate
-            ? new Date(deliveryDate.getTime() + 4 * 24 * 60 * 60 * 1000)
-                .toISOString()
-                .slice(0, 10)
-            : "", // Add 4 days if deliveryDate is not null
-          (parseInt(item.product_data.acf?.facts?.calories) || 0) +
-            (facts ? facts.calories : 0), // Add existing calories to calculated calories, with null check for 'facts'
-          (parseInt(
-            item.product_data.acf?.facts?.items?.find(
-              (fact: any) => fact.label === "protein"
-            )?.amount
-          ) || 0) + (facts ? facts.protein : 0), // Add existing protein to calculated protein, with null check for 'facts'
-          (parseInt(
-            item.product_data.acf?.facts?.items?.find(
-              (fact: any) => fact.label === "carbs"
-            )?.amount
-          ) || 0) + (facts ? facts.carbs : 0), // Add existing carbs to calculated carbs, with null check for 'facts'
-          (parseInt(
-            item.product_data.acf?.facts?.items?.find(
-              (fact: any) => fact.label === "fat"
-            )?.amount
-          ) || 0) + (facts ? facts.fat : 0), // Add existing fat to calculated fat, with null check for 'facts'
-          `"${
-            item.product_data.acf?.ingredients?.description?.replace(
-              /<[^>]+>/g,
-              ""
-            ) || ""
-          }"`,
-          allergens,
-          deliveryDate ? deliveryDate.toISOString().slice(0, 10) : "", // Convert deliveryDate to ISO string if not null
-          formatSize(item.meta_data),
-        ]);
       });
     });
 
