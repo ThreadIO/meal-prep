@@ -47,10 +47,12 @@ export default function OrdersPage() {
     const headers = {
       "Content-Type": "application/json",
     };
+    const start_one = startDate.copy().subtract({ days: 1 }).toString();
+    const end_one = endDate.copy().add({ days: 1 }).toString();
     const body = {
       userid: user?.userId,
-      startDate: startDate.toString(),
-      endDate: endDate.toString(),
+      startDate: start_one,
+      endDate: end_one,
     };
     getData(
       "orders",
