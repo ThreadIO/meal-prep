@@ -1,9 +1,29 @@
 import { CalendarDate, parseDate, isSameDay } from "@internationalized/date";
+export const friendlyDate = (
+  date: Date | null,
+  includeMinutes: boolean = false
+): string => {
+  if (date === null) {
+    return "";
+  }
+  return includeMinutes
+    ? new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+};
 export const filterOrdersByDate = (
   orders: any,
   orderDeliveryDate: CalendarDate
 ) => {
-  console.log("Order Delivery Date: ", orderDeliveryDate);
   if (!orderDeliveryDate) return orders;
   console.log("order Delivery Date", orderDeliveryDate);
   return orders.filter((order: any) => {

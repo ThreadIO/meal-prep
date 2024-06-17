@@ -111,7 +111,7 @@ const DropdownComponent = (props: DropdownProps) => {
       >
         {paginatedItems.map((item: any) => (
           <DropdownItem key={item.name}>
-            {item.name.replace(/&amp;/g, "&")}
+            {item.display || item.name.replace(/&amp;/g, "&")}
           </DropdownItem>
         ))}
       </DropdownMenu>

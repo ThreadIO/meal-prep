@@ -65,7 +65,7 @@ const Products = () => {
       <FilterDropdown
         selectedKeys={selectedKeys}
         setSelectedKeys={setSelectedKeys}
-        categories={categories}
+        options={categories}
       />
     );
   };

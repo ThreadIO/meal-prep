@@ -15,7 +15,7 @@ import { DeleteModal } from "@/components/Modals/DeleteModal";
 import { deleteProduct } from "@/helpers/request";
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
-import { columns } from "@/helpers/utils";
+import { product_columns } from "@/helpers/utils";
 
 interface ProductTableProps {
   products: any;
@@ -201,7 +201,7 @@ const ProductTable = (props: ProductTableProps) => {
     <div className="mt-4 mr-4 ml-4">
       {modals(product)}
       <Table isHeaderSticky isStriped aria-label="Table of Products">
-        <TableHeader columns={columns}>
+        <TableHeader columns={product_columns}>
           {(column) => (
             <TableColumn key={column.key}>{column.label}</TableColumn>
           )}

@@ -7,14 +7,14 @@ import Navbar from "@/components/Navbar";
 import React from "react";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { saveAs } from "file-saver";
-import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
-import { useOrgContext } from "@/components/OrgContext";
 import { not_products } from "@/helpers/utils";
-import { getCategories, getData, friendlyDate } from "@/helpers/frontend";
-import { filterOrdersByDate, getDeliveryDate } from "@/helpers/date";
+import { getCategories, getData } from "@/helpers/frontend";
+import { filterOrdersByDate } from "@/helpers/date";
+import { generateFullCsvData } from "@/helpers/downloads";
 import { today, getLocalTimeZone } from "@internationalized/date";
 import FilterDropdown from "@/components/FilterDropdown";
-
+import OrderTable from "@/components/Order/OrderTable";
+import { statusOptions } from "@/helpers/utils";
 export default function OrdersPage() {
   const { loading, isLoggedIn, user } = useUser();
   const [endDate, setEndDate] = useState(today(getLocalTimeZone())); // Default to today's date
@@ -26,20 +26,17 @@ export default function OrdersPage() {
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
-  const [selectedKeys, setSelectedKeys] = useState<any>(new Set(["All"]));
-  const [ingredients, setIngredients] = useState<any>({});
-  const [ingredientsLoading, setIngredientsLoading] = useState<boolean>(false);
+  const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
+    new Set(["All"])
+  );
+  const [selectedStatusKeys, setSelectedStatusKeys] = useState<any>(
+    new Set(["All"])
+  );
+
   const [showLineItems, setShowLineItems] = useState(true);
   const [showOrders, setShowOrders] = useState(false);
-  const [showIngredients, setShowIngredients] = useState(false);
   const [error, setError] = useState<string>("");
   const [deliveryDate, setDeliveryDate] = useState<any>();
-
-  const { currentOrg } = useOrgContext();
-  function getOrg() {
-    return user?.getOrg(currentOrg);
-  }
-  const currentOrgId = getOrg()?.orgId as string;
 
   const getOrders = async () => {
     const url = "/api/woocommerce/getorders";
@@ -70,22 +67,31 @@ export default function OrdersPage() {
         setShowOrders(true);
         getCategories(user, setCategories, setError, setCategoriesLoading);
       },
-      getIngredients,
+      () => {},
       transformOrdersData
     );
+    console.log("Orders: ", orders);
   };
 
   useEffect(() => {
     console.log("Local time zone: ", getLocalTimeZone());
-    const filtered = getFilteredOrders(orders, selectedKeys);
+    const filtered = getFilteredOrders(
+      orders,
+      selectedMenuKeys,
+      selectedStatusKeys
+    );
     setFilteredOrders(filtered);
-  }, [selectedKeys, orders, deliveryDate]);
+  }, [selectedMenuKeys, selectedStatusKeys, orders, deliveryDate]);
 
-  const getFilteredOrders = (orders: any[], selectedKeys: Set<string>) => {
-    const filteredByStatus = filterOrdersByStatus(orders);
+  const getFilteredOrders = (
+    orders: any[],
+    selectedMenuKeys: Set<string>,
+    selectedStatusKeys: Set<string>
+  ) => {
+    const filteredByStatus = filterOrdersByStatus(orders, selectedStatusKeys);
     const filteredByCategory = filterOrdersByCategory(
       filteredByStatus,
-      selectedKeys
+      selectedMenuKeys
     );
     const filteredByDate = filterOrdersByDate(filteredByCategory, deliveryDate);
     return filteredByDate;
@@ -110,18 +116,32 @@ export default function OrdersPage() {
       .filter((order) => order.line_items.length > 0);
   };
 
-  const filterOrdersByStatus = (orders: any[]) => {
-    return orders
-      .filter((order) => order.status === "processing") // Filter orders with status "processing"
-      .filter((order) => order.line_items.length > 0); // Keep orders with at least one line item
+  const filterOrdersByStatus = (orders: any[], selectedKeys: Set<string>) => {
+    // Check if "All" is in the selectedKeys
+    if (selectedKeys.has("All")) {
+      return orders;
+    }
+
+    // Filter the orders where the status is one of the selected keys
+    return orders.filter((order) => selectedKeys.has(order.status));
   };
 
-  const renderFilterDropdown = () => {
+  const renderCategoryFilterDropdown = () => {
     return (
       <FilterDropdown
-        selectedKeys={selectedKeys}
-        setSelectedKeys={setSelectedKeys}
-        categories={categories}
+        selectedKeys={selectedMenuKeys}
+        setSelectedKeys={setSelectedMenuKeys}
+        options={categories}
+      />
+    );
+  };
+
+  const renderStatusFilterDropdown = () => {
+    return (
+      <FilterDropdown
+        selectedKeys={selectedStatusKeys}
+        setSelectedKeys={setSelectedStatusKeys}
+        options={statusOptions}
       />
     );
   };
@@ -137,37 +157,11 @@ export default function OrdersPage() {
 
   const clear = async () => {
     clearOrders();
-    clearIngredients();
   };
   const clearOrders = async () => {
     setOrders([]);
     setOrdersLoading(false);
     setShowOrders(false);
-  };
-
-  const clearIngredients = async () => {
-    setIngredients([]);
-    setIngredientsLoading(false);
-    setShowIngredients(false);
-  };
-
-  const getIngredients = async (ingredients_orders: any[] = orders) => {
-    const url = "/api/ingredients";
-    const method = "POST";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    const body = { orders: ingredients_orders, orgid: currentOrgId };
-    getData(
-      "ingredients",
-      url,
-      method,
-      headers,
-      setIngredients,
-      setError,
-      setIngredientsLoading,
-      body
-    );
   };
 
   const downloadOrders = async (
@@ -223,60 +217,6 @@ export default function OrdersPage() {
     saveAs(blob, `orders-${startDate}-${endDate}.csv`);
   };
 
-  const downloadIngredients = async () => {
-    console.log("download ingredients");
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({ text: "Ingredients Report", bold: true }),
-              ],
-              heading: HeadingLevel.HEADING_1,
-            }),
-            ...Object.entries(ingredients).flatMap(
-              ([ingredient, details]: [any, any]) => [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `Ingredient: ${ingredient}`,
-                      bold: true,
-                    }),
-                  ],
-                  heading: HeadingLevel.HEADING_2,
-                }),
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: `Quantity: ${details.quantity} ${details.unit}`,
-                    }),
-                  ],
-                }),
-                new Paragraph({}), // Add a line break after each ingredient
-              ]
-            ),
-          ],
-        },
-      ],
-    });
-    console.log(doc);
-    const buffer = await Packer.toBuffer(doc);
-    console.log(buffer);
-    saveAs(new Blob([buffer]), `ingredients-report.docx`);
-  };
-
-  const handleShowOrders = () => {
-    setShowOrders(true);
-    setShowIngredients(false);
-  };
-
-  const handleShowIngredients = () => {
-    setShowOrders(false);
-    setShowIngredients(true);
-  };
-
   const renderDeliveryDateInputs = () => {
     return (
       <div
@@ -293,143 +233,6 @@ export default function OrdersPage() {
         />
       </div>
     );
-  };
-
-  // Function to generate CSV data from orders
-  const generateFullCsvData = (orders: any[]) => {
-    const extractAllergens = (acf: any) => {
-      const allergens = acf?.allergens?.items
-        ?.map((item: any) => item.label.name)
-        .join(", ");
-      return allergens || "";
-    };
-
-    const formatSize = (metaData: any[]) => {
-      const addonsData = metaData.find((item) => item.key === "_addons_data");
-      if (addonsData) {
-        const sizeAddons = addonsData.value.filter(
-          (addon: any) => addon.name === "Size"
-        );
-        const sizes = sizeAddons.map((addon: any) => addon.value);
-        return sizes.join(" | ");
-      }
-      return ""; // Return empty string if size is not found or metadata doesn't contain addons data
-    };
-
-    const calculateFacts = (selectedSize: string, metaData: any[]) => {
-      if (!metaData) {
-        return null;
-      }
-      const sizeData = metaData.find((item) => item.name === "Size");
-      if (sizeData) {
-        const selectedOption = sizeData.options.find(
-          (option: any) => option.label === selectedSize
-        );
-        if (selectedOption) {
-          const calories = parseInt(selectedOption.calories) || 0;
-          const protein = parseInt(selectedOption.protein) || 0;
-          const carbs = parseInt(selectedOption.carbs) || 0;
-          const fat = parseInt(selectedOption.fat) || 0;
-          return {
-            calories: calories,
-            protein: protein,
-            carbs: carbs,
-            fat: fat,
-          };
-        }
-      }
-      return {
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-      };
-    };
-
-    const csvData = [
-      [
-        "Customer Name",
-        "First Name",
-        "Last Name",
-        "Product Name",
-        "Expiry Date",
-        "Calories",
-        "Protein",
-        "Carbs",
-        "Fat",
-        "Ingredients",
-        "Allergens",
-        "Delivery Date",
-        "All Sizes",
-      ],
-    ];
-
-    console.log("Generating CSV data for: ", orders);
-    orders.forEach((order) => {
-      const deliveryDate = getDeliveryDate(order);
-      order.line_items.forEach((item: any) => {
-        // Generate a label for each instance of the line item
-        for (let i = 0; i < item.quantity; i++) {
-          const allergens = extractAllergens(item.product_data.acf);
-          const selectedSizeRegex = /(\d+\s*cal(?:ories)?)/i; // Match "400cal" or "400 Calories", case insensitive
-          const selectedSizeMatch = selectedSizeRegex.exec(
-            formatSize(item.meta_data)
-          );
-          let selectedSize = "";
-          if (selectedSizeMatch) {
-            selectedSize = selectedSizeMatch[1]; // Use the matched value
-          } else {
-            const sizeOptions = formatSize(item.meta_data).split(" | ");
-            // Prioritize "400cal" if it exists
-            selectedSize =
-              sizeOptions.find((size: any) => size.includes("cal")) || "";
-          }
-          const facts = calculateFacts(
-            selectedSize,
-            item.product_data.product_addons
-          );
-          csvData.push([
-            `${order.billing.first_name} ${order.billing.last_name}`,
-            order.billing.first_name,
-            order.billing.last_name,
-            `"${item.name}"`, // Enclose item name in double quotes
-            deliveryDate
-              ? new Date(deliveryDate.getTime() + 4 * 24 * 60 * 60 * 1000)
-                  .toISOString()
-                  .slice(0, 10)
-              : "", // Add 4 days if deliveryDate is not null
-            (parseInt(item.product_data.acf?.facts?.calories) || 0) +
-              (facts ? facts.calories : 0), // Add existing calories to calculated calories, with null check for 'facts'
-            (parseInt(
-              item.product_data.acf?.facts?.items?.find(
-                (fact: any) => fact.label === "protein"
-              )?.amount
-            ) || 0) + (facts ? facts.protein : 0), // Add existing protein to calculated protein, with null check for 'facts'
-            (parseInt(
-              item.product_data.acf?.facts?.items?.find(
-                (fact: any) => fact.label === "carbs"
-              )?.amount
-            ) || 0) + (facts ? facts.carbs : 0), // Add existing carbs to calculated carbs, with null check for 'facts'
-            (parseInt(
-              item.product_data.acf?.facts?.items?.find(
-                (fact: any) => fact.label === "fat"
-              )?.amount
-            ) || 0) + (facts ? facts.fat : 0), // Add existing fat to calculated fat, with null check for 'facts'
-            `"${
-              item.product_data.acf?.ingredients?.description?.replace(
-                /<[^>]+>/g,
-                ""
-              ) || ""
-            }"`,
-            allergens,
-            deliveryDate ? deliveryDate.toISOString().slice(0, 10) : "", // Convert deliveryDate to ISO string if not null
-            formatSize(item.meta_data),
-          ]);
-        }
-      });
-    });
-
-    return csvData.map((row) => row.join(",")).join("\n");
   };
 
   const generateFilteredCsvData = (filteredOrders: any[]) => {
@@ -496,10 +299,6 @@ export default function OrdersPage() {
           text={showLineItems ? "Show Meal Quantities" : "Show Line Items"}
         />
         <StyledButton
-          onClick={() => handleShowIngredients()}
-          text="Show Ingredients"
-        />
-        <StyledButton
           onClick={() => downloadOrders(orders, startDate, endDate)}
           text="Download Orders"
         />
@@ -541,14 +340,8 @@ export default function OrdersPage() {
   };
 
   const renderOrdersContent = () => {
-    if (
-      (ordersLoading && showOrders) ||
-      (ingredientsLoading && showIngredients) ||
-      categoriesLoading
-    ) {
+    if ((ordersLoading && showOrders) || categoriesLoading) {
       return renderLoading();
-    } else if (showIngredients) {
-      return renderIngredients();
     } else if (showOrders) {
       return renderOrders();
     } else {
@@ -570,64 +363,6 @@ export default function OrdersPage() {
           <Spinner
             label={ordersLoading ? "Loading Orders" : "Loading Ingredients"}
           />
-        </div>
-      </div>
-    );
-  };
-
-  const renderIngredients = () => {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            maxHeight: "80vh", // Set the max height to 80% of the screen height
-            overflowY: "auto", // Enable vertical scrolling
-          }}
-        >
-          {Object.entries(ingredients).map(
-            ([ingredient, details]: [any, any], index) => (
-              <div key={index} style={{ marginBottom: "20px" }}>
-                <strong>Ingredient:</strong> {ingredient}
-                <br />
-                <div style={{ marginLeft: "20px" }}>
-                  <strong>Quantity:</strong> {details.quantity} {details.unit}
-                </div>
-              </div>
-            )
-          )}
-        </div>
-        <div style={{ marginTop: "10px" }}>
-          <Button
-            style={{
-              marginRight: "10px",
-              padding: "5px 10px",
-              borderRadius: "5px",
-            }}
-            onClick={() => downloadIngredients()}
-            color="primary"
-          >
-            Download Ingredients
-          </Button>
-          <Button
-            style={{
-              marginRight: "10px",
-              padding: "5px 10px",
-              borderRadius: "5px",
-            }}
-            onClick={() => handleShowOrders()}
-            color="primary"
-          >
-            Show Orders
-          </Button>
         </div>
       </div>
     );
@@ -665,42 +400,45 @@ export default function OrdersPage() {
 
     // Function to render individual order details with line items
     const renderLineItems = () => {
-      return filteredOrders.map((order, index) => (
-        <div key={index} style={{ marginBottom: "20px" }}>
-          <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
-          {order.billing.first_name} {order.billing.last_name} <br />
-          <strong>Order Date: </strong>
-          {friendlyDate(order.date_created, true) || "N/A"}
-          <br />
-          <strong>Delivery Date:</strong>{" "}
-          {friendlyDate(getDeliveryDate(order)) || "N/A"}
-          <br />
-          <strong>Status: </strong>
-          {order.status}
-          <div style={{ marginLeft: "20px" }}>
-            <strong>Line Items:</strong>
-            {order.line_items.map(
-              (
-                item: any,
-                i: number // Provide type annotations for item and i
-              ) => (
-                <div key={i} style={{ marginLeft: "20px", marginTop: "5px" }}>
-                  <div>
-                    <strong>Product Name:</strong> {item.name}
-                  </div>
-                  <div>
-                    <strong>Quantity:</strong> {item.quantity}
-                  </div>
-                  <div>
-                    <strong>Price:</strong> {item.price.toFixed(2)}{" "}
-                    {order.currency_symbol}
-                  </div>
-                </div>
-              )
-            )}
-          </div>
-        </div>
-      ));
+      return (
+        <OrderTable orders={filteredOrders} onUpdate={() => getOrders()} />
+      );
+      // return filteredOrders.map((order, index) => (
+      //   <div key={index} style={{ marginBottom: "20px" }}>
+      //     <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
+      //     {order.billing.first_name} {order.billing.last_name} <br />
+      //     <strong>Order Date: </strong>
+      //     {friendlyDate(order.date_created, true) || "N/A"}
+      //     <br />
+      //     <strong>Delivery Date:</strong>{" "}
+      //     {friendlyDate(getDeliveryDate(order)) || "N/A"}
+      //     <br />
+      //     <strong>Status: </strong>
+      //     {order.status}
+      //     <div style={{ marginLeft: "20px" }}>
+      //       <strong>Line Items:</strong>
+      //       {order.line_items.map(
+      //         (
+      //           item: any,
+      //           i: number // Provide type annotations for item and i
+      //         ) => (
+      //           <div key={i} style={{ marginLeft: "20px", marginTop: "5px" }}>
+      //             <div>
+      //               <strong>Product Name:</strong> {item.name}
+      //             </div>
+      //             <div>
+      //               <strong>Quantity:</strong> {item.quantity}
+      //             </div>
+      //             <div>
+      //               <strong>Price:</strong> {item.price.toFixed(2)}{" "}
+      //               {order.currency_symbol}
+      //             </div>
+      //           </div>
+      //         )
+      //       )}
+      //     </div>
+      //   </div>
+      // ));
     };
 
     // Get meal sums
@@ -734,7 +472,11 @@ export default function OrdersPage() {
           </div>
           <div style={{ textAlign: "center" }}>
             <h3 style={{ marginBottom: "10px" }}>Select Menu:</h3>
-            {renderFilterDropdown()}
+            {renderCategoryFilterDropdown()}
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
+            {renderStatusFilterDropdown()}
           </div>
         </div>
 

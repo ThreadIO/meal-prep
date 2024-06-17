@@ -4,11 +4,11 @@ interface FilterDropdownProps {
   selectedKeys: any;
   // eslint-disable-next-line no-unused-vars
   setSelectedKeys: (selectedKeys: any) => void;
-  categories: any[];
+  options: any[];
 }
 
 const FilterDropdown = (props: FilterDropdownProps) => {
-  const { selectedKeys, setSelectedKeys, categories } = props;
+  const { selectedKeys, setSelectedKeys, options } = props;
   const handleSelectionChange = (keys: Set<any>) => {
     // Convert set to array for easier manipulation
     const newSelectedKeys = new Set(keys);
@@ -37,7 +37,10 @@ const FilterDropdown = (props: FilterDropdownProps) => {
       onSelectionChange={handleSelectionChange}
       items={[
         { name: "All" },
-        ...categories.map((category) => ({ name: category.name })),
+        ...options.map((option) => ({
+          name: option.name,
+          display: option.display,
+        })),
       ]}
     />
   );

@@ -1,0 +1,147 @@
+  const getIngredients = async (ingredients_orders: any[] = orders) => {
+    const url = "/api/ingredients";
+    const method = "POST";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const body = { orders: ingredients_orders, orgid: currentOrgId };
+    getData(
+      "ingredients",
+      url,
+      method,
+      headers,
+      setIngredients,
+      setError,
+      setIngredientsLoading,
+      body
+    );
+  };
+
+    const clearIngredients = async () => {
+    setIngredients([]);
+    setIngredientsLoading(false);
+    setShowIngredients(false);
+  };
+
+  const [showIngredients, setShowIngredients] = useState(false);
+    const [ingredients, setIngredients] = useState<any>({});
+  const [ingredientsLoading, setIngredientsLoading] = useState<boolean>(false);
+
+    const downloadIngredients = async () => {
+    console.log("download ingredients");
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({ text: "Ingredients Report", bold: true }),
+              ],
+              heading: HeadingLevel.HEADING_1,
+            }),
+            ...Object.entries(ingredients).flatMap(
+              ([ingredient, details]: [any, any]) => [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Ingredient: ${ingredient}`,
+                      bold: true,
+                    }),
+                  ],
+                  heading: HeadingLevel.HEADING_2,
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `Quantity: ${details.quantity} ${details.unit}`,
+                    }),
+                  ],
+                }),
+                new Paragraph({}), // Add a line break after each ingredient
+              ]
+            ),
+          ],
+        },
+      ],
+    });
+    console.log(doc);
+    const buffer = await Packer.toBuffer(doc);
+    console.log(buffer);
+    saveAs(new Blob([buffer]), `ingredients-report.docx`);
+  };
+
+    const handleShowOrders = () => {
+    setShowOrders(true);
+    setShowIngredients(false);
+  };
+
+  const handleShowIngredients = () => {
+    setShowOrders(false);
+    setShowIngredients(true);
+  };
+
+          <StyledButton
+          onClick={() => handleShowIngredients()}
+          text="Show Ingredients"
+        />
+
+          const renderIngredients = () => {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            maxHeight: "80vh", // Set the max height to 80% of the screen height
+            overflowY: "auto", // Enable vertical scrolling
+          }}
+        >
+          {Object.entries(ingredients).map(
+            ([ingredient, details]: [any, any], index) => (
+              <div key={index} style={{ marginBottom: "20px" }}>
+                <strong>Ingredient:</strong> {ingredient}
+                <br />
+                <div style={{ marginLeft: "20px" }}>
+                  <strong>Quantity:</strong> {details.quantity} {details.unit}
+                </div>
+              </div>
+            )
+          )}
+        </div>
+        <div style={{ marginTop: "10px" }}>
+          <Button
+            style={{
+              marginRight: "10px",
+              padding: "5px 10px",
+              borderRadius: "5px",
+            }}
+            onClick={() => downloadIngredients()}
+            color="primary"
+          >
+            Download Ingredients
+          </Button>
+          <Button
+            style={{
+              marginRight: "10px",
+              padding: "5px 10px",
+              borderRadius: "5px",
+            }}
+            onClick={() => handleShowOrders()}
+            color="primary"
+          >
+            Show Orders
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  import { Packer, Document, Paragraph, TextRun, HeadingLevel } from "docx";
