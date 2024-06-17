@@ -42,11 +42,11 @@ export const renderOrderStatus = (order: any) => {
     statusColor = "bg-red-200 text-red-800";
     statusText = order.status === "failed" ? "Failed" : "Cancelled";
   } else if (order.status === "completed" || order.status === "processing") {
-    statusText = order.status === "processing" ? "Paid" : "Completed";
+    statusText = order.status === "processing" ? "Processing" : "Completed";
     statusColor = "bg-green-200 text-green-800";
   } else if (order.status === "pending") {
     statusColor = "bg-yellow-200 text-yellow-800";
-    statusText = "Awaiting Payment";
+    statusText = "Pending";
   }
   return (
     <div

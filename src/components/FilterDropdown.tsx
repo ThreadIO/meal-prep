@@ -39,7 +39,6 @@ const FilterDropdown = (props: FilterDropdownProps) => {
         { name: "All" },
         ...options.map((option) => ({
           name: option.name,
-          display: option.display,
         })),
       ]}
     />
