@@ -55,7 +55,6 @@ const DropdownComponent = (props: DropdownProps) => {
     () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
     [selectedKeys]
   );
-
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -111,7 +110,7 @@ const DropdownComponent = (props: DropdownProps) => {
       >
         {paginatedItems.map((item: any) => (
           <DropdownItem key={item.name}>
-            {item.display || item.name.replace(/&amp;/g, "&")}
+            {item.name.replace(/&amp;/g, "&")}
           </DropdownItem>
         ))}
       </DropdownMenu>
