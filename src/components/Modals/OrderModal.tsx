@@ -9,7 +9,7 @@ import {
 } from "@nextui-org/react";
 import { useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
-import LineItemTable from "../Order/LineItemTable";
+import LineItemTable from "@/components/Order/LineItemTable";
 
 interface OrderModalProps {
   order: any;
