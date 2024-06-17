@@ -4,13 +4,7 @@ import { AccountModal } from "@/components/Modals/AccountModal";
 import { useState } from "react";
 import UserProfile from "@/components/UserProfile";
 // import BusinessIcon from "@/components/BusinessIcon";
-import Link from "next/link";
-import {
-  Navbar,
-  NavbarBrand,
-  NavbarContent,
-  NavbarItem,
-} from "@nextui-org/react";
+import { Navbar, NavbarBrand, NavbarContent } from "@nextui-org/react";
 const NavbarComponent = () => {
   const { user } = useUser();
   const [openAccount, setOpenAccount] = useState(false);
@@ -35,11 +29,6 @@ const NavbarComponent = () => {
         </Link> */}
       </NavbarBrand>
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
-        <NavbarItem>
-          <Link color="foreground" href="/orders">
-            Orders
-          </Link>
-        </NavbarItem>
         {/* <NavbarItem>
           <Link color="foreground" href="/recipes">
             Recipes

@@ -108,7 +108,7 @@ const Products = () => {
       return (
         <div className="overflow-y-auto h-full pb-20">
           <div className="mx-auto max-w-4xl text-center mt-10 items-center">
-            <h2 className="text-3xl font-semibold leading-7 mb-6">Products</h2>
+            <h2 className="text-3xl font-semibold leading-7 mb-6">Meals</h2>
             <div className="flex justify-center">
               <Button color="primary" onPress={() => setOpenProduct(true)}>
                 Create New
@@ -246,7 +246,7 @@ const Products = () => {
   const renderLoading = () => {
     return (
       <div className="flex justify-center items-center h-full">
-        <Spinner label={"Loading Products"} />
+        <Spinner label={"Loading Meals"} />
       </div>
     );
   };
