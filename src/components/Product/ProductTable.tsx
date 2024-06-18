@@ -11,6 +11,7 @@ import {
   getKeyValue,
 } from "@nextui-org/react";
 import { ProductModal } from "@/components/Modals/ProductModal";
+import { MealModal } from "@/components/Modals/MealModal";
 import { DeleteModal } from "@/components/Modals/DeleteModal";
 import { deleteProduct } from "@/helpers/request";
 import { Copy, Trash } from "lucide-react";
@@ -168,7 +169,15 @@ const ProductTable = (props: ProductTableProps) => {
     if (product) {
       return (
         <>
-          <ProductModal
+          <MealModal
+            meal={product}
+            mealImage={getProductImage(product)}
+            open={openProduct}
+            categories={categories}
+            onClose={() => handleCloseProductModal()}
+            onUpdate={() => onUpdate()}
+          />
+          {/* <ProductModal
             product={product}
             productImage={getProductImage(product)}
             open={openProduct}
@@ -176,7 +185,7 @@ const ProductTable = (props: ProductTableProps) => {
             categories={categories}
             onClose={() => handleCloseProductModal()}
             onUpdate={() => onUpdate()}
-          />
+          /> */}
           <ProductModal
             product={product}
             productImage={getProductImage(product)}
