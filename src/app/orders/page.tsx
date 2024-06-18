@@ -236,18 +236,6 @@ export default function OrdersPage() {
   };
 
   const generateFilteredCsvData = (filteredOrders: any[]) => {
-    // orders.forEach((order) => {
-    //   const filteredLineItems = order.line_items.filter(
-    //     (item: any) => parseInt(item.product_data.acf?.facts?.calories) > 0
-    //   );
-
-    //   if (filteredLineItems.length > 0) {
-    //     // If there are line items with non-zero calories, include the order with filtered line items
-    //     const filteredOrder = { ...order, line_items: filteredLineItems };
-    //     filteredOrders.push(filteredOrder);
-    //   }
-    // });
-
     // Generate CSV data from filtered orders
     const filteredCsvData = generateFullCsvData(filteredOrders);
     return filteredCsvData;
@@ -403,42 +391,6 @@ export default function OrdersPage() {
       return (
         <OrderTable orders={filteredOrders} onUpdate={() => getOrders()} />
       );
-      // return filteredOrders.map((order, index) => (
-      //   <div key={index} style={{ marginBottom: "20px" }}>
-      //     <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
-      //     {order.billing.first_name} {order.billing.last_name} <br />
-      //     <strong>Order Date: </strong>
-      //     {friendlyDate(order.date_created, true) || "N/A"}
-      //     <br />
-      //     <strong>Delivery Date:</strong>{" "}
-      //     {friendlyDate(getDeliveryDate(order)) || "N/A"}
-      //     <br />
-      //     <strong>Status: </strong>
-      //     {order.status}
-      //     <div style={{ marginLeft: "20px" }}>
-      //       <strong>Line Items:</strong>
-      //       {order.line_items.map(
-      //         (
-      //           item: any,
-      //           i: number // Provide type annotations for item and i
-      //         ) => (
-      //           <div key={i} style={{ marginLeft: "20px", marginTop: "5px" }}>
-      //             <div>
-      //               <strong>Product Name:</strong> {item.name}
-      //             </div>
-      //             <div>
-      //               <strong>Quantity:</strong> {item.quantity}
-      //             </div>
-      //             <div>
-      //               <strong>Price:</strong> {item.price.toFixed(2)}{" "}
-      //               {order.currency_symbol}
-      //             </div>
-      //           </div>
-      //         )
-      //       )}
-      //     </div>
-      //   </div>
-      // ));
     };
 
     // Get meal sums
@@ -561,26 +513,6 @@ export default function OrdersPage() {
               onChange={(e) => setEndDate(e)}
               minValue={startDate.copy().add({ days: 1 })}
             />
-            {/* <Input
-              type="date"
-              variant="bordered"
-              label="Start Date"
-              defaultValue={startDate}
-              onChange={(e) => setStartDate(e.target.value)} // Update state when the date changes
-              max={new Date(endDate) // Set max to one day before end date
-                .toISOString()
-                .slice(0, 10)}
-            ></Input>
-            <Input
-              type="date"
-              variant="bordered"
-              label="End Date"
-              defaultValue={endDate} // Set default value to today's date
-              onChange={(e) => setEndDate(e.target.value)} // Update state when the date changes
-              min={new Date(startDate) // Set min to one day after start date
-                .toISOString()
-                .slice(0, 10)}
-            ></Input> */}
           </div>
           <div
             style={{
