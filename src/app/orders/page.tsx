@@ -433,8 +433,8 @@ export default function OrdersPage() {
         <div style={{ width: "70%", marginBottom: "10px" }}>
           <Tooltip
             showArrow={true}
-            content='use "name:" at the start to search for names'
-            delay={500}
+            content='use "name:" at the start to search for names otherwise search by order id'
+            delay={1000}
             closeDelay={0}
             placement="bottom-start"
           >
