@@ -50,7 +50,7 @@ export const order_columns = [
   },
   {
     key: "customer_name",
-    label: "CUSTOMER_NAME",
+    label: "CUSTOMER NAME",
   },
   {
     key: "order_date",
