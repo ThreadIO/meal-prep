@@ -17,6 +17,11 @@ import { getUser, getMeal, createMeal, patchMeal } from "@/helpers/request";
 import { stockStatusOptions } from "@/helpers/utils";
 import Dropdown from "@/components/Dropdown";
 import { X } from "lucide-react";
+import {
+  createMealOnWoocommerce,
+  updateMealOnWoocommerce,
+} from "@/connectors/woocommerce/meals";
+
 interface MealModalProps {
   meal: any;
   threadMeal: any;
@@ -131,12 +136,15 @@ export const MealModal = (props: MealModalProps) => {
           await patchMeal(meal.id, body.url, body);
           // Update in Service
         }
-        console.log("Placeholder - Update in Service");
+        const woocommerceProduct = await updateMealOnWoocommerce(body, tags);
+        console.log("Updated Product: ", woocommerceProduct);
       } else {
         // Create it first in Service, then Create in Thread so we have an associated mealid
         console.log("Doesn't exist in WC yet");
-        console.log("Placeholder - Create in Service");
+        const woocommerceProduct = await createMealOnWoocommerce(meal, tags);
+        // Get an id from the service
         // Create in Thread
+        console.log("Create Product: ", woocommerceProduct);
         console.log("Placeholder - Create in Thread");
       }
       onUpdate();

@@ -70,7 +70,6 @@ export async function deleteMeal(mealid: string, url: string) {
 
 export async function patchMeal(mealid: string, url: string, body: any = {}) {
   try {
-    console.log("MealId ID: ", mealid);
     if (!mealid)
       return NextResponse.json({
         success: false,

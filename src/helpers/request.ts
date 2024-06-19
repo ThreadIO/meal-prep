@@ -133,6 +133,7 @@ export async function createProduct(body: any) {
 }
 
 export async function patchProduct(productid: string, body: any) {
+  console.log("In Patch Product: ", body);
   const { success, data, error } = await (
     await fetch(`/api/woocommerce/product/${productid}`, {
       method: "PATCH",
