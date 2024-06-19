@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Button,
   Table,
   TableHeader,
   TableColumn,
@@ -10,9 +9,6 @@ import {
   getKeyValue,
 } from "@nextui-org/react";
 import { OrderModal } from "@/components/Modals/OrderModal";
-import { DeleteModal } from "@/components/Modals/DeleteModal";
-// import { deleteOrder } from "@/helpers/request";
-import { Trash } from "lucide-react";
 import { order_columns } from "@/helpers/utils";
 import { friendlyDate, getDeliveryDate } from "@/helpers/date";
 import { renderOrderStatus } from "@/components/Renders";
@@ -23,36 +19,17 @@ interface OrderTableProps {
 
 const OrderTable = (props: OrderTableProps) => {
   const [openOrder, setOpenOrder] = useState(false);
-  const [openDelete, setOpenDelete] = useState(false);
   const [order, setOrder] = useState<any>({});
   const { orders, onUpdate } = props;
-
-  const handleCloseDeleteModal = () => {
-    setOrder({});
-    setOpenDelete(false);
-  };
 
   const handleCloseOrderModal = () => {
     setOrder({});
     setOpenOrder(false);
   };
 
-  const handleDelete = async (order: any) => {
-    // await deleteOrder(order.id, { userid: userId });
-    console.log("Deleting order: ", order);
-    onUpdate();
-    setOpenDelete(false);
-  };
-
-  const handleOpenDelete = (item: any) => {
-    setOrder(item);
-    setOpenDelete(true);
-  };
-
   const handleOpenOrder = (item: any) => {
     setOrder(item);
     setOpenOrder(true);
-    console.log("Opening order: ", openOrder);
   };
 
   const renderTableCell = (item: any, columnKey: string) => {
@@ -77,19 +54,6 @@ const OrderTable = (props: OrderTableProps) => {
       return <div>{friendlyDate(getDeliveryDate(item)) || "N/A"}</div>;
     } else if (columnKey === "status") {
       return <div>{renderOrderStatus(item)}</div>;
-    } else if (columnKey === "actions") {
-      return (
-        <div className="flex justify-center space-x-4">
-          <Button
-            color="danger"
-            size="sm"
-            onClick={() => handleOpenDelete(item)}
-            isIconOnly
-          >
-            <Trash />
-          </Button>
-        </div>
-      );
     } else {
       return getKeyValue(item, columnKey);
     }
@@ -104,12 +68,6 @@ const OrderTable = (props: OrderTableProps) => {
             open={openOrder}
             onClose={() => handleCloseOrderModal()}
             onUpdate={() => onUpdate()}
-          />
-          <DeleteModal
-            object={order}
-            open={openDelete}
-            onClose={() => handleCloseDeleteModal()}
-            onDelete={() => handleDelete(order)}
           />
         </>
       );

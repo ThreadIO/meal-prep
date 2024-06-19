@@ -1,5 +1,6 @@
 import {
   Image,
+  Input,
   Table,
   TableHeader,
   TableColumn,
@@ -9,11 +10,11 @@ import {
   getKeyValue,
 } from "@nextui-org/react";
 import { line_item_columns } from "@/helpers/utils";
-interface LineItemTableProps {
+interface RefundLineItemTableProps {
   line_items: any;
 }
 
-const LineItemTable = (props: LineItemTableProps) => {
+const RefundLineItemTable = (props: RefundLineItemTableProps) => {
   const { line_items } = props;
 
   const getLineItemImage = (lineItem: any) => {
@@ -64,9 +65,26 @@ const LineItemTable = (props: LineItemTableProps) => {
     } else if (columnKey === "name") {
       return <div> {getKeyValue(item, columnKey)}</div>;
     } else if (columnKey === "subtotal") {
-      return <div>{`$${parseFloat(item.price || "0").toFixed(2)}`}</div>;
+      return (
+        <Input
+          type={"number"}
+          defaultValue={`${parseFloat(item.price || "0").toFixed(2)}`}
+        />
+      );
     } else if (columnKey === "total_tax") {
-      return <div>{`$${parseFloat(item.total_tax || "0").toFixed(2)}`}</div>;
+      return (
+        <Input
+          type={"number"}
+          defaultValue={`${parseFloat(item.total_tax || "0").toFixed(2)}`}
+        />
+      );
+    } else if (columnKey === "quantity") {
+      return (
+        <Input
+          type={"number"}
+          defaultValue={`${parseFloat(item.quantity || "0")}`}
+        />
+      );
     } else {
       return getKeyValue(item, columnKey);
     }
@@ -74,7 +92,7 @@ const LineItemTable = (props: LineItemTableProps) => {
 
   return (
     <div className="mt-4 mr-4 ml-4">
-      <Table isHeaderSticky isStriped aria-label="Table of Line Items">
+      <Table isHeaderSticky aria-label="Table of Line Items">
         <TableHeader columns={line_item_columns}>
           {(column) => (
             <TableColumn key={column.key}>{column.label}</TableColumn>
@@ -99,4 +117,4 @@ const LineItemTable = (props: LineItemTableProps) => {
   );
 };
 
-export default LineItemTable;
+export default RefundLineItemTable;
