@@ -14,16 +14,15 @@ export async function getMeal(mealid: string, url: string) {
 
 /** POST: http://localhost:3000/api/meal */
 export async function createMeal(mealid: string, body: any) {
+  console.log("In create meal helper");
+  console.log("Meal ID: ", mealid);
+  console.log("Body: ", body);
   try {
-    if (!mealid)
-      return NextResponse.json({
-        success: false,
-        error: "No meal id present...!",
-      });
     const existingMeal = await Meal.findOne({
       mealid: mealid,
       url: body.url,
     });
+    console.log("Existing Meal: ", existingMeal);
     if (existingMeal) {
       console.log("Meal already exists...!");
       return NextResponse.json({

@@ -30,6 +30,8 @@ const ProductTable = (props: ProductTableProps) => {
   const [openCopyProduct, setOpenCopyProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [product, setProduct] = useState<any>({});
+  // This is the product in Thread
+  // const [threadMeal, setThreadMeal] = useState<any>();
   const [loading, setLoading] = useState(false);
   const { products, userId, onUpdate, categories } = props;
 
@@ -176,7 +178,7 @@ const ProductTable = (props: ProductTableProps) => {
             meal={product}
             mealImage={getProductImage(product)}
             open={openProduct}
-            categories={categories}
+            tags={categories}
             onClose={() => handleCloseProductModal()}
             onUpdate={() => onUpdate()}
           />

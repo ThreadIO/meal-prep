@@ -13,7 +13,7 @@ import {
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import { useUser } from "@propelauth/nextjs/client";
-import { patchProduct } from "@/helpers/request";
+import { getUser, getMeal, createMeal, patchMeal } from "@/helpers/request";
 import { stockStatusOptions } from "@/helpers/utils";
 import Dropdown from "@/components/Dropdown";
 
@@ -23,11 +23,11 @@ interface MealModalProps {
   open: boolean;
   onClose: () => void;
   onUpdate: () => void;
-  categories: any[];
+  tags: any[];
 }
 
 export const MealModal = (props: MealModalProps) => {
-  const { meal, mealImage, open, onClose, onUpdate, categories } = props;
+  const { meal, mealImage, open, onClose, onUpdate, tags } = props;
   const [loadingSave, setLoadingSave] = useState(false);
   const [mealDescription, setMealDescription] = useState("");
   const [mealRegularPrice, setMealRegularPrice] = useState("");
@@ -37,6 +37,13 @@ export const MealModal = (props: MealModalProps) => {
   );
   const [selectedKeys, setSelectedKeys] = useState<any>(new Set());
   const [options, setOptions] = useState<any[]>();
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [nutritionFacts, setNutritionFacts] = useState({
+    calories: 0,
+    carbs: 0,
+    fat: 0,
+    protein: 0,
+  });
   const { loading, user } = useUser();
   const userId = user?.userId || "";
 
@@ -46,11 +53,7 @@ export const MealModal = (props: MealModalProps) => {
       setMealDescription(meal.description || "");
       setMealRegularPrice(meal.regular_price || "");
       setSelectedKeys(
-        new Set(
-          meal.categories
-            ? meal.categories.map((category: any) => category.name)
-            : []
-        )
+        new Set(meal.tags ? meal.tags.map((tag: any) => tag.name) : [])
       );
       setSelectedStockStatus(
         new Set([
@@ -59,47 +62,69 @@ export const MealModal = (props: MealModalProps) => {
           )?.display || "In Stock",
         ])
       );
+      setSelectedTags(meal.tags ? meal.tags.map((tag: any) => tag.name) : []);
+      setNutritionFacts({
+        calories: meal.nutrition?.calories || 0,
+        carbs: meal.nutrition?.carbs || 0,
+        fat: meal.nutrition?.fat || 0,
+        protein: meal.nutrition?.protein || 0,
+      });
     }
   }, [meal]);
 
-  const mapSelectedCategoriesToObjects = () => {
-    const selectedCategoryObjects = categories.filter((category) =>
-      selectedKeys.has(category.name)
-    );
-    return selectedCategoryObjects;
-  };
+  //   const mapSelectedTagsToObjects = () => {
+  //     const selectedTagObjects = tags.filter((tag) => selectedKeys.has(tag.name));
+  //     return selectedTagObjects;
+  //   };
 
+  // Update this to save the meal in Mongo instead of WooCommerce
   const handleSave = async () => {
     setLoadingSave(true);
-    const selectedCategories = mapSelectedCategoriesToObjects();
-    const selectedStockStatusDisplay = Array.from(selectedStockStatus)[0];
-    const matchingStockOption = stockStatusOptions.find(
-      (option) => option.display === selectedStockStatusDisplay
-    );
-    const matchingStockOptionValue = matchingStockOption?.value || "instock";
-    const body = {
-      ...(meal || {}),
-      name: String(mealName),
-      images: meal.images,
-      description: String(mealDescription),
-      regular_price: String(mealRegularPrice),
-      categories: selectedCategories,
-      stock_status: matchingStockOptionValue,
-      userid: userId,
-    };
-
-    const ignoredParams = [
-      "composite_layout",
-      "composite_add_to_cart_form_location",
-      "composite_sold_individually_context",
-      "composite_shop_price_calc",
-      "bundle_layout",
-    ];
-    ignoredParams.forEach((param) => delete body[param]);
-    await patchProduct(meal.id, body);
-    onUpdate();
-    setLoadingSave(false);
-    onClose();
+    console.log("Selected Tags: ", selectedTags);
+    try {
+      if (meal) {
+        // Meal exists in Service, need to check if it exists in Thread
+        // Need to programmatically get url, from user settings
+        const user = await getUser(userId);
+        const url = user.settings.url.replace(/^(https?:\/\/)/, "");
+        const selectedStockStatusString =
+          Array.from(selectedStockStatus).join(", ");
+        const body = {
+          mealid: meal.id,
+          name: String(mealName),
+          url: url,
+          status: selectedStockStatusString,
+          description: String(mealDescription),
+          price: String(mealRegularPrice),
+          userid: userId,
+          //   tags: selectedTags,
+          nutrition_facts: nutritionFacts,
+        };
+        // Check if meal exists in thread db
+        const existing_meal = await getMeal(meal.id, body.url);
+        if (!existing_meal) {
+          // This means the meal doesn't exist in thread db, so we need to create it
+          await createMeal(body);
+        } else {
+          // This means the meal does exist, so we need to update it
+          await patchMeal(meal.id, body.url, body);
+          // Update in Service
+        }
+        console.log("Placeholder - Update in Service");
+      } else {
+        // Create it first in Service, then Create in Thread so we have an associated mealid
+        console.log("Doesn't exist in WC yet");
+        console.log("Placeholder - Create in Service");
+        // Create in Thread
+        console.log("Placeholder - Create in Thread");
+      }
+      onUpdate();
+      setLoadingSave(false);
+      onClose();
+    } catch (error) {
+      console.log("Some error: ", error);
+      setLoadingSave(false);
+    }
   };
 
   const renderContent = () => {
@@ -160,7 +185,7 @@ export const MealModal = (props: MealModalProps) => {
           }}
         >
           {renderStockStatusDropdown()}
-          {renderCategoryDropdown()}
+          {renderTagDropdown()}
         </div>
         <Input
           label="Regular Price"
@@ -170,7 +195,7 @@ export const MealModal = (props: MealModalProps) => {
       </div>
     );
   };
-  const renderCategoryDropdown = () => {
+  const renderTagDropdown = () => {
     return (
       <Dropdown
         aria_label="Multiple selection example"
@@ -180,7 +205,7 @@ export const MealModal = (props: MealModalProps) => {
         selectionMode="multiple"
         selectedKeys={selectedKeys}
         onSelectionChange={setSelectedKeys}
-        items={categories}
+        items={tags}
       />
     );
   };
@@ -219,7 +244,17 @@ export const MealModal = (props: MealModalProps) => {
       <Accordion>
         <AccordionItem key="nutrition_facts" title="Nutrition Facts">
           <div style={{ display: "flex", gap: "1rem" }}>
-            <Input type="number" label="Calories" />
+            <Input
+              type="number"
+              label="Calories"
+              value={nutritionFacts.calories.toString()}
+              onChange={(e) =>
+                setNutritionFacts({
+                  ...nutritionFacts,
+                  calories: parseInt(e.target.value),
+                })
+              }
+            />
             <Input type="number" label="Carbs" />
             <Input type="number" label="Fat" />
             <Input type="number" label="Protein" />

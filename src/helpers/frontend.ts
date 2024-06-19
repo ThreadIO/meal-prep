@@ -78,3 +78,7 @@ export const getCategories = async (
 export const findObjectByValue = (array: any[], key: string, value: any) => {
   return array.find((obj) => obj[key] === value);
 };
+
+export const friendlyUrl = (url: string) => {
+  return url.replace(/^(https?:\/\/)/, "");
+};

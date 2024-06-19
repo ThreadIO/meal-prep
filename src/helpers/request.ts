@@ -159,3 +159,58 @@ export async function deleteProduct(productid: string, body: any) {
   if (!success) throw new Error("Error deleting product: ", error);
   return data;
 }
+
+export async function getMeal(mealid: string, url: string) {
+  const { success, data, error } = await (
+    await fetch(`/api/meal/${mealid}/${url}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+  ).json();
+  if (!success) throw new Error("Error fetching meal: ", error);
+  return data;
+}
+
+export async function createMeal(body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/meal`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error creating meal: ", error);
+  return data;
+}
+
+export async function patchMeal(mealid: string, url: string, body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/meal/${mealid}/${url}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error updating meal: ", error);
+  return data;
+}
+
+export async function deleteMeal(mealid: string, body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/meal/${mealid}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error deleting meal: ", error);
+  return data;
+}
