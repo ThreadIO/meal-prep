@@ -202,14 +202,13 @@ export async function patchMeal(mealid: string, url: string, body: any) {
   return data;
 }
 
-export async function deleteMeal(mealid: string, body: any) {
+export async function deleteMeal(mealid: string, url: string) {
   const { success, data, error } = await (
-    await fetch(`/api/meal/${mealid}`, {
+    await fetch(`/api/meal/${mealid}/${url}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
     })
   ).json();
   if (!success) throw new Error("Error deleting meal: ", error);

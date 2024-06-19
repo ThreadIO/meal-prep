@@ -30,13 +30,14 @@ export const createMealOnWoocommerce = async (
     userid: meal.userid,
     name: meal.name,
     type: "simple",
-    regular_price: meal.price,
+    regular_price: meal.price.toString(),
     description: meal.description,
     categories: categories,
     stock_status: status,
   };
 
   const product = await createProduct(body);
+  console.log("Product: ", product);
   return product;
 };
 

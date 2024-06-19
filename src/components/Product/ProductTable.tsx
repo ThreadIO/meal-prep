@@ -10,10 +10,9 @@ import {
   TableCell,
   getKeyValue,
 } from "@nextui-org/react";
-import { ProductModal } from "@/components/Modals/ProductModal";
 import { MealModal } from "@/components/Modals/MealModal";
 import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
-import { deleteProduct, getMeal, getUser } from "@/helpers/request";
+import { deleteMeal, deleteProduct, getMeal, getUser } from "@/helpers/request";
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
 import { product_columns } from "@/helpers/utils";
@@ -69,6 +68,20 @@ const ProductTable = (props: ProductTableProps) => {
     return productImage;
   };
 
+  const threadConnector = async (
+    object: any,
+    // eslint-disable-next-line no-unused-vars
+    functionToCall: (id: string, url: string) => Promise<void>
+  ) => {
+    if (object && Object.keys(object).length > 0) {
+      const user = await getUser(userId);
+      const url = friendlyUrl(user.settings.url);
+      const response = await functionToCall(object.id, url);
+      return response;
+    }
+    return null;
+  };
+
   const handleCloseProductModal = () => {
     setProduct({});
     setOpenProduct(false);
@@ -86,6 +99,8 @@ const ProductTable = (props: ProductTableProps) => {
 
   const handleDelete = async (product: any) => {
     setLoading(true);
+    console.log("Product: ", product);
+    await threadConnector(product, deleteMeal);
     await deleteProduct(product.id, { userid: userId });
     onUpdate();
     setLoading(false);
@@ -99,15 +114,15 @@ const ProductTable = (props: ProductTableProps) => {
 
   const handleOpenProduct = async (item: any) => {
     setProduct(item);
-    const user = await getUser(userId);
-    const url = friendlyUrl(user.settings.url);
-    const threadMeal = await getMeal(item.id, url);
+    const threadMeal = await threadConnector(item, getMeal);
     setThreadMeal(threadMeal);
     setOpenProduct(true);
   };
 
-  const handleOpenCopyProduct = (item: any) => {
+  const handleOpenCopyProduct = async (item: any) => {
     setProduct(item);
+    const threadMeal = await threadConnector(item, getMeal);
+    setThreadMeal(threadMeal);
     setOpenCopyProduct(true);
   };
 
@@ -188,6 +203,7 @@ const ProductTable = (props: ProductTableProps) => {
             tags={categories}
             onClose={() => handleCloseProductModal()}
             onUpdate={() => onUpdate()}
+            mode="patch"
           />
           {/* <ProductModal
             product={product}
@@ -198,14 +214,15 @@ const ProductTable = (props: ProductTableProps) => {
             onClose={() => handleCloseProductModal()}
             onUpdate={() => onUpdate()}
           /> */}
-          <ProductModal
-            product={product}
-            productImage={getProductImage(product)}
+          <MealModal
+            meal={product}
+            threadMeal={threadMeal}
+            mealImage={getProductImage(product)}
             open={openCopyProduct}
-            mode="create"
             onClose={() => handleCloseCopyProductModal()}
             onUpdate={() => onUpdate()}
-            categories={categories}
+            tags={categories}
+            mode="create"
           />
           <ConfirmationModal
             object={product}

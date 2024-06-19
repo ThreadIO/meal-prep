@@ -21,6 +21,7 @@ import {
   createMealOnWoocommerce,
   updateMealOnWoocommerce,
 } from "@/connectors/woocommerce/meals";
+import { friendlyUrl } from "@/helpers/frontend";
 
 interface MealModalProps {
   meal: any;
@@ -30,10 +31,12 @@ interface MealModalProps {
   onClose: () => void;
   onUpdate: () => void;
   tags: any[];
+  mode: "create" | "patch";
 }
 
 export const MealModal = (props: MealModalProps) => {
-  const { meal, threadMeal, mealImage, open, onClose, onUpdate, tags } = props;
+  const { meal, threadMeal, mealImage, open, onClose, onUpdate, tags, mode } =
+    props;
   const [loadingSave, setLoadingSave] = useState(false);
   const [mealDescription, setMealDescription] = useState("");
   const [mealPrice, setMealPrice] = useState("");
@@ -108,46 +111,60 @@ export const MealModal = (props: MealModalProps) => {
     );
     console.log("Selected Tags: ", selectedTags);
     try {
-      if (meal) {
-        // Meal exists in Service, need to check if it exists in Thread
-        // Need to programmatically get url, from user settings
-        const user = await getUser(userId);
-        const url = user.settings.url.replace(/^(https?:\/\/)/, "");
-        const selectedStockStatusString =
-          Array.from(selectedStockStatus).join(", ");
-        console.log("Menu Price: ", mealPrice);
-        const body = {
-          mealid: meal.id,
-          name: String(mealName),
-          url: url,
-          status: selectedStockStatusString,
-          description: String(mealDescription),
-          price: parseFloat(mealPrice),
-          userid: userId,
-          tags: selectedTags,
-          nutrition_facts: nutritionFacts,
-          options: options,
+      const user = await getUser(userId);
+      const url = friendlyUrl(user.settings.url);
+      const selectedStockStatusString =
+        Array.from(selectedStockStatus).join(", ");
+      console.log("Menu Price: ", mealPrice);
+      const body: {
+        name: string;
+        url: string;
+        status: string;
+        description: string;
+        price: number;
+        userid: string;
+        tags: any[];
+        nutrition_facts: {
+          calories: number;
+          carbs: number;
+          fat: number;
+          protein: number;
         };
-        // Check if meal exists in thread db
-        const existing_meal = await getMeal(meal.id, body.url);
+        options: any[];
+        mealid?: string; // Add the mealid property
+      } = {
+        name: String(mealName),
+        url: url,
+        status: selectedStockStatusString,
+        description: String(mealDescription),
+        price: parseFloat(mealPrice),
+        userid: userId,
+        tags: selectedTags,
+        nutrition_facts: nutritionFacts,
+        options: options,
+      };
+
+      if (meal && mode === "patch") {
+        // Meal exists in Service, need to check if it exists in Thread
+        body.mealid = meal.id;
+        const existing_meal = await getMeal(meal.id, url);
         if (!existing_meal) {
-          // This means the meal doesn't exist in thread db, so we need to create it
+          // Create the meal in Thread DB
           await createMeal(body);
         } else {
-          // This means the meal does exist, so we need to update it
-          await patchMeal(meal.id, body.url, body);
-          // Update in Service
+          // Update the meal in Thread DB
+          await patchMeal(meal.id, url, body);
+          // Update in Service if needed
         }
         const woocommerceProduct = await updateMealOnWoocommerce(body, tags);
         console.log("Updated Product: ", woocommerceProduct);
       } else {
-        // Create it first in Service, then Create in Thread so we have an associated mealid
+        // Create it first in Service, then create in Thread DB
         console.log("Doesn't exist in WC yet");
-        const woocommerceProduct = await createMealOnWoocommerce(meal, tags);
-        // Get an id from the service
-        // Create in Thread
-        console.log("Create Product: ", woocommerceProduct);
-        console.log("Placeholder - Create in Thread");
+        const woocommerceProduct = await createMealOnWoocommerce(body, tags);
+        body.mealid = woocommerceProduct.id;
+        // Then create in Thread DB
+        await createMeal(body);
       }
       onUpdate();
       setLoadingSave(false);
