@@ -36,8 +36,7 @@ export const MealModal = (props: MealModalProps) => {
     new Set()
   );
   const [selectedKeys, setSelectedKeys] = useState<any>(new Set());
-  const [options, setOptions] = useState<any[]>();
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [options, setOptions] = useState<any[]>([]);
   const [nutritionFacts, setNutritionFacts] = useState({
     calories: 0,
     carbs: 0,
@@ -53,7 +52,11 @@ export const MealModal = (props: MealModalProps) => {
       setMealDescription(meal.description || "");
       setMealRegularPrice(meal.regular_price || "");
       setSelectedKeys(
-        new Set(meal.tags ? meal.tags.map((tag: any) => tag.name) : [])
+        new Set(
+          meal.categories
+            ? meal.categories.map((category: any) => category.name)
+            : []
+        )
       );
       setSelectedStockStatus(
         new Set([
@@ -62,7 +65,6 @@ export const MealModal = (props: MealModalProps) => {
           )?.display || "In Stock",
         ])
       );
-      setSelectedTags(meal.tags ? meal.tags.map((tag: any) => tag.name) : []);
       setNutritionFacts({
         calories: meal.nutrition?.calories || 0,
         carbs: meal.nutrition?.carbs || 0,
@@ -72,14 +74,19 @@ export const MealModal = (props: MealModalProps) => {
     }
   }, [meal]);
 
-  //   const mapSelectedTagsToObjects = () => {
-  //     const selectedTagObjects = tags.filter((tag) => selectedKeys.has(tag.name));
-  //     return selectedTagObjects;
-  //   };
+  const mapSelectedTagsToObjects = () => {
+    console.log("Selected Keys: ", selectedKeys);
+    const selectedTagObjects = tags.filter((tag) => selectedKeys.has(tag.name));
+    return selectedTagObjects;
+  };
 
   // Update this to save the meal in Mongo instead of WooCommerce
   const handleSave = async () => {
     setLoadingSave(true);
+    const selectedTags = Array.from(
+      mapSelectedTagsToObjects(),
+      (item) => item.name
+    );
     console.log("Selected Tags: ", selectedTags);
     try {
       if (meal) {
@@ -89,16 +96,18 @@ export const MealModal = (props: MealModalProps) => {
         const url = user.settings.url.replace(/^(https?:\/\/)/, "");
         const selectedStockStatusString =
           Array.from(selectedStockStatus).join(", ");
+        console.log("Menu Regular Price: ", mealRegularPrice);
         const body = {
           mealid: meal.id,
           name: String(mealName),
           url: url,
           status: selectedStockStatusString,
           description: String(mealDescription),
-          price: String(mealRegularPrice),
+          price: parseFloat(mealRegularPrice),
           userid: userId,
-          //   tags: selectedTags,
+          tags: selectedTags,
           nutrition_facts: nutritionFacts,
+          options: options,
         };
         // Check if meal exists in thread db
         const existing_meal = await getMeal(meal.id, body.url);
@@ -255,9 +264,39 @@ export const MealModal = (props: MealModalProps) => {
                 })
               }
             />
-            <Input type="number" label="Carbs" />
-            <Input type="number" label="Fat" />
-            <Input type="number" label="Protein" />
+            <Input
+              type="number"
+              label="Carbs"
+              value={nutritionFacts.carbs.toString()}
+              onChange={(e) =>
+                setNutritionFacts({
+                  ...nutritionFacts,
+                  carbs: parseInt(e.target.value),
+                })
+              }
+            />
+            <Input
+              type="number"
+              label="Fat"
+              value={nutritionFacts.fat.toString()}
+              onChange={(e) =>
+                setNutritionFacts({
+                  ...nutritionFacts,
+                  fat: parseInt(e.target.value),
+                })
+              }
+            />
+            <Input
+              type="number"
+              label="Protein"
+              value={nutritionFacts.protein.toString()}
+              onChange={(e) =>
+                setNutritionFacts({
+                  ...nutritionFacts,
+                  protein: parseInt(e.target.value),
+                })
+              }
+            />
           </div>
         </AccordionItem>
       </Accordion>
@@ -269,25 +308,87 @@ export const MealModal = (props: MealModalProps) => {
       <Accordion>
         <AccordionItem key="options" title="Options">
           {options &&
-            options.map((option, index) => renderOption(index.toString()))}
+            options.map((option, index) =>
+              renderOption(option, index.toString())
+            )}
           {addOptionButton()}
         </AccordionItem>
       </Accordion>
     );
   };
 
-  const renderOption = (index: string) => {
+  const renderOption = (option: any, index: string) => {
     return (
       <div
         key={index}
         style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}
       >
-        <Input label="Option Name" />
-        <Input label="Price Adjustment" type="number" />
-        <Input label="Calories" type="number" />
-        <Input label="Carbs" type="number" />
-        <Input label="Fat" type="number" />
-        <Input label="Protein" type="number" />
+        <Input
+          label="Option Name"
+          value={option.name}
+          onChange={(e) => {
+            const updatedOptions = [...options];
+            updatedOptions[parseInt(index)].name = e.target.value;
+            setOptions(updatedOptions);
+          }}
+        />
+        <Input
+          label="Price Adjustment"
+          type="number"
+          defaultValue={"0"}
+          value={option.price_adjustment}
+          onChange={(e) => {
+            const updatedOptions = [...options];
+            updatedOptions[parseInt(index)].price_adjustment = parseFloat(
+              e.target.value
+            );
+            setOptions(updatedOptions);
+          }}
+        />
+        <Input
+          label="Calories"
+          type="number"
+          defaultValue={"0"}
+          value={option.calories}
+          onChange={(e) => {
+            const updatedOptions = [...options];
+            updatedOptions[parseInt(index)].calories = parseInt(e.target.value);
+            setOptions(updatedOptions);
+          }}
+        />
+        <Input
+          label="Carbs"
+          type="number"
+          defaultValue={"0"}
+          value={option.carbs}
+          onChange={(e) => {
+            const updatedOptions = [...options];
+            updatedOptions[parseInt(index)].carbs = parseInt(e.target.value);
+            setOptions(updatedOptions);
+          }}
+        />
+        <Input
+          label="Fat"
+          type="number"
+          defaultValue={"0"}
+          value={option.fat}
+          onChange={(e) => {
+            const updatedOptions = [...options];
+            updatedOptions[parseInt(index)].fat = parseInt(e.target.value);
+            setOptions(updatedOptions);
+          }}
+        />
+        <Input
+          label="Protein"
+          type="number"
+          defaultValue={"0"}
+          value={option.protein}
+          onChange={(e) => {
+            const updatedOptions = [...options];
+            updatedOptions[parseInt(index)].protein = parseInt(e.target.value);
+            setOptions(updatedOptions);
+          }}
+        />
       </div>
     );
   };
