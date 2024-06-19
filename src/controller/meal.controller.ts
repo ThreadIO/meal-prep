@@ -20,6 +20,17 @@ export async function createMeal(mealid: string, body: any) {
         success: false,
         error: "No meal id present...!",
       });
+    const existingMeal = await Meal.findOne({
+      mealid: mealid,
+      url: body.url,
+    });
+    if (existingMeal) {
+      console.log("Meal already exists...!");
+      return NextResponse.json({
+        success: false,
+        error: "Meal already exists...!",
+      });
+    }
     console.log("Meal details: ", body);
     const newMeal = {
       mealid: mealid,
