@@ -16,7 +16,7 @@ import { useUser } from "@propelauth/nextjs/client";
 import { getUser, getMeal, createMeal, patchMeal } from "@/helpers/request";
 import { stockStatusOptions } from "@/helpers/utils";
 import Dropdown from "@/components/Dropdown";
-import { X } from "lucide-react";
+import { X, Grip, Check, ArrowUp, ArrowDown } from "lucide-react";
 import {
   createMealOnWoocommerce,
   updateMealOnWoocommerce,
@@ -49,6 +49,7 @@ export const MealModal = (props: MealModalProps) => {
     fat: 0,
     protein: 0,
   });
+  const [reorderMode, setReorderMode] = useState(false);
   const { loading, user } = useUser();
   const userId = user?.userId || "";
   useEffect(() => {
@@ -88,6 +89,7 @@ export const MealModal = (props: MealModalProps) => {
         fat: meal.nutrition?.fat || 0,
         protein: meal.nutrition?.protein || 0,
       });
+      setOptions([]);
     }
   }, [meal, threadMeal]);
 
@@ -338,85 +340,150 @@ export const MealModal = (props: MealModalProps) => {
   };
 
   const renderOption = (option: any, index: string) => {
+    const moveOption = (currentIndex: number, direction: "up" | "down") => {
+      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= options.length) {
+        return; // Index out of bounds, do nothing
+      }
+
+      // Create a copy of the options array
+      const updatedOptions = [...options];
+
+      // Swap the options at currentIndex and newIndex
+      const temp = updatedOptions[newIndex];
+      updatedOptions[newIndex] = updatedOptions[currentIndex];
+      updatedOptions[currentIndex] = temp;
+
+      // Update the state with the new options array
+      setOptions(updatedOptions);
+    };
+
+    const handleInputChange = (field: string, value: any) => {
+      // Create a copy of the options array
+      const updatedOptions = [...options];
+
+      // Update the specific option's field with the new value
+      updatedOptions[parseInt(index)][field] = value;
+
+      // Update the state with the new options array
+      setOptions(updatedOptions);
+    };
+
+    const deleteOption = () => {
+      // Filter out the option at the current index
+      const updatedOptions = options.filter((_, i) => i !== parseInt(index));
+
+      // Update the state with the new options array
+      setOptions(updatedOptions);
+    };
+
     return (
       <div
         key={index}
         style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}
       >
+        {reorderMode ? (
+          <>
+            <Button
+              onPress={() => moveOption(parseInt(index), "up")}
+              isIconOnly
+              variant="light"
+            >
+              <ArrowUp />
+            </Button>
+            <Button
+              onPress={() => moveOption(parseInt(index), "down")}
+              isIconOnly
+              variant="light"
+            >
+              <ArrowDown />
+            </Button>
+            <Button
+              isIconOnly
+              color="success"
+              variant="light"
+              onPress={() => setReorderMode(false)}
+            >
+              <Check />
+            </Button>
+          </>
+        ) : (
+          <Button
+            isIconOnly
+            variant="light"
+            style={{ cursor: "grab" }}
+            onPress={() => {
+              setReorderMode(true);
+            }}
+          >
+            <Grip />
+          </Button>
+        )}
         <Input
           label="Option Name"
           value={option.name}
-          onChange={(e) => {
-            const updatedOptions = [...options];
-            updatedOptions[parseInt(index)].name = e.target.value;
-            setOptions(updatedOptions);
-          }}
+          onChange={(e) => handleInputChange("name", e.target.value)}
         />
-        <Input
-          label="Price Adjustment"
-          type="number"
-          defaultValue={"0"}
-          value={option.price_adjustment}
-          onChange={(e) => {
-            const updatedOptions = [...options];
-            updatedOptions[parseInt(index)].price_adjustment = parseFloat(
-              e.target.value
-            );
-            setOptions(updatedOptions);
-          }}
-        />
-        <Input
-          label="Calories"
-          type="number"
-          defaultValue={"0"}
-          value={option.calories}
-          onChange={(e) => {
-            const updatedOptions = [...options];
-            updatedOptions[parseInt(index)].calories = parseInt(e.target.value);
-            setOptions(updatedOptions);
-          }}
-        />
-        <Input
-          label="Carbs"
-          type="number"
-          defaultValue={"0"}
-          value={option.carbs}
-          onChange={(e) => {
-            const updatedOptions = [...options];
-            updatedOptions[parseInt(index)].carbs = parseInt(e.target.value);
-            setOptions(updatedOptions);
-          }}
-        />
-        <Input
-          label="Fat"
-          type="number"
-          defaultValue={"0"}
-          value={option.fat}
-          onChange={(e) => {
-            const updatedOptions = [...options];
-            updatedOptions[parseInt(index)].fat = parseInt(e.target.value);
-            setOptions(updatedOptions);
-          }}
-        />
-        <Input
-          label="Protein"
-          type="number"
-          defaultValue={"0"}
-          value={option.protein}
-          onChange={(e) => {
-            const updatedOptions = [...options];
-            updatedOptions[parseInt(index)].protein = parseInt(e.target.value);
-            setOptions(updatedOptions);
-          }}
-        />
-        <Button
-          isIconOnly
-          color="danger"
-          variant={"ghost"}
-          onPress={() => deleteOption(parseInt(index))}
-        >
-          <X />
-        </Button>
+        {!reorderMode && (
+          <>
+            <Input
+              label="Price Adjustment"
+              type="number"
+              defaultValue={"0"}
+              value={option.price_adjustment}
+              onChange={(e) =>
+                handleInputChange(
+                  "price_adjustment",
+                  parseFloat(e.target.value)
+                )
+              }
+            />
+            <Input
+              label="Calories"
+              type="number"
+              defaultValue={"0"}
+              value={option.calories}
+              onChange={(e) =>
+                handleInputChange("calories", parseInt(e.target.value))
+              }
+            />
+            <Input
+              label="Carbs"
+              type="number"
+              defaultValue={"0"}
+              value={option.carbs}
+              onChange={(e) =>
+                handleInputChange("carbs", parseInt(e.target.value))
+              }
+            />
+            <Input
+              label="Fat"
+              type="number"
+              defaultValue={"0"}
+              value={option.fat}
+              onChange={(e) =>
+                handleInputChange("fat", parseInt(e.target.value))
+              }
+            />
+            <Input
+              label="Protein"
+              type="number"
+              defaultValue={"0"}
+              value={option.protein}
+              onChange={(e) =>
+                handleInputChange("protein", parseInt(e.target.value))
+              }
+            />
+            <Button
+              isIconOnly
+              color="danger"
+              variant="ghost"
+              onPress={deleteOption}
+            >
+              <X />
+            </Button>
+          </>
+        )}
       </div>
     );
   };
@@ -432,11 +499,6 @@ export const MealModal = (props: MealModalProps) => {
         Add Option
       </Button>
     );
-  };
-
-  const deleteOption = (index: number) => {
-    const updatedOptions = options.filter((_, i) => i !== index);
-    setOptions(updatedOptions);
   };
 
   const renderModalContent = () => {
