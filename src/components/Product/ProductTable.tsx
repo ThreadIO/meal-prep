@@ -13,10 +13,11 @@ import {
 import { ProductModal } from "@/components/Modals/ProductModal";
 import { MealModal } from "@/components/Modals/MealModal";
 import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
-import { deleteProduct } from "@/helpers/request";
+import { deleteProduct, getMeal, getUser } from "@/helpers/request";
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
 import { product_columns } from "@/helpers/utils";
+import { friendlyUrl } from "@/helpers/frontend";
 
 interface ProductTableProps {
   products: any;
@@ -30,6 +31,7 @@ const ProductTable = (props: ProductTableProps) => {
   const [openCopyProduct, setOpenCopyProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [product, setProduct] = useState<any>({});
+  const [threadMeal, setThreadMeal] = useState<any>();
   // This is the product in Thread
   // const [threadMeal, setThreadMeal] = useState<any>();
   const [loading, setLoading] = useState(false);
@@ -95,8 +97,12 @@ const ProductTable = (props: ProductTableProps) => {
     setOpenDelete(true);
   };
 
-  const handleOpenProduct = (item: any) => {
+  const handleOpenProduct = async (item: any) => {
     setProduct(item);
+    const user = await getUser(userId);
+    const url = friendlyUrl(user.settings.url);
+    const threadMeal = await getMeal(item.id, url);
+    setThreadMeal(threadMeal);
     setOpenProduct(true);
   };
 
@@ -170,12 +176,13 @@ const ProductTable = (props: ProductTableProps) => {
     }
   };
 
-  const modals = (product: any) => {
+  const modals = (product: any, threadMeal: any) => {
     if (product) {
       return (
         <>
           <MealModal
             meal={product}
+            threadMeal={threadMeal}
             mealImage={getProductImage(product)}
             open={openProduct}
             tags={categories}
@@ -214,7 +221,7 @@ const ProductTable = (props: ProductTableProps) => {
 
   return (
     <div className="mt-4 mr-4 ml-4">
-      {modals(product)}
+      {modals(product, threadMeal)}
       <Table isHeaderSticky isStriped aria-label="Table of Products">
         <TableHeader columns={product_columns}>
           {(column) => (

@@ -19,6 +19,7 @@ import Dropdown from "@/components/Dropdown";
 
 interface MealModalProps {
   meal: any;
+  threadMeal: any;
   mealImage: any;
   open: boolean;
   onClose: () => void;
@@ -27,10 +28,10 @@ interface MealModalProps {
 }
 
 export const MealModal = (props: MealModalProps) => {
-  const { meal, mealImage, open, onClose, onUpdate, tags } = props;
+  const { meal, threadMeal, mealImage, open, onClose, onUpdate, tags } = props;
   const [loadingSave, setLoadingSave] = useState(false);
   const [mealDescription, setMealDescription] = useState("");
-  const [mealRegularPrice, setMealRegularPrice] = useState("");
+  const [mealPrice, setMealPrice] = useState("");
   const [mealName, setMealName] = useState("");
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
     new Set()
@@ -45,12 +46,23 @@ export const MealModal = (props: MealModalProps) => {
   });
   const { loading, user } = useUser();
   const userId = user?.userId || "";
-
   useEffect(() => {
-    if (meal) {
+    if (threadMeal) {
+      setMealName(threadMeal.name || "");
+      setMealDescription(threadMeal.description || "");
+      setMealPrice(threadMeal.price || "");
+      setNutritionFacts({
+        calories: threadMeal.nutrition_facts.calories || 0,
+        carbs: threadMeal.nutrition_facts.carbs || 0,
+        fat: threadMeal.nutrition_facts.fat || 0,
+        protein: threadMeal.nutrition_facts.protein || 0,
+      });
+      setSelectedKeys(new Set(threadMeal.tags || []));
+      setOptions(threadMeal.options || []);
+    } else if (meal) {
       setMealName(meal.name || "");
       setMealDescription(meal.description || "");
-      setMealRegularPrice(meal.regular_price || "");
+      setMealPrice(meal.regular_price || "");
       setSelectedKeys(
         new Set(
           meal.categories
@@ -72,7 +84,7 @@ export const MealModal = (props: MealModalProps) => {
         protein: meal.nutrition?.protein || 0,
       });
     }
-  }, [meal]);
+  }, [meal, threadMeal]);
 
   const mapSelectedTagsToObjects = () => {
     console.log("Selected Keys: ", selectedKeys);
@@ -96,14 +108,14 @@ export const MealModal = (props: MealModalProps) => {
         const url = user.settings.url.replace(/^(https?:\/\/)/, "");
         const selectedStockStatusString =
           Array.from(selectedStockStatus).join(", ");
-        console.log("Menu Regular Price: ", mealRegularPrice);
+        console.log("Menu Price: ", mealPrice);
         const body = {
           mealid: meal.id,
           name: String(mealName),
           url: url,
           status: selectedStockStatusString,
           description: String(mealDescription),
-          price: parseFloat(mealRegularPrice),
+          price: parseFloat(mealPrice),
           userid: userId,
           tags: selectedTags,
           nutrition_facts: nutritionFacts,
@@ -198,8 +210,8 @@ export const MealModal = (props: MealModalProps) => {
         </div>
         <Input
           label="Regular Price"
-          value={mealRegularPrice}
-          onChange={(e) => setMealRegularPrice(e.target.value)}
+          value={mealPrice}
+          onChange={(e) => setMealPrice(e.target.value)}
         />
       </div>
     );
