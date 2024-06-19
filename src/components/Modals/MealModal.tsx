@@ -16,7 +16,7 @@ import { useUser } from "@propelauth/nextjs/client";
 import { getUser, getMeal, createMeal, patchMeal } from "@/helpers/request";
 import { stockStatusOptions } from "@/helpers/utils";
 import Dropdown from "@/components/Dropdown";
-
+import { X } from "lucide-react";
 interface MealModalProps {
   meal: any;
   threadMeal: any;
@@ -401,6 +401,14 @@ export const MealModal = (props: MealModalProps) => {
             setOptions(updatedOptions);
           }}
         />
+        <Button
+          isIconOnly
+          color="danger"
+          variant={"ghost"}
+          onPress={() => deleteOption(parseInt(index))}
+        >
+          <X />
+        </Button>
       </div>
     );
   };
@@ -416,6 +424,11 @@ export const MealModal = (props: MealModalProps) => {
         Add Option
       </Button>
     );
+  };
+
+  const deleteOption = (index: number) => {
+    const updatedOptions = options.filter((_, i) => i !== index);
+    setOptions(updatedOptions);
   };
 
   const renderModalContent = () => {
