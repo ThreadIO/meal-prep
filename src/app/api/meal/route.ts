@@ -1,7 +1,6 @@
 import connect from "@/database/conn";
 import { createMeal } from "@/controller/meal.controller";
 import { NextRequest, NextResponse } from "next/server";
-import { Console } from "console";
 
 export async function POST(request: NextRequest) {
   console.log("Creating Meal in MongoDb...");
