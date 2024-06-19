@@ -20,16 +20,17 @@ export async function createMeal(mealid: string, body: any) {
         success: false,
         error: "No meal id present...!",
       });
-    console.log("Settings: ", body);
+    console.log("Meal details: ", body);
     const newMeal = {
       mealid: mealid,
-      meal_name: body.meal_name,
       url: body.url,
-      calories: body.calories,
-      protein: body.protein,
-      fat: body.fat,
-      carbs: body.carbs,
-      add_ons: body.add_ons,
+      name: body.name,
+      status: body.status,
+      image: body.image,
+      tags: body.tags,
+      price: body.price,
+      nutrition_facts: body.nutrition_facts,
+      options: body.options,
     };
     console.log("New Meal: ", newMeal);
     const meal = await Meal.create(newMeal);
