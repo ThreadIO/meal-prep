@@ -80,10 +80,11 @@ export const line_item_columns = [
     label: "NAME",
   },
   {
-    key: "price",
-    label: "PRICE",
+    key: "subtotal",
+    label: "Total",
   },
   { key: "quantity", label: "QUANTITY" },
+  { key: "total_tax", label: "TOTAL TAX" },
   // {
   //   key: "actions",
   //   label: "ACTIONS",

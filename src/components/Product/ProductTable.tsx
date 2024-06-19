@@ -12,7 +12,7 @@ import {
 } from "@nextui-org/react";
 import { ProductModal } from "@/components/Modals/ProductModal";
 import { MealModal } from "@/components/Modals/MealModal";
-import { DeleteModal } from "@/components/Modals/DeleteModal";
+import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
 import { deleteProduct } from "@/helpers/request";
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
@@ -30,6 +30,7 @@ const ProductTable = (props: ProductTableProps) => {
   const [openCopyProduct, setOpenCopyProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [product, setProduct] = useState<any>({});
+  const [loading, setLoading] = useState(false);
   const { products, userId, onUpdate, categories } = props;
 
   //   useEffect(() => {
@@ -80,8 +81,10 @@ const ProductTable = (props: ProductTableProps) => {
   };
 
   const handleDelete = async (product: any) => {
+    setLoading(true);
     await deleteProduct(product.id, { userid: userId });
     onUpdate();
+    setLoading(false);
     setOpenDelete(false);
   };
 
@@ -195,11 +198,12 @@ const ProductTable = (props: ProductTableProps) => {
             onUpdate={() => onUpdate()}
             categories={categories}
           />
-          <DeleteModal
+          <ConfirmationModal
             object={product}
             open={openDelete}
             onClose={() => handleCloseDeleteModal()}
-            onDelete={() => handleDelete(product)}
+            onConfirm={() => handleDelete(product)}
+            loading={loading}
           />
         </>
       );
