@@ -13,7 +13,7 @@ import {
 import Image from "next/image";
 import { useState } from "react";
 import { ProductModal } from "@/components/Modals/ProductModal";
-import { DeleteModal } from "@/components/Modals/DeleteModal";
+import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
 import { deleteProduct } from "@/helpers/request";
 import { Copy } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
@@ -29,6 +29,7 @@ const ProductCard = (props: ProductCardProps) => {
   const [openCopyProduct, setOpenCopyProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<any>({});
+  const [loading, setLoading] = useState(false);
   const { product, userId, onUpdate, categories } = props;
   const isValidUrl = (url: string) => {
     try {
@@ -78,8 +79,10 @@ const ProductCard = (props: ProductCardProps) => {
   };
 
   const handleDelete = async () => {
+    setLoading(true);
     await deleteProduct(product.id, { userid: userId });
     onUpdate();
+    setLoading(false);
     setOpenDelete(false);
   };
 
@@ -210,11 +213,12 @@ const ProductCard = (props: ProductCardProps) => {
         onUpdate={() => onUpdate()}
         categories={categories}
       />
-      <DeleteModal
+      <ConfirmationModal
         object={product}
         open={openDelete}
         onClose={() => handleCloseDeleteModal()}
-        onDelete={() => handleDelete()}
+        onConfirm={() => handleDelete()}
+        loading={loading}
       />
       <CardHeader className="flex justify-between p-4">
         <Button color="danger" size="sm" onClick={() => setOpenDelete(true)}>

@@ -9,46 +9,21 @@ import {
 } from "@nextui-org/react";
 import { useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
-import LineItemTable from "@/components/Order/LineItemTable";
-import { ConfirmationModal } from "./ConfirmationModal";
+import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
+import RefundLineItemTable from "@/components/Order/RefundLineItemTable";
 
-interface OrderModalProps {
+interface RefundModalProps {
   order: any;
   open: boolean;
   onClose: () => void;
   onUpdate: () => void;
 }
 
-// To-do: Implement refund function from woocommerce
-
-export const OrderModal = (props: OrderModalProps) => {
-  const { order, open, onClose, onUpdate } = props;
+export const RefundModal = (props: RefundModalProps) => {
+  const { order, open, onClose } = props;
+  const [loadingSave] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
-  const [refundLoading, setRefundLoading] = useState(false);
   const { loading } = useUser();
-
-  const handleRefund = async () => {
-    setRefundLoading(true);
-    const body = { amount: order.total };
-    const method = "POST";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    const response = await fetch(
-      `/api/woocommerce/orders/${order.id}/refunds`,
-      {
-        method,
-        headers,
-        body: JSON.stringify(body),
-      }
-    );
-    if (!response.ok) {
-      console.error("Error refunding order:", response.statusText);
-    }
-    onUpdate();
-    setRefundLoading(false);
-    setOpenConfirm(false);
-  };
 
   const renderContent = () => {
     if (loading) {
@@ -75,12 +50,12 @@ export const OrderModal = (props: OrderModalProps) => {
       return (
         <>
           <ConfirmationModal
-            object={{ ...order, name: `Order# ${order.id}` }}
             open={openConfirm}
+            object={{ ...order, name: `Order# ${order.id}` }}
             onClose={() => setOpenConfirm(false)}
-            onConfirm={() => handleRefund()}
-            action="Full Refund"
-            loading={refundLoading}
+            onConfirm={() => {}}
+            loading={loading || loadingSave}
+            action="Refund"
           />
         </>
       );
@@ -91,10 +66,10 @@ export const OrderModal = (props: OrderModalProps) => {
       <>
         <Button
           color="danger"
-          onPress={() => setOpenConfirm(true)}
+          onPress={() => {}}
           style={{ marginRight: "auto" }} // Pushes to the leftmost side
         >
-          Full Refund
+          Save
         </Button>
       </>
     );
@@ -104,10 +79,10 @@ export const OrderModal = (props: OrderModalProps) => {
       <ModalContent>
         <>
           <ModalHeader className="flex flex-col gap-1 text-center">
-            Order# {order.id}
+            Refund Order# {order.id}
           </ModalHeader>
           <ModalBody className="flex flex-col overflow-y-auto">
-            <LineItemTable line_items={order.line_items} />
+            <RefundLineItemTable line_items={order.line_items} />
           </ModalBody>
           <ModalFooter
             style={{ display: "flex", justifyContent: "space-between" }}
@@ -127,4 +102,4 @@ export const OrderModal = (props: OrderModalProps) => {
   );
 };
 
-export default OrderModal;
+export default RefundModal;

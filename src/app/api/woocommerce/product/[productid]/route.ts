@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
     body
   );
   // This is a workaround to update the ACF fields
-  if (body.acf.length > 0) {
+  if (body.acf && body.acf.length > 0) {
     console.log("ACF fields found");
     const acf_body = convertACF(body.acf);
 

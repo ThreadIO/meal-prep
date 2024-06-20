@@ -1,6 +1,6 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
-import { Button, Spinner, DatePicker } from "@nextui-org/react";
+import { Button, Spinner, DatePicker, Input, Tooltip } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
@@ -15,6 +15,7 @@ import { today, getLocalTimeZone } from "@internationalized/date";
 import FilterDropdown from "@/components/FilterDropdown";
 import OrderTable from "@/components/Order/OrderTable";
 import { statusOptions } from "@/helpers/utils";
+import { Search } from "lucide-react";
 export default function OrdersPage() {
   const { loading, isLoggedIn, user } = useUser();
   const [endDate, setEndDate] = useState(today(getLocalTimeZone())); // Default to today's date
@@ -37,6 +38,7 @@ export default function OrdersPage() {
   const [showOrders, setShowOrders] = useState(false);
   const [error, setError] = useState<string>("");
   const [deliveryDate, setDeliveryDate] = useState<any>();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const getOrders = async () => {
     const url = "/api/woocommerce/getorders";
@@ -81,7 +83,21 @@ export default function OrdersPage() {
       selectedStatusKeys
     );
     setFilteredOrders(filtered);
-  }, [selectedMenuKeys, selectedStatusKeys, orders, deliveryDate]);
+  }, [selectedMenuKeys, selectedStatusKeys, orders, deliveryDate, searchTerm]);
+
+  const nameSearch = (searchTerm: string) => {
+    // Extract the name search term (after "name:")
+    const nameSearchTerm = searchTerm.slice(5).trim().toLowerCase();
+
+    // Filter orders based on the full name derived from first_name and last_name
+    const filteredOrders = orders.filter((order) => {
+      const fullName =
+        `${order.billing.first_name} ${order.billing.last_name}`.toLowerCase();
+      return fullName.includes(nameSearchTerm);
+    });
+
+    return filteredOrders;
+  };
 
   const getFilteredOrders = (
     orders: any[],
@@ -94,7 +110,21 @@ export default function OrdersPage() {
       selectedMenuKeys
     );
     const filteredByDate = filterOrdersByDate(filteredByCategory, deliveryDate);
-    return filteredByDate;
+    const filteredBySearch = filterBySearch(filteredByDate, searchTerm);
+    return filteredBySearch;
+  };
+
+  const filterBySearch = (orders: any[], searchTerm: string) => {
+    // Check if the searchTerm contains "name:"
+    if (searchTerm.toLowerCase().startsWith("name:")) {
+      return nameSearch(searchTerm);
+    } else {
+      // Regular filter based on id field
+      const filteredOrders = orders.filter((order) =>
+        order.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      return filteredOrders;
+    }
   };
 
   const filterOrdersByCategory = (orders: any[], selectedKeys: Set<string>) => {
@@ -236,18 +266,6 @@ export default function OrdersPage() {
   };
 
   const generateFilteredCsvData = (filteredOrders: any[]) => {
-    // orders.forEach((order) => {
-    //   const filteredLineItems = order.line_items.filter(
-    //     (item: any) => parseInt(item.product_data.acf?.facts?.calories) > 0
-    //   );
-
-    //   if (filteredLineItems.length > 0) {
-    //     // If there are line items with non-zero calories, include the order with filtered line items
-    //     const filteredOrder = { ...order, line_items: filteredLineItems };
-    //     filteredOrders.push(filteredOrder);
-    //   }
-    // });
-
     // Generate CSV data from filtered orders
     const filteredCsvData = generateFullCsvData(filteredOrders);
     return filteredCsvData;
@@ -370,10 +388,11 @@ export default function OrdersPage() {
 
   const renderOrders = () => {
     // State variable to toggle between line items and meal quantities
+    // Assuming showLineItems and filteredOrders are defined elsewhere
 
     // Function to calculate the sum of quantities for each meal
     const calculateMealSum = () => {
-      const mealSum: { [key: string]: number } = {}; // Define mealSum with type annotation
+      const mealSum: { [key: string]: number } = {};
 
       filteredOrders.forEach((order) => {
         order.line_items.forEach((item: any) => {
@@ -403,46 +422,35 @@ export default function OrdersPage() {
       return (
         <OrderTable orders={filteredOrders} onUpdate={() => getOrders()} />
       );
-      // return filteredOrders.map((order, index) => (
-      //   <div key={index} style={{ marginBottom: "20px" }}>
-      //     <strong>Order ID:</strong> {order.id} <strong>Customer Name:</strong>{" "}
-      //     {order.billing.first_name} {order.billing.last_name} <br />
-      //     <strong>Order Date: </strong>
-      //     {friendlyDate(order.date_created, true) || "N/A"}
-      //     <br />
-      //     <strong>Delivery Date:</strong>{" "}
-      //     {friendlyDate(getDeliveryDate(order)) || "N/A"}
-      //     <br />
-      //     <strong>Status: </strong>
-      //     {order.status}
-      //     <div style={{ marginLeft: "20px" }}>
-      //       <strong>Line Items:</strong>
-      //       {order.line_items.map(
-      //         (
-      //           item: any,
-      //           i: number // Provide type annotations for item and i
-      //         ) => (
-      //           <div key={i} style={{ marginLeft: "20px", marginTop: "5px" }}>
-      //             <div>
-      //               <strong>Product Name:</strong> {item.name}
-      //             </div>
-      //             <div>
-      //               <strong>Quantity:</strong> {item.quantity}
-      //             </div>
-      //             <div>
-      //               <strong>Price:</strong> {item.price.toFixed(2)}{" "}
-      //               {order.currency_symbol}
-      //             </div>
-      //           </div>
-      //         )
-      //       )}
-      //     </div>
-      //   </div>
-      // ));
     };
 
     // Get meal sums
     const mealSum = calculateMealSum();
+
+    // Function to render search bar with adjusted width
+    const renderSearchBar = () => {
+      return (
+        <div style={{ width: "70%", marginBottom: "10px" }}>
+          <Tooltip
+            showArrow={true}
+            content='use "name:" at the start to search for names otherwise search by order id'
+            delay={1000}
+            closeDelay={0}
+            placement="bottom-start"
+          >
+            <Input
+              size="sm"
+              radius="sm"
+              startContent={<Search />}
+              isClearable
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClear={() => setSearchTerm("")}
+            />
+          </Tooltip>
+        </div>
+      );
+    };
 
     return (
       <div
@@ -450,13 +458,12 @@ export default function OrdersPage() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          paddingTop: "20px",
-          position: "relative",
-          minHeight: "100vh",
+          position: "relative", // Contain button section within the parent
           boxSizing: "border-box",
-          paddingBottom: "60px",
+          width: "100%", // Make sure the parent container takes full width
         }}
       >
+        {renderSearchBar()}
         <div
           style={{
             display: "flex",
@@ -479,13 +486,12 @@ export default function OrdersPage() {
             {renderStatusFilterDropdown()}
           </div>
         </div>
-
         <div
           style={{
+            flex: 1,
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            maxHeight: "65vh",
+            maxHeight: "calc(65vh - 80px)", // Adjust based on button height
             overflowY: "auto",
             marginTop: "20px",
             width: "100%",
@@ -496,18 +502,19 @@ export default function OrdersPage() {
             : Object.keys(mealSum).length > 0
               ? renderMealSum(mealSum)
               : null}
+          <div style={{ height: "80px" }} /> {/* Spacer to prevent overlap */}
         </div>
-
         <div
           style={{
-            position: "fixed",
+            position: "sticky", // Use sticky to keep it in view
             bottom: "0",
-            width: "100%",
+            width: "100%", // Ensure full width within parent
             padding: "10px",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            boxSizing: "border-box", // Ensure padding is included in total height
+            boxSizing: "border-box",
+            backgroundColor: "transparent", // Ensure no background color
           }}
         >
           {renderAllButtons()}
@@ -561,26 +568,6 @@ export default function OrdersPage() {
               onChange={(e) => setEndDate(e)}
               minValue={startDate.copy().add({ days: 1 })}
             />
-            {/* <Input
-              type="date"
-              variant="bordered"
-              label="Start Date"
-              defaultValue={startDate}
-              onChange={(e) => setStartDate(e.target.value)} // Update state when the date changes
-              max={new Date(endDate) // Set max to one day before end date
-                .toISOString()
-                .slice(0, 10)}
-            ></Input>
-            <Input
-              type="date"
-              variant="bordered"
-              label="End Date"
-              defaultValue={endDate} // Set default value to today's date
-              onChange={(e) => setEndDate(e.target.value)} // Update state when the date changes
-              min={new Date(startDate) // Set min to one day after start date
-                .toISOString()
-                .slice(0, 10)}
-            ></Input> */}
           </div>
           <div
             style={{
@@ -610,9 +597,14 @@ export default function OrdersPage() {
     return (
       <div style={{ display: "flex", height: "100vh" }}>
         <Sidebar />
-        <div className="flex-1">
+        <div
+          className="flex-1"
+          style={{ display: "flex", flexDirection: "column" }}
+        >
           <Navbar />
-          {renderOrdersContent()}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            {renderOrdersContent()}
+          </div>
         </div>
       </div>
     );
