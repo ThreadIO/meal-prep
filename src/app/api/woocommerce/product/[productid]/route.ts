@@ -1,5 +1,5 @@
 import connect from "@/database/conn";
-import { patch, remove, filterProductAddons } from "@/helpers/woocommerce";
+import { put, remove, filterProductAddons } from "@/helpers/woocommerce";
 import { post_one, convertACF } from "@/helpers/wordpress";
 import { NextRequest, NextResponse } from "next/server";
 interface Params {
@@ -56,7 +56,7 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
     body.meta_data = filtered_meta_data;
   }
 
-  const res = await patch(
+  const res = await put(
     body.userid,
     `/wp-json/wc/v3/products/${context.params.productid}`,
     body

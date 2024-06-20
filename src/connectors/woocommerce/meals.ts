@@ -2,8 +2,14 @@
 // Tags are WooCommerce Product Categories
 // Regular_Price is the price of the meal
 // This will translate a meal object to a WooCommerce Product
-import { createProduct, patchProduct } from "@/helpers/request";
+import {
+  createProduct,
+  patchProduct,
+  patchProductAddOns,
+  postProductAddOns,
+} from "@/helpers/request";
 import { stockStatusOptions } from "@/helpers/utils";
+import { convertOptionsToProductAddOns } from "@/connectors/woocommerce/options";
 
 const convertTagsToCategories = (tags: string[], fullCategories: any) => {
   const converted_tags = fullCategories.filter((category: any) =>
@@ -39,7 +45,11 @@ export const createMealOnWoocommerce = async (
   };
 
   const product = await createProduct(body);
-  console.log("Product: ", product);
+  console.log("Product Add Ons: ", convertOptionsToProductAddOns(meal.options));
+  await postProductAddOns(product.id, {
+    ...convertOptionsToProductAddOns(meal.options),
+    userid: meal.userid,
+  });
   return product;
 };
 
@@ -63,5 +73,11 @@ export const updateMealOnWoocommerce = async (
     images: image ? [image] : [],
   };
   const product = await patchProduct(meal.mealid, body);
+  // Need to update the add ons here
+  console.log("Product Add Ons: ", convertOptionsToProductAddOns(meal.options));
+  await patchProductAddOns(meal.mealid, {
+    ...convertOptionsToProductAddOns(meal.options),
+    userid: meal.userid,
+  });
   return product;
 };

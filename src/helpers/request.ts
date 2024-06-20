@@ -214,3 +214,47 @@ export async function deleteMeal(mealid: string, url: string) {
   if (!success) throw new Error("Error deleting meal: ", error);
   return data;
 }
+
+export async function getProductAddons(productid: string, body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/getproductaddons/${productid}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error fetching product addons: ", error);
+  return data;
+}
+
+export async function patchProductAddOns(productid: string, body: any) {
+  console.log("In Patch Product Addons: ", body);
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/productaddons/${productid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error updating product: ", error);
+  return data;
+}
+
+export async function postProductAddOns(productid: string, body: any) {
+  console.log("In Post Product Addons: ", body);
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/productaddons/${productid}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error updating product: ", error);
+  return data;
+}

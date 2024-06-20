@@ -22,6 +22,7 @@ import {
   updateMealOnWoocommerce,
 } from "@/connectors/woocommerce/meals";
 import { friendlyUrl } from "@/helpers/frontend";
+import { convertProductAddOnsToOptions } from "@/connectors/woocommerce/options";
 
 interface MealModalProps {
   meal: any;
@@ -92,7 +93,7 @@ export const MealModal = (props: MealModalProps) => {
         fat: meal.nutrition?.fat || 0,
         protein: meal.nutrition?.protein || 0,
       });
-      setOptions([]);
+      setOptions(convertProductAddOnsToOptions(meal.add_ons) || []);
     }
   }, [meal, threadMeal]);
 

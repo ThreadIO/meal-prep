@@ -12,7 +12,12 @@ import {
 } from "@nextui-org/react";
 import { MealModal } from "@/components/Modals/MealModal";
 import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
-import { deleteMeal, deleteProduct, getMeal } from "@/helpers/request";
+import {
+  deleteMeal,
+  deleteProduct,
+  getMeal,
+  getProductAddons,
+} from "@/helpers/request";
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
 import { product_columns } from "@/helpers/utils";
@@ -88,7 +93,9 @@ const ProductTable = (props: ProductTableProps) => {
   };
 
   const handleOpenProduct = async (item: any) => {
-    setProduct(item);
+    const add_ons = await getProductAddons(item.id, { userid: userId });
+    console.log("Addons: ", add_ons.fields);
+    setProduct({ ...item, add_ons: add_ons.fields }); // Add the add_ons to the product
     const threadMeal = await threadConnector(item, userId, getMeal);
     setThreadMeal(threadMeal);
     setOpenProduct(true);

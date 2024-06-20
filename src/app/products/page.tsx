@@ -6,7 +6,7 @@ import { useUser } from "@propelauth/nextjs/client";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { Button, Spinner, Tooltip } from "@nextui-org/react";
 import ProductCard from "@/components/Product/ProductCard";
-import { ProductModal } from "@/components/Modals/ProductModal";
+import { MealModal } from "@/components/Modals/MealModal";
 import Dropdown from "@/components/Dropdown";
 import FilterDropdown from "@/components/FilterDropdown";
 import { getData, getCategories } from "@/helpers/frontend";
@@ -257,14 +257,15 @@ const Products = () => {
         <Sidebar />
         <div className="flex-1">
           <Navbar />
-          <ProductModal
-            product={{}}
-            productImage={{}}
+          <MealModal
+            meal={null}
+            threadMeal={null}
+            mealImage={{}}
             open={openProduct}
             mode={"create"}
             onClose={() => handleCloseProductModal()}
             onUpdate={() => getProducts()}
-            categories={categories}
+            tags={categories}
           />
           {renderProductPage()}
         </div>
