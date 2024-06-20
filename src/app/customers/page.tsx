@@ -27,13 +27,6 @@ export default function CustomersPage() {
   const [pages, setPages] = useState(1);
   const rowsPerPage = 15;
 
-  useEffect(() => {
-    // Check customers.length === 0 to ensure it only runs when the page loads and we don't get subsequent calls to Woocommerce
-    if (user && customers.length === 0) {
-      getCustomers();
-    }
-  }, [user, customers]);
-
   const getCustomers = async () => {
     setShowCustomers(true);
     console.log("Inside Client-side Get Customers");
@@ -86,6 +79,13 @@ export default function CustomersPage() {
       setShowCustomers(false);
     }
   };
+
+  useEffect(() => {
+    // Check customers.length === 0 to ensure it only runs when the page loads and we don't get subsequent calls to Woocommerce
+    if (user && customers.length === 0) {
+      getCustomers();
+    }
+  }, [user, customers, getCustomers]);
 
   const renderCustomersContent = () => {
     if (customersLoading && showCustomers) {
