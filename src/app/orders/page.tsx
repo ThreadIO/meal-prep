@@ -93,7 +93,7 @@ export default function OrdersPage() {
     console.log("Meal Ids: ", mealids);
     const body = {
       mealids: generateListOfMealIds(orders),
-      url: "foodandfigure.com",
+      userid: user?.userId,
     };
     getData(
       "meals",

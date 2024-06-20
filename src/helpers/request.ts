@@ -259,7 +259,7 @@ export async function postProductAddOns(productid: string, body: any) {
   return data;
 }
 
-export async function getAllMeals(mealids: string[], url: string) {
+export async function getAllMeals(mealids: string[], userid: string) {
   const { success, data, error } = await (
     await fetch(`/api/getmeals`, {
       method: "POST",
@@ -268,7 +268,7 @@ export async function getAllMeals(mealids: string[], url: string) {
       },
       body: JSON.stringify({
         mealids: mealids,
-        url: url,
+        userid: userid,
       }),
     })
   ).json();
