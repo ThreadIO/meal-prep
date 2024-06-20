@@ -31,7 +31,7 @@ export async function POST(request: NextRequest, context: { params: Params }) {
   const body = { amount: amount };
   const issue_full_refund_response = await post(
     userid,
-    `orders/${orderid}/refunds`,
+    `/wp-json/wc/v3/orders/${orderid}/refunds`,
     body
   );
   return issue_full_refund_response;

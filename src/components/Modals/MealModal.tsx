@@ -174,7 +174,15 @@ export const MealModal = (props: MealModalProps) => {
         );
         body.mealid = woocommerceProduct.id;
         // Then create in Thread DB
-        await createMeal(body);
+        if (
+          !(woocommerceProduct.data && woocommerceProduct.data.status === 400)
+        ) {
+          await createMeal(body);
+        } else {
+          console.log(
+            "Error creating meal in WooCommerce so not making in MongoDB"
+          );
+        }
       }
       onUpdate();
       setLoadingSave(false);

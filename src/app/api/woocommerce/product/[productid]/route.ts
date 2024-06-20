@@ -26,7 +26,10 @@ export async function DELETE(
   const body = JSON.parse(await request.text());
   console.log("Body: ", body);
   console.log("Product Id: ", context.params.productid);
-  const res = await remove(body.userid, "products", context.params.productid);
+  const res = await remove(
+    body.userid,
+    `/wp-json/wc/v3/products/${context.params.productid}`
+  );
   return res;
 }
 
@@ -55,8 +58,7 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
 
   const res = await patch(
     body.userid,
-    "products",
-    context.params.productid,
+    `/wp-json/wc/v3/products/${context.params.productid}`,
     body
   );
   // This is a workaround to update the ACF fields

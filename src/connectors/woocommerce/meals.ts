@@ -35,7 +35,7 @@ export const createMealOnWoocommerce = async (
     description: meal.description,
     categories: categories,
     stock_status: status,
-    images: [image],
+    images: image ? [image] : [],
   };
 
   const product = await createProduct(body);

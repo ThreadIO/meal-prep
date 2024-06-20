@@ -47,6 +47,10 @@ export async function POST(request: NextRequest) {
     stock_status,
   };
 
-  const create_products_response = await post(userid, "products", body);
+  const create_products_response = await post(
+    userid,
+    `/wp-json/wc/v3/products`,
+    body
+  );
   return create_products_response;
 }
