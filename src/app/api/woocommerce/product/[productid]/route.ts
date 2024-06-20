@@ -1,5 +1,5 @@
 import connect from "@/database/conn";
-import { patch, remove, filterProductAddons } from "@/helpers/woocommerce";
+import { put, remove, filterProductAddons } from "@/helpers/woocommerce";
 import { post_one, convertACF } from "@/helpers/wordpress";
 import { NextRequest, NextResponse } from "next/server";
 interface Params {
@@ -26,7 +26,10 @@ export async function DELETE(
   const body = JSON.parse(await request.text());
   console.log("Body: ", body);
   console.log("Product Id: ", context.params.productid);
-  const res = await remove(body.userid, "products", context.params.productid);
+  const res = await remove(
+    body.userid,
+    `/wp-json/wc/v3/products/${context.params.productid}`
+  );
   return res;
 }
 
@@ -53,10 +56,9 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
     body.meta_data = filtered_meta_data;
   }
 
-  const res = await patch(
+  const res = await put(
     body.userid,
-    "products",
-    context.params.productid,
+    `/wp-json/wc/v3/products/${context.params.productid}`,
     body
   );
   // This is a workaround to update the ACF fields

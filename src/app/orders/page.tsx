@@ -8,7 +8,11 @@ import React from "react";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { saveAs } from "file-saver";
 import { not_products } from "@/helpers/utils";
-import { getCategories, getData } from "@/helpers/frontend";
+import {
+  generateListOfMealIds,
+  getCategories,
+  getData,
+} from "@/helpers/frontend";
 import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
 import { today, getLocalTimeZone } from "@internationalized/date";
@@ -23,8 +27,10 @@ export default function OrdersPage() {
     today(getLocalTimeZone()).subtract({ weeks: 1 })
   ); // Default to a week ago
   const [orders, setOrders] = useState<any[]>([]);
+  const [meals, setMeals] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
+  const [mealsLoading, setMealsLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
@@ -69,10 +75,38 @@ export default function OrdersPage() {
         setShowOrders(true);
         getCategories(user, setCategories, setError, setCategoriesLoading);
       },
-      () => {},
+      (data) => {
+        getMeals(data);
+      },
       transformOrdersData
     );
     console.log("Orders: ", orders);
+  };
+
+  const getMeals = async (orders: any) => {
+    const url = "/api/getmeals";
+    const method = "POST";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const mealids = generateListOfMealIds(orders);
+    console.log("Meal Ids: ", mealids);
+    const body = {
+      mealids: generateListOfMealIds(orders),
+      url: "foodandfigure.com",
+    };
+    getData(
+      "meals",
+      url,
+      method,
+      headers,
+      (data) => {
+        setMeals(data);
+      },
+      setError,
+      setOrdersLoading,
+      body
+    );
   };
 
   useEffect(() => {
@@ -191,6 +225,7 @@ export default function OrdersPage() {
   const clearOrders = async () => {
     setOrders([]);
     setOrdersLoading(false);
+    setMealsLoading(false);
     setShowOrders(false);
   };
 
@@ -202,31 +237,42 @@ export default function OrdersPage() {
     console.log("download orders");
 
     // CSV Header
-    let csvContent =
-      "Delivery Dates Range:, " + startDate + " - " + endDate + "\n\n";
-    csvContent += "Meal & Side Name(s), QTY.\n";
+    let csvContent = `Delivery Dates Range:, ${startDate} - ${endDate}\n\n`;
+    csvContent += "Meal & Side Name(s), Size, QTY.\n";
 
-    // Group items by name and sort alphabetically
+    // Group items by name and size
     const itemQuantities = ordersData.reduce((acc: any, order: any) => {
       order.line_items.forEach((item: any) => {
-        if (acc[item.name]) {
-          acc[item.name] += item.quantity;
+        const sizeMeta = item.meta_data.find(
+          (meta: any) => meta.key === "Size"
+        );
+        const size = sizeMeta ? sizeMeta.value : "N/A";
+
+        const key = `${item.name}|||${size}`; // Use a delimiter unlikely to appear in names
+
+        if (acc[key]) {
+          acc[key] += item.quantity;
         } else {
-          acc[item.name] = item.quantity;
+          acc[key] = item.quantity;
         }
       });
       return acc;
     }, {});
 
-    // Sort items alphabetically by name
+    // Sort items alphabetically by name (and size implicitly)
     const sortedItemQuantities = Object.entries(itemQuantities).sort(
-      ([nameA], [nameB]) => nameA.localeCompare(nameB)
+      ([keyA], [keyB]) => {
+        const [nameA] = keyA.split("|||");
+        const [nameB] = keyB.split("|||");
+        return nameA.localeCompare(nameB);
+      }
     );
 
     // Construct CSV lines from sorted grouped data
-    const lines = sortedItemQuantities.map(
-      ([name, quantity]) => `"${name}", ${quantity}`
-    );
+    const lines = sortedItemQuantities.map(([key, quantity]) => {
+      const [name, size] = key.split("|||");
+      return `"${name.replace(/"/g, '""')}", ${size.replace(/"/g, '""')}, ${quantity}`;
+    });
 
     // Add each line to the CSV content
     csvContent += lines.join("\n") + "\n\n";
@@ -238,7 +284,7 @@ export default function OrdersPage() {
     );
 
     // Add total quantity to the CSV content
-    csvContent += `Total Qty., ${totalQuantity}`;
+    csvContent += `,Total Qty., ${totalQuantity}`;
 
     // Create a Blob from the CSV content
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -265,9 +311,9 @@ export default function OrdersPage() {
     );
   };
 
-  const generateFilteredCsvData = (filteredOrders: any[]) => {
+  const generateFilteredCsvData = (filteredOrders: any[], meals: any) => {
     // Generate CSV data from filtered orders
-    const filteredCsvData = generateFullCsvData(filteredOrders);
+    const filteredCsvData = generateFullCsvData(filteredOrders, meals);
     return filteredCsvData;
   };
 
@@ -333,7 +379,7 @@ export default function OrdersPage() {
         <StyledButton
           onClick={() =>
             downloadCsv(
-              generateFullCsvData(orders),
+              generateFullCsvData(orders, meals),
               `orders-${startDate}-${endDate}-full.csv`
             )
           }
@@ -342,7 +388,7 @@ export default function OrdersPage() {
         <StyledButton
           onClick={() =>
             downloadCsv(
-              generateFilteredCsvData(filteredOrders),
+              generateFilteredCsvData(filteredOrders, meals),
               `orders-${startDate}-${endDate}-filtered.csv`
             )
           }
@@ -358,7 +404,7 @@ export default function OrdersPage() {
   };
 
   const renderOrdersContent = () => {
-    if ((ordersLoading && showOrders) || categoriesLoading) {
+    if ((ordersLoading && showOrders) || categoriesLoading || mealsLoading) {
       return renderLoading();
     } else if (showOrders) {
       return renderOrders();
@@ -378,9 +424,7 @@ export default function OrdersPage() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <Spinner
-            label={ordersLoading ? "Loading Orders" : "Loading Ingredients"}
-          />
+          <Spinner label={ordersLoading ? "Loading Orders" : "Loading Meals"} />
         </div>
       </div>
     );

@@ -12,11 +12,17 @@ import {
 } from "@nextui-org/react";
 import Image from "next/image";
 import { useState } from "react";
-import { ProductModal } from "@/components/Modals/ProductModal";
+import { MealModal } from "@/components/Modals/MealModal";
 import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
-import { deleteProduct } from "@/helpers/request";
+import {
+  deleteMeal,
+  deleteProduct,
+  getMeal,
+  getProductAddons,
+} from "@/helpers/request";
 import { Copy } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
+import { getProductImage, threadConnector } from "@/helpers/frontend";
 interface ProductCardProps {
   product: any;
   onUpdate: () => void;
@@ -30,7 +36,9 @@ const ProductCard = (props: ProductCardProps) => {
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState<any>({});
   const [loading, setLoading] = useState(false);
-  const { product, userId, onUpdate, categories } = props;
+  const [threadMeal, setThreadMeal] = useState<any>();
+  const [product, setProduct] = useState<any>(props.product);
+  const { userId, onUpdate, categories } = props;
   const isValidUrl = (url: string) => {
     try {
       new URL(url);
@@ -62,10 +70,6 @@ const ProductCard = (props: ProductCardProps) => {
     }
   };
 
-  const openProductModal = () => {
-    setOpenProduct(true);
-  };
-
   const handleCloseProductModal = () => {
     setOpenProduct(false);
   };
@@ -78,12 +82,34 @@ const ProductCard = (props: ProductCardProps) => {
     setOpenDelete(false);
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (product: any) => {
     setLoading(true);
+    console.log("Product: ", product);
+    await threadConnector(product, userId, deleteMeal);
     await deleteProduct(product.id, { userid: userId });
     onUpdate();
     setLoading(false);
     setOpenDelete(false);
+  };
+
+  const handleOpenDelete = () => {
+    setOpenDelete(true);
+  };
+
+  const handleOpenProduct = async (item: any) => {
+    const add_ons = await getProductAddons(item.id, { userid: userId });
+    console.log("Addons: ", add_ons.fields);
+    setProduct({ ...item, add_ons: add_ons.fields }); // Add the add_ons to the product
+    const threadMeal = await threadConnector(item, userId, getMeal);
+    setThreadMeal(threadMeal);
+    setOpenProduct(true);
+  };
+
+  const handleOpenCopyProduct = async (item: any) => {
+    setProduct(item);
+    const threadMeal = await threadConnector(item, userId, getMeal);
+    setThreadMeal(threadMeal);
+    setOpenCopyProduct(true);
   };
 
   const renderImage = () => {
@@ -192,42 +218,44 @@ const ProductCard = (props: ProductCardProps) => {
   return (
     <Card
       isPressable
-      onPress={() => openProductModal()}
+      onPress={() => handleOpenProduct(product)}
       className="text-center mt-4"
     >
-      <ProductModal
-        product={product}
-        productImage={productImage}
+      <MealModal
+        meal={product}
+        threadMeal={threadMeal}
+        mealImage={getProductImage(product)}
         open={openProduct}
-        mode="patch"
-        categories={categories}
+        tags={categories}
         onClose={() => handleCloseProductModal()}
         onUpdate={() => onUpdate()}
+        mode="patch"
       />
-      <ProductModal
-        product={product}
-        productImage={productImage}
+      <MealModal
+        meal={product}
+        threadMeal={threadMeal}
+        mealImage={getProductImage(product)}
         open={openCopyProduct}
-        mode="create"
         onClose={() => handleCloseCopyProductModal()}
         onUpdate={() => onUpdate()}
-        categories={categories}
+        tags={categories}
+        mode="create"
       />
       <ConfirmationModal
         object={product}
         open={openDelete}
         onClose={() => handleCloseDeleteModal()}
-        onConfirm={() => handleDelete()}
+        onConfirm={() => handleDelete(product)}
         loading={loading}
       />
       <CardHeader className="flex justify-between p-4">
-        <Button color="danger" size="sm" onClick={() => setOpenDelete(true)}>
+        <Button color="danger" size="sm" onClick={() => handleOpenDelete()}>
           Delete
         </Button>
         <Button
           color="primary"
           size="sm"
-          onClick={() => setOpenCopyProduct(true)}
+          onClick={() => handleOpenCopyProduct(product)}
           isIconOnly
         >
           <Copy />

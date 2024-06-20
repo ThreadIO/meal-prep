@@ -1,13 +1,9 @@
 import connect from "@/database/conn";
-import {
-  getProduct,
-  deleteProduct,
-  patchProduct,
-} from "@/controller/product.controller";
+import { getMeal, deleteMeal, patchMeal } from "@/controller/meal.controller";
 import { NextRequest, NextResponse } from "next/server";
 
 interface Params {
-  productid: string;
+  mealid: string;
   url: string;
 }
 
@@ -19,8 +15,8 @@ export async function GET(request: NextRequest, context: { params: Params }) {
       error: err,
     })
   );
-  console.log("Product Id: ", context.params.productid);
-  const res = await getProduct(context.params.productid, context.params.url);
+  console.log("Meal Id: ", context.params.mealid);
+  const res = await getMeal(context.params.mealid, context.params.url);
   return res;
 }
 
@@ -35,8 +31,8 @@ export async function DELETE(
       error: err,
     })
   );
-  console.log("Product Id: ", context.params.productid);
-  const res = await deleteProduct(context.params.productid, context.params.url);
+  console.log("Meal Id: ", context.params.mealid);
+  const res = await deleteMeal(context.params.mealid, context.params.url);
   return res;
 }
 
@@ -48,13 +44,9 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
       error: err,
     })
   );
-  console.log("Product Id: ", context.params.productid);
+  console.log("Meal Id: ", context.params.mealid);
   const body = JSON.parse(await request.text());
   console.log("Body: ", body);
-  const res = await patchProduct(
-    context.params.productid,
-    context.params.url,
-    body
-  );
+  const res = await patchMeal(context.params.mealid, context.params.url, body);
   return res;
 }

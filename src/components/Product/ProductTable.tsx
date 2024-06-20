@@ -10,12 +10,18 @@ import {
   TableCell,
   getKeyValue,
 } from "@nextui-org/react";
-import { ProductModal } from "@/components/Modals/ProductModal";
+import { MealModal } from "@/components/Modals/MealModal";
 import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
-import { deleteProduct } from "@/helpers/request";
+import {
+  deleteMeal,
+  deleteProduct,
+  getMeal,
+  getProductAddons,
+} from "@/helpers/request";
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
 import { product_columns } from "@/helpers/utils";
+import { getProductImage, threadConnector } from "@/helpers/frontend";
 
 interface ProductTableProps {
   products: any;
@@ -29,40 +35,11 @@ const ProductTable = (props: ProductTableProps) => {
   const [openCopyProduct, setOpenCopyProduct] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [product, setProduct] = useState<any>({});
+  const [threadMeal, setThreadMeal] = useState<any>();
+  // This is the product in Thread
+  // const [threadMeal, setThreadMeal] = useState<any>();
   const [loading, setLoading] = useState(false);
   const { products, userId, onUpdate, categories } = props;
-
-  //   useEffect(() => {
-  //     if (product && Object.keys(product).length > 0) {
-  //       if (openProduct) {
-  //         console.log("Product: ", product);
-  //         setOpenProduct(true);
-  //       } else if (openCopyProduct) {
-  //         setOpenCopyProduct(true);
-  //       }
-  //     }
-  //   }, [product]);
-
-  const getProductImage = (product: any) => {
-    const isValidUrl = (url: string) => {
-      try {
-        new URL(url);
-        return true;
-      } catch (error) {
-        return false;
-      }
-    };
-    if (!product || !product.images) {
-      return null;
-    }
-    let productImage = product.images[0];
-    if (productImage && !isValidUrl(productImage.src)) {
-      productImage = {
-        src: "https://t3.ftcdn.net/jpg/04/60/01/36/360_F_460013622_6xF8uN6ubMvLx0tAJECBHfKPoNOR5cRa.jpg",
-      };
-    }
-    return productImage;
-  };
 
   const handleCloseProductModal = () => {
     setProduct({});
@@ -81,6 +58,8 @@ const ProductTable = (props: ProductTableProps) => {
 
   const handleDelete = async (product: any) => {
     setLoading(true);
+    console.log("Product: ", product);
+    await threadConnector(product, userId, deleteMeal);
     await deleteProduct(product.id, { userid: userId });
     onUpdate();
     setLoading(false);
@@ -92,13 +71,19 @@ const ProductTable = (props: ProductTableProps) => {
     setOpenDelete(true);
   };
 
-  const handleOpenProduct = (item: any) => {
-    setProduct(item);
+  const handleOpenProduct = async (item: any) => {
+    const add_ons = await getProductAddons(item.id, { userid: userId });
+    console.log("Addons: ", add_ons.fields);
+    setProduct({ ...item, add_ons: add_ons.fields }); // Add the add_ons to the product
+    const threadMeal = await threadConnector(item, userId, getMeal);
+    setThreadMeal(threadMeal);
     setOpenProduct(true);
   };
 
-  const handleOpenCopyProduct = (item: any) => {
+  const handleOpenCopyProduct = async (item: any) => {
     setProduct(item);
+    const threadMeal = await threadConnector(item, userId, getMeal);
+    setThreadMeal(threadMeal);
     setOpenCopyProduct(true);
   };
 
@@ -167,27 +152,29 @@ const ProductTable = (props: ProductTableProps) => {
     }
   };
 
-  const modals = (product: any) => {
+  const modals = (product: any, threadMeal: any) => {
     if (product) {
       return (
         <>
-          <ProductModal
-            product={product}
-            productImage={getProductImage(product)}
+          <MealModal
+            meal={product}
+            threadMeal={threadMeal}
+            mealImage={getProductImage(product)}
             open={openProduct}
-            mode="patch"
-            categories={categories}
+            tags={categories}
             onClose={() => handleCloseProductModal()}
             onUpdate={() => onUpdate()}
+            mode="patch"
           />
-          <ProductModal
-            product={product}
-            productImage={getProductImage(product)}
+          <MealModal
+            meal={product}
+            threadMeal={threadMeal}
+            mealImage={getProductImage(product)}
             open={openCopyProduct}
-            mode="create"
             onClose={() => handleCloseCopyProductModal()}
             onUpdate={() => onUpdate()}
-            categories={categories}
+            tags={categories}
+            mode="create"
           />
           <ConfirmationModal
             object={product}
@@ -203,7 +190,7 @@ const ProductTable = (props: ProductTableProps) => {
 
   return (
     <div className="mt-4 mr-4 ml-4">
-      {modals(product)}
+      {modals(product, threadMeal)}
       <Table isHeaderSticky isStriped aria-label="Table of Products">
         <TableHeader columns={product_columns}>
           {(column) => (

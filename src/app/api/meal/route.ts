@@ -1,16 +1,17 @@
 import connect from "@/database/conn";
-import { createProduct } from "@/controller/product.controller";
+import { createMeal } from "@/controller/meal.controller";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  console.log("Creating Meal in MongoDb...");
   const body = JSON.parse(await request.text());
-  connect(body.settings.url).catch((err) =>
+  connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
     NextResponse.json({
       success: false,
       message: "Database connection error",
       error: err,
     })
   );
-  const res = await createProduct(body.productid, body);
+  const res = await createMeal(body.mealid, body);
   return res;
 }

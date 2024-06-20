@@ -101,10 +101,8 @@ export async function getAll(
   }
 }
 
-export async function get(userid: string, object: string, objectid: string) {
-  console.log("Inside getAll woocommerce helper function");
-  console.log("Object: ", object);
-  console.log("Object ID: ", objectid);
+export async function get(userid: string, url: string) {
+  console.log("Inside get woocommerce helper function");
 
   // Retrieve user data
   const user_response = await (await getUser(userid)).json();
@@ -116,7 +114,7 @@ export async function get(userid: string, object: string, objectid: string) {
     user.settings.client_key,
     user.settings.client_secret
   );
-  const endpoint = `${company_url}/wp-json/wc/v3/${object}/${objectid}`;
+  const endpoint = `${company_url}${url}`;
   const response = await fetch(endpoint, {
     method: "GET",
     headers: headers,
@@ -125,9 +123,8 @@ export async function get(userid: string, object: string, objectid: string) {
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
-export async function post(userid: string, object: string, body: any) {
+export async function post(userid: string, url: string, body: any) {
   console.log("Inside post woocommerce helper function");
-  console.log("Object: ", object);
   console.log("Body: ", body);
   // Retrieve user data
   const user_response = await (await getUser(userid)).json();
@@ -139,7 +136,7 @@ export async function post(userid: string, object: string, body: any) {
     user.settings.client_key,
     user.settings.client_secret
   );
-  const endpoint = `${company_url}/wp-json/wc/v3/${object}`;
+  const endpoint = `${company_url}${url}`;
   const response = await fetch(endpoint, {
     method: "POST",
     headers: headers,
@@ -149,15 +146,9 @@ export async function post(userid: string, object: string, body: any) {
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
-export async function patch(
-  userid: string,
-  object: string,
-  objectid: string,
-  body: any
-) {
+export async function put(userid: string, url: string, body: any) {
   console.log("Inside patch woocommerce helper function");
-  console.log("Object: ", object);
-  console.log("Object ID: ", objectid);
+  console.log("Body: ", body);
 
   // Retrieve user data
   const user_response = await (await getUser(userid)).json();
@@ -169,7 +160,7 @@ export async function patch(
     user.settings.client_key,
     user.settings.client_secret
   );
-  const endpoint = `${company_url}/wp-json/wc/v3/${object}/${objectid}`;
+  const endpoint = `${company_url}${url}`;
   const response = await fetch(endpoint, {
     method: "PUT",
     headers: headers,
@@ -180,10 +171,8 @@ export async function patch(
   return NextResponse.json({ success: true, data: data }, { status: 200 });
 }
 
-export async function remove(userid: string, object: string, objectid: string) {
+export async function remove(userid: string, url: string) {
   console.log("Inside remove woocommerce helper function");
-  console.log("Object: ", object);
-  console.log("Object ID: ", objectid);
 
   // Retrieve user data
   const user_response = await (await getUser(userid)).json();
@@ -195,7 +184,7 @@ export async function remove(userid: string, object: string, objectid: string) {
     user.settings.client_key,
     user.settings.client_secret
   );
-  const endpoint = `${company_url}/wp-json/wc/v3/${object}/${objectid}`;
+  const endpoint = `${company_url}${url}`;
   const response = await fetch(endpoint, {
     method: "DELETE",
     headers: headers,
@@ -225,4 +214,29 @@ export function filterProductAddons(meta_data: any, product_addons: any) {
   }
 
   return filteredMetaData;
+}
+
+export async function patch(userid: string, url: string, body: any) {
+  console.log("Inside patch woocommerce helper function");
+  console.log("Body: ", body);
+
+  // Retrieve user data
+  const user_response = await (await getUser(userid)).json();
+  const user = user_response.data;
+
+  // Extract necessary data from user settings
+  const company_url = user.settings.url;
+  const headers = getHeaders(
+    user.settings.client_key,
+    user.settings.client_secret
+  );
+  const endpoint = `${company_url}${url}`;
+  const response = await fetch(endpoint, {
+    method: "PATCH",
+    headers: headers,
+    body: JSON.stringify(body),
+  });
+  const data = await response.json();
+  console.log("Patch Data: ", data);
+  return NextResponse.json({ success: true, data: data }, { status: 200 });
 }

@@ -63,6 +63,9 @@ const LineItemTable = (props: LineItemTableProps) => {
       return renderImage(lineItemImage);
     } else if (columnKey === "name") {
       return <div> {getKeyValue(item, columnKey)}</div>;
+    } else if (columnKey === "size") {
+      const size = item.meta_data.find((meta: any) => meta.key === "Size");
+      return <div>{size ? size.value : "N/A"}</div>;
     } else if (columnKey === "subtotal") {
       return <div>{`$${parseFloat(item.price || "0").toFixed(2)}`}</div>;
     } else if (columnKey === "total_tax") {
