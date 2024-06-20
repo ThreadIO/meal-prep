@@ -258,3 +258,20 @@ export async function postProductAddOns(productid: string, body: any) {
   if (!success) throw new Error("Error updating product: ", error);
   return data;
 }
+
+export async function getAllMeals(mealids: string[], url: string) {
+  const { success, data, error } = await (
+    await fetch(`/api/getmeals`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mealids: mealids,
+        url: url,
+      }),
+    })
+  ).json();
+  if (!success) throw new Error("Error fetching meals: ", error);
+  return data;
+}

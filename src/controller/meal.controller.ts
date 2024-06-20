@@ -90,3 +90,14 @@ export async function patchMeal(mealid: string, url: string, body: any = {}) {
     return NextResponse.json({ success: false, error: error });
   }
 }
+
+export async function getAllMeals(mealids: [string], url: string) {
+  try {
+    const meals = await Meal.find({ mealid: { $in: mealids }, url: url });
+    console.log("Meals: ", meals);
+    return NextResponse.json({ success: true, data: meals });
+  } catch (error) {
+    console.log("Error in Get Meal: ", error);
+    return NextResponse.json({ success: false, error: error }, { status: 400 });
+  }
+}
