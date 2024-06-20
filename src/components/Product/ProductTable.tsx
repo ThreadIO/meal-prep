@@ -36,17 +36,6 @@ const ProductTable = (props: ProductTableProps) => {
   const [loading, setLoading] = useState(false);
   const { products, userId, onUpdate, categories } = props;
 
-  //   useEffect(() => {
-  //     if (product && Object.keys(product).length > 0) {
-  //       if (openProduct) {
-  //         console.log("Product: ", product);
-  //         setOpenProduct(true);
-  //       } else if (openCopyProduct) {
-  //         setOpenCopyProduct(true);
-  //       }
-  //     }
-  //   }, [product]);
-
   const getProductImage = (product: any) => {
     const isValidUrl = (url: string) => {
       try {
