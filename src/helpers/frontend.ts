@@ -98,3 +98,24 @@ export const threadConnector = async (
   }
   return null;
 };
+
+export const getProductImage = (product: any) => {
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+  if (!product || !product.images) {
+    return null;
+  }
+  let productImage = product.images[0];
+  if (productImage && !isValidUrl(productImage.src)) {
+    productImage = {
+      src: "https://t3.ftcdn.net/jpg/04/60/01/36/360_F_460013622_6xF8uN6ubMvLx0tAJECBHfKPoNOR5cRa.jpg",
+    };
+  }
+  return productImage;
+};

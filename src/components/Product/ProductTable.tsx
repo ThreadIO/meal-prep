@@ -21,7 +21,7 @@ import {
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
 import { product_columns } from "@/helpers/utils";
-import { threadConnector } from "@/helpers/frontend";
+import { getProductImage, threadConnector } from "@/helpers/frontend";
 
 interface ProductTableProps {
   products: any;
@@ -40,27 +40,6 @@ const ProductTable = (props: ProductTableProps) => {
   // const [threadMeal, setThreadMeal] = useState<any>();
   const [loading, setLoading] = useState(false);
   const { products, userId, onUpdate, categories } = props;
-
-  const getProductImage = (product: any) => {
-    const isValidUrl = (url: string) => {
-      try {
-        new URL(url);
-        return true;
-      } catch (error) {
-        return false;
-      }
-    };
-    if (!product || !product.images) {
-      return null;
-    }
-    let productImage = product.images[0];
-    if (productImage && !isValidUrl(productImage.src)) {
-      productImage = {
-        src: "https://t3.ftcdn.net/jpg/04/60/01/36/360_F_460013622_6xF8uN6ubMvLx0tAJECBHfKPoNOR5cRa.jpg",
-      };
-    }
-    return productImage;
-  };
 
   const handleCloseProductModal = () => {
     setProduct({});
@@ -187,15 +166,6 @@ const ProductTable = (props: ProductTableProps) => {
             onUpdate={() => onUpdate()}
             mode="patch"
           />
-          {/* <ProductModal
-            product={product}
-            productImage={getProductImage(product)}
-            open={openProduct}
-            mode="patch"
-            categories={categories}
-            onClose={() => handleCloseProductModal()}
-            onUpdate={() => onUpdate()}
-          /> */}
           <MealModal
             meal={product}
             threadMeal={threadMeal}
