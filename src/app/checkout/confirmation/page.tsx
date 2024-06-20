@@ -1,9 +1,8 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { PaymentConfirmation } from "@/components/Payment/PaymentConfirmation";
 
-const Confirmation = () => {
+const PaymentConfirmation = () => {
   const searchParams = useSearchParams();
   const payinId = searchParams.get("payinid");
   const receiptSessionKey = searchParams.get("sessionkey");
@@ -19,16 +18,24 @@ const Confirmation = () => {
       <h1>Payment Confirmed</h1>
       {payinId && receiptSessionKey ? (
         <>
-          <p>Your payment was successful. Payin Id: {payinId}</p>
-          <PaymentConfirmation
-            sessionKey={receiptSessionKey}
-            payinId={payinId}
-          ></PaymentConfirmation>
+          <p>Your payment was successful. Payin Id: </p>
+          <rainforest-payin-receipt
+            session-key={receiptSessionKey}
+            payin-id={payinId}
+          ></rainforest-payin-receipt>
         </>
       ) : (
         <p>No Payin Id or SessionKey found</p>
       )}
     </div>
+  );
+};
+
+const Confirmation = () => {
+  return (
+    <Suspense>
+      <PaymentConfirmation></PaymentConfirmation>
+    </Suspense>
   );
 };
 
