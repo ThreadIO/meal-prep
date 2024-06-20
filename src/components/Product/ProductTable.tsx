@@ -12,11 +12,11 @@ import {
 } from "@nextui-org/react";
 import { MealModal } from "@/components/Modals/MealModal";
 import { ConfirmationModal } from "@/components/Modals/ConfirmationModal";
-import { deleteMeal, deleteProduct, getMeal, getUser } from "@/helpers/request";
+import { deleteMeal, deleteProduct, getMeal } from "@/helpers/request";
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
 import { product_columns } from "@/helpers/utils";
-import { friendlyUrl } from "@/helpers/frontend";
+import { threadConnector } from "@/helpers/frontend";
 
 interface ProductTableProps {
   products: any;
@@ -68,20 +68,6 @@ const ProductTable = (props: ProductTableProps) => {
     return productImage;
   };
 
-  const threadConnector = async (
-    object: any,
-    // eslint-disable-next-line no-unused-vars
-    functionToCall: (id: string, url: string) => Promise<void>
-  ) => {
-    if (object && Object.keys(object).length > 0) {
-      const user = await getUser(userId);
-      const url = friendlyUrl(user.settings.url);
-      const response = await functionToCall(object.id, url);
-      return response;
-    }
-    return null;
-  };
-
   const handleCloseProductModal = () => {
     setProduct({});
     setOpenProduct(false);
@@ -100,7 +86,7 @@ const ProductTable = (props: ProductTableProps) => {
   const handleDelete = async (product: any) => {
     setLoading(true);
     console.log("Product: ", product);
-    await threadConnector(product, deleteMeal);
+    await threadConnector(product, userId, deleteMeal);
     await deleteProduct(product.id, { userid: userId });
     onUpdate();
     setLoading(false);
@@ -114,14 +100,14 @@ const ProductTable = (props: ProductTableProps) => {
 
   const handleOpenProduct = async (item: any) => {
     setProduct(item);
-    const threadMeal = await threadConnector(item, getMeal);
+    const threadMeal = await threadConnector(item, userId, getMeal);
     setThreadMeal(threadMeal);
     setOpenProduct(true);
   };
 
   const handleOpenCopyProduct = async (item: any) => {
     setProduct(item);
-    const threadMeal = await threadConnector(item, getMeal);
+    const threadMeal = await threadConnector(item, userId, getMeal);
     setThreadMeal(threadMeal);
     setOpenCopyProduct(true);
   };

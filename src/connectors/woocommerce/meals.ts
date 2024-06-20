@@ -21,6 +21,7 @@ const convertStatusToStockStatus = (status: string) => {
 // Need to pass categories to createProduct
 export const createMealOnWoocommerce = async (
   meal: any,
+  image: any,
   fullCategories: any
 ) => {
   const categories = convertTagsToCategories(meal.tags, fullCategories); // Need to convert tags to categories
@@ -34,6 +35,7 @@ export const createMealOnWoocommerce = async (
     description: meal.description,
     categories: categories,
     stock_status: status,
+    images: [image],
   };
 
   const product = await createProduct(body);
@@ -43,11 +45,13 @@ export const createMealOnWoocommerce = async (
 
 export const updateMealOnWoocommerce = async (
   meal: any,
+  image: any,
   fullCategories: any
 ) => {
   // Will need to work this out -> Maybe will need to make api calls here
   const categories = convertTagsToCategories(meal.tags, fullCategories); // Need to convert tags to categories
   const status = convertStatusToStockStatus(meal.status); // Need to convert status to stock_status
+  console.log("Meal: ", meal);
   const body = {
     userid: meal.userid,
     name: meal.name,
@@ -56,6 +60,7 @@ export const updateMealOnWoocommerce = async (
     description: meal.description,
     categories: categories,
     stock_status: status,
+    images: image ? [image] : [],
   };
   const product = await patchProduct(meal.mealid, body);
   return product;

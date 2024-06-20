@@ -123,6 +123,7 @@ export const MealModal = (props: MealModalProps) => {
         description: string;
         price: number;
         userid: string;
+        image: string;
         tags: any[];
         nutrition_facts: {
           calories: number;
@@ -142,6 +143,7 @@ export const MealModal = (props: MealModalProps) => {
         tags: selectedTags,
         nutrition_facts: nutritionFacts,
         options: options,
+        image: mealImage ? mealImage.src : "",
       };
 
       if (meal && mode === "patch") {
@@ -156,12 +158,20 @@ export const MealModal = (props: MealModalProps) => {
           await patchMeal(meal.id, url, body);
           // Update in Service if needed
         }
-        const woocommerceProduct = await updateMealOnWoocommerce(body, tags);
+        const woocommerceProduct = await updateMealOnWoocommerce(
+          body,
+          mealImage,
+          tags
+        );
         console.log("Updated Product: ", woocommerceProduct);
       } else {
         // Create it first in Service, then create in Thread DB
         console.log("Doesn't exist in WC yet");
-        const woocommerceProduct = await createMealOnWoocommerce(body, tags);
+        const woocommerceProduct = await createMealOnWoocommerce(
+          body,
+          mealImage,
+          tags
+        );
         body.mealid = woocommerceProduct.id;
         // Then create in Thread DB
         await createMeal(body);

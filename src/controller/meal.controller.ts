@@ -77,6 +77,7 @@ export async function patchMeal(mealid: string, url: string, body: any = {}) {
       });
 
     if (Object.keys(body).length > 0) {
+      console.log("Body: ", body);
       await Meal.updateOne({ mealid: mealid, url: url }, { $set: body });
       return NextResponse.json({ success: true, updated: mealid });
     } else {

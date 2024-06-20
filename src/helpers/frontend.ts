@@ -1,3 +1,4 @@
+import { getUser } from "@/helpers/request";
 /* eslint-disable no-unused-vars */
 export const getData = async (
   dataType: string,
@@ -81,4 +82,19 @@ export const findObjectByValue = (array: any[], key: string, value: any) => {
 
 export const friendlyUrl = (url: string) => {
   return url.replace(/^(https?:\/\/)/, "");
+};
+
+export const threadConnector = async (
+  object: any,
+  userId: string,
+  // eslint-disable-next-line no-unused-vars
+  functionToCall: (id: string, url: string) => Promise<void>
+) => {
+  if (object && Object.keys(object).length > 0) {
+    const user = await getUser(userId);
+    const url = friendlyUrl(user.settings.url);
+    const response = await functionToCall(object.id, url);
+    return response;
+  }
+  return null;
 };
