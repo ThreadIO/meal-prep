@@ -48,7 +48,7 @@ const LineItemTable = (props: LineItemTableProps) => {
               style={{
                 objectFit: "contain",
                 objectPosition: "center",
-                width: "70px", // Adjust the width to make the image smaller
+                width: "40px", // Adjust the width to make the image smaller
               }}
             />
           </div>
@@ -76,7 +76,7 @@ const LineItemTable = (props: LineItemTableProps) => {
   };
 
   return (
-    <div className="mt-4 mr-4 ml-4">
+    <div className="mt-4 mr-4 ml-4 max-h-[50vh] overflow-y-auto">
       <Table isHeaderSticky isStriped aria-label="Table of Line Items">
         <TableHeader columns={line_item_columns}>
           {(column) => (
