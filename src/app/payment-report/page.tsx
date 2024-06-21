@@ -16,7 +16,10 @@ const RainforestPaymentReport = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ sessionType: "merchant-payment-report", merchantId: mId }),
+      body: JSON.stringify({
+        sessionType: "merchant-payment-report",
+        merchantId: mId,
+      }),
     });
     const result = await response.json();
     console.log("Got session key for payment: ", result);

@@ -13,13 +13,13 @@ declare namespace JSX {
     };
     "rainforest-deposit-report": {
       "session-key": string;
-      "columns"?: string; // JSON Column array
+      columns?: string; // JSON Column array
       "display-header": string;
       "data-filters": string; // JSON w/ merchantId
     };
     "rainforest-payment-report": {
       "session-key": string;
       "data-filters": string; // JSON w/ merchantId
-    }
+    };
   }
 }
