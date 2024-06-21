@@ -9,6 +9,7 @@ import {
   getKeyValue,
 } from "@nextui-org/react";
 import { line_item_columns } from "@/helpers/utils";
+import { decodeHtmlEntities } from "@/helpers/frontend";
 interface LineItemTableProps {
   line_items: any;
 }
@@ -62,7 +63,7 @@ const LineItemTable = (props: LineItemTableProps) => {
     if (columnKey === "image") {
       return renderImage(lineItemImage);
     } else if (columnKey === "name") {
-      return <div> {getKeyValue(item, columnKey)}</div>;
+      return <div> {decodeHtmlEntities(getKeyValue(item, columnKey))}</div>;
     } else if (columnKey === "size") {
       const size = item.meta_data.find((meta: any) => meta.key === "Size");
       return <div>{size ? size.value : "N/A"}</div>;

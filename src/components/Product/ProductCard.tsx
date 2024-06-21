@@ -22,7 +22,11 @@ import {
 } from "@/helpers/request";
 import { Copy } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
-import { getProductImage, threadConnector } from "@/helpers/frontend";
+import {
+  decodeHtmlEntities,
+  getProductImage,
+  threadConnector,
+} from "@/helpers/frontend";
 interface ProductCardProps {
   product: any;
   onUpdate: () => void;
@@ -264,7 +268,9 @@ const ProductCard = (props: ProductCardProps) => {
       <CardBody className="text-center">
         <div className="p-6">
           <div className="h-full flex flex-col">
-            <h4 className="text-3xl font-bold">{product.name}</h4>
+            <h4 className="text-3xl font-bold">
+              {decodeHtmlEntities(product.name)}
+            </h4>
             {renderCategories(product)}
             <div className="mt-4 flex-grow">{renderImage()}</div>
             <div className="mt-6 flex flex-col items-center justify-center">

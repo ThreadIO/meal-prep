@@ -21,7 +21,11 @@ import {
 import { Copy, Trash } from "lucide-react";
 import { renderCategories, renderStockStatus } from "@/components/Renders";
 import { product_columns } from "@/helpers/utils";
-import { getProductImage, threadConnector } from "@/helpers/frontend";
+import {
+  decodeHtmlEntities,
+  getProductImage,
+  threadConnector,
+} from "@/helpers/frontend";
 
 interface ProductTableProps {
   products: any;
@@ -36,8 +40,6 @@ const ProductTable = (props: ProductTableProps) => {
   const [openDelete, setOpenDelete] = useState(false);
   const [product, setProduct] = useState<any>({});
   const [threadMeal, setThreadMeal] = useState<any>();
-  // This is the product in Thread
-  // const [threadMeal, setThreadMeal] = useState<any>();
   const [loading, setLoading] = useState(false);
   const { products, userId, onUpdate, categories } = props;
 
@@ -112,12 +114,13 @@ const ProductTable = (props: ProductTableProps) => {
     if (columnKey === "image") {
       return renderImage(productImage);
     } else if (columnKey === "name") {
+      const decodedName = decodeHtmlEntities(getKeyValue(item, columnKey));
       return (
         <button
           onClick={() => handleOpenProduct(item)}
           className="text-blue-500 hover:text-blue-700 cursor-pointer"
         >
-          {getKeyValue(item, columnKey)}
+          {decodedName}
         </button>
       );
     } else if (columnKey === "categories") {
@@ -191,7 +194,22 @@ const ProductTable = (props: ProductTableProps) => {
   return (
     <div className="mt-4 mr-4 ml-4">
       {modals(product, threadMeal)}
-      <Table isHeaderSticky isStriped aria-label="Table of Products">
+      <Table
+        isHeaderSticky
+        isStriped
+        aria-label="Table of Products"
+        selectionBehavior="toggle"
+        onRowAction={(key) => {
+          const selectedProduct = products.find(
+            (product: any) => product.id === key
+          );
+          if (selectedProduct) {
+            handleOpenProduct(selectedProduct);
+          } else {
+            console.error(`Product with id ${key} not found`);
+          }
+        }}
+      >
         <TableHeader columns={product_columns}>
           {(column) => (
             <TableColumn key={column.key}>{column.label}</TableColumn>

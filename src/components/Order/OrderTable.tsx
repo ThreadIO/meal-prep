@@ -77,7 +77,20 @@ const OrderTable = (props: OrderTableProps) => {
   return (
     <div className="mt-4 mr-4 ml-4">
       {modals(order)}
-      <Table isHeaderSticky isStriped aria-label="Table of Orders">
+      <Table
+        isHeaderSticky
+        isStriped
+        aria-label="Table of Orders"
+        selectionBehavior="toggle"
+        onRowAction={(key) => {
+          const selectedOrder = orders.find((order: any) => order.id === key);
+          if (selectedOrder) {
+            handleOpenOrder(selectedOrder);
+          } else {
+            console.error(`Order with id ${key} not found`);
+          }
+        }}
+      >
         <TableHeader columns={order_columns}>
           {(column) => (
             <TableColumn key={column.key}>{column.label}</TableColumn>

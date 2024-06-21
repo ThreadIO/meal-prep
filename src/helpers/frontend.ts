@@ -142,3 +142,9 @@ export const generateListOfMealIds = (orders: any[]): string[] => {
   // Convert Set to array and return
   return Array.from(mealIdSet);
 };
+
+export const decodeHtmlEntities = (str: string) => {
+  const textArea = document.createElement("textarea");
+  textArea.innerHTML = str;
+  return textArea.value;
+};
