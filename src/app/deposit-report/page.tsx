@@ -11,18 +11,18 @@ const RainforestReport = () => {
   const [mId] = useState<string>("sbx_mid_2g6zrrR2AgUpICJFqWIc56FRu3Q");
 
   const fetchSession = async () => {
-      const response = await fetch("api/rainforest/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ sessionType: "merchant", merchantId: mId }),
-      });
-      const result = await response.json();
-      console.log("Got session key for payment: ", result);
+    const response = await fetch("api/rainforest/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ sessionType: "merchant", merchantId: mId }),
+    });
+    const result = await response.json();
+    console.log("Got session key for payment: ", result);
 
-      const sessionKey = result.response.data.session_key;
-      setSessionKey(sessionKey);
+    const sessionKey = result.response.data.session_key;
+    setSessionKey(sessionKey);
   };
 
   // TODO: Only load if the sessionId and mId are available.. Maybe Suspense?
