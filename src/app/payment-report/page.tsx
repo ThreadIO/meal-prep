@@ -6,7 +6,7 @@ import { Spinner } from "@nextui-org/react";
 import { useUser } from "@propelauth/nextjs/client";
 import { useEffect, useState } from "react";
 
-const RainforestReport = () => {
+const RainforestPaymentReport = () => {
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [mId] = useState<string>("sbx_mid_2g6zrrR2AgUpICJFqWIc56FRu3Q");
 
@@ -16,7 +16,7 @@ const RainforestReport = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ sessionType: "merchant-deposit-report", merchantId: mId }),
+      body: JSON.stringify({ sessionType: "merchant-payment-report", merchantId: mId }),
     });
     const result = await response.json();
     console.log("Got session key for payment: ", result);
@@ -38,16 +38,16 @@ const RainforestReport = () => {
   }, []);
 
   const dataFilters = JSON.stringify({ merchant_id: mId });
-  const tableName = "Deposit Report";
+  const tableName = "Payment Report";
 
   return (
     <div>
       {mId && sessionKey ? (
-        <rainforest-deposit-report
+        <rainforest-payment-report
           session-key={sessionKey}
           display-header={tableName}
           data-filters={dataFilters}
-        ></rainforest-deposit-report>
+        ></rainforest-payment-report>
       ) : (
         <p>No Merchant Id or SessionKey found</p>
       )}
@@ -55,7 +55,7 @@ const RainforestReport = () => {
   );
 };
 
-export default function DepositReport() {
+export default function PaymentReport() {
   const { loading, isLoggedIn } = useUser();
 
   if (isLoggedIn) {
@@ -68,7 +68,7 @@ export default function DepositReport() {
         >
           <Navbar />
           <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <RainforestReport />
+            <RainforestPaymentReport />
           </div>
         </div>
       </div>
