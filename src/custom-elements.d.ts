@@ -11,5 +11,11 @@ declare namespace JSX {
       "session-key": string;
       "payin-id": string;
     };
+    "rainforest-deposit-report": {
+      "session-key": string;
+      columns?: string; // JSON Column array
+      "display-header": string;
+      "data-filters": string; // JSON w/ merchantId
+    };
   }
 }

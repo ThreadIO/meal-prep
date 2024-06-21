@@ -6,11 +6,6 @@ import fetch from "node-fetch";
 //   ttl: number;
 // }
 
-interface SessionRequestBody extends ReadableStream<Uint8Array> {
-  sessionType?: string;
-  payinId?: string;
-}
-
 // TODO: Remove hardcoded merchantId
 // const merchant_id = "sbx_mid_2g6zrrR2AgUpICJFqWIc56FRu3Q"; // Test merchant Id
 
@@ -20,7 +15,11 @@ export async function POST(request: NextRequest) {
 
   const url = "https://api.sandbox.rainforestpay.com/v1/sessions";
 
-  const { sessionType, payinId } = request.body as SessionRequestBody;
+  const body = JSON.parse(await request.text());
+
+  const { sessionType, payinId, merchantId } = body;
+
+  console.log("body attributes: ", sessionType, payinId, merchantId);
 
   var options;
   if (sessionType == "receipt") {
@@ -42,6 +41,32 @@ export async function POST(request: NextRequest) {
               payin: {
                 payin_id: `${payinId}`,
               },
+            },
+          },
+        ],
+        ttl: 3600,
+      }),
+    };
+  } else if (sessionType == "merchant") {
+    console.log("Received the sessionType: ", sessionType);
+
+    options = {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "Rainforest-Api-Version": "2023-12-01",
+        "content-type": "application/json",
+        authorization: `Bearer ${auth}`,
+      },
+      body: JSON.stringify({
+        statements: [
+          {
+            permissions: [
+              "group#deposit_report_component",
+              "group#deposit_report_component.create_refund",
+            ],
+            constraints: {
+              merchant: { merchant_id: merchantId },
             },
           },
         ],
