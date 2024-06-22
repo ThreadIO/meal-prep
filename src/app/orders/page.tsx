@@ -369,7 +369,7 @@ export default function OrdersPage() {
         <CardBody>
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-md">Total Meals Sold:</p>
+              <p className="text-md">Total Meals:</p>
               <p className="text-2xl font-bold" style={{ color: "green" }}>
                 {totalMeals.toLocaleString()}
               </p>
@@ -610,7 +610,7 @@ export default function OrdersPage() {
             flex: 1,
             display: "flex",
             flexDirection: "column",
-            maxHeight: "calc(65vh - 80px)", // Adjust based on button height
+            maxHeight: "calc(60vh - 80px)", // Adjust based on button height
             overflowY: "auto",
             marginTop: "20px",
             width: "100%",
