@@ -5,7 +5,6 @@ import { encryptField } from "@/helpers/encrypt";
 export async function getUser(userid: string) {
   try {
     const user = await User.findOne({ userid: userid });
-    console.log("User: ", user);
     return NextResponse.json({ success: true, data: user });
   } catch (error) {
     console.log("Error in Get User: ", error);

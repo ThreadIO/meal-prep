@@ -1,7 +1,8 @@
 import { getDeliveryDate } from "@/helpers/date";
 
-export const generateFullCsvData = (orders: any[], meals: any = null) => {
-  if (!meals) {
+export const generateFullCsvData = (orders: any[], meals: any = []) => {
+  // This means that the meal doesn't exist (stopgap solution for now before meals are updated in the database)
+  if (!meals || meals.length === 0) {
     const extractAllergens = (acf: any) => {
       const allergens = acf?.allergens?.items
         ?.map((item: any) => item.label.name)
