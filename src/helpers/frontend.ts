@@ -21,9 +21,8 @@ export const getData = async (
     const response = await fetch(url, {
       method,
       headers,
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : undefined,
     });
-
     if (!response.ok) {
       const errorMessage =
         response.statusText || `Failed to fetch ${dataType} from the server`;

@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Sidebar, SidebarCTA } from "flowbite-react";
-import { CookingPot, ShoppingBag, ShoppingCart, Users } from "lucide-react";
+import {
+  CookingPot,
+  ShoppingBag,
+  ShoppingCart,
+  Users,
+  Settings,
+} from "lucide-react";
 import { useUser } from "@propelauth/nextjs/client";
 import BusinessIcon from "@/components/BusinessIcon";
 import UserProfile from "@/components/UserProfile";
@@ -89,6 +95,15 @@ const SidebarComponent = () => {
               Pricing
             </Sidebar.Item>
           )}
+        </Sidebar.ItemGroup>
+        <Sidebar.ItemGroup className="mt-4 space-y-2 border-t border-gray-200 pt-4 first:mt-0 first:border-t-0 first:pt-0 dark:border-gray-700">
+          <Sidebar.Item
+            href="/settings"
+            icon={Settings}
+            className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+          >
+            Settings
+          </Sidebar.Item>
         </Sidebar.ItemGroup>
       </div>
     </Sidebar>

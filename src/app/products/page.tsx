@@ -22,7 +22,6 @@ const Products = () => {
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
     new Set(["All"])
   );
-
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
