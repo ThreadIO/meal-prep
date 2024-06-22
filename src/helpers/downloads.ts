@@ -155,14 +155,18 @@ export const generateFullCsvData = (orders: any[], meals: any = null) => {
     ];
 
     console.log("Generating CSV data for: ", orders);
-    orders.forEach((order) => {
+    orders.forEach((order: any) => {
       const deliveryDate = getDeliveryDate(order);
       order.line_items.forEach((item: any) => {
         for (let i = 0; i < item.quantity; i++) {
-          const sizeMetadata = item.meta_data.find(
-            (meta: any) => meta.key === "Size"
+          // Filter all metadata entries that contain "size" and do not start with '_'
+          const sizeMetadata = item.meta_data.filter(
+            (meta: any) => !meta.key.startsWith("_")
           );
-          const selectedSize = sizeMetadata ? sizeMetadata.value : "";
+
+          // Concatenate all sizes with a delimiter '|'
+          const selectedSizes =
+            sizeMetadata.map((meta: any) => meta.value).join(" | ") || "";
 
           const meal = meals.find((m: any) => m.name === item.name);
 
@@ -175,9 +179,11 @@ export const generateFullCsvData = (orders: any[], meals: any = null) => {
             allSizes = "";
 
           if (meal) {
+            // Find a matching option based on any of the selected sizes
             const selectedOption =
-              meal.options.find((opt: any) => opt.name === selectedSize) ||
-              meal.options[0];
+              meal.options.find((opt: any) =>
+                selectedSizes.includes(opt.name)
+              ) || meal.options[0];
 
             calories = selectedOption.calories || 0;
             protein = selectedOption.protein || 0;
@@ -205,7 +211,7 @@ export const generateFullCsvData = (orders: any[], meals: any = null) => {
             `"${ingredients}"`,
             `"${allergens}"`,
             deliveryDate ? deliveryDate.toISOString().slice(0, 10) : "",
-            allSizes,
+            selectedSizes || allSizes,
           ]);
         }
       });

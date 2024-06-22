@@ -119,12 +119,12 @@ export default function OrdersPage() {
     setFilteredOrders(filtered);
   }, [selectedMenuKeys, selectedStatusKeys, orders, deliveryDate, searchTerm]);
 
-  const nameSearch = (searchTerm: string) => {
+  const nameSearch = (orders: any, searchTerm: string) => {
     // Extract the name search term (after "name:")
     const nameSearchTerm = searchTerm.slice(5).trim().toLowerCase();
 
     // Filter orders based on the full name derived from first_name and last_name
-    const filteredOrders = orders.filter((order) => {
+    const filteredOrders = orders.filter((order: any) => {
       const fullName =
         `${order.billing.first_name} ${order.billing.last_name}`.toLowerCase();
       return fullName.includes(nameSearchTerm);
@@ -151,7 +151,7 @@ export default function OrdersPage() {
   const filterBySearch = (orders: any[], searchTerm: string) => {
     // Check if the searchTerm contains "name:"
     if (searchTerm.toLowerCase().startsWith("name:")) {
-      return nameSearch(searchTerm);
+      return nameSearch(orders, searchTerm);
     } else {
       // Regular filter based on id field
       const filteredOrders = orders.filter((order) =>
@@ -241,23 +241,34 @@ export default function OrdersPage() {
     csvContent += "Meal & Side Name(s), Size, QTY.\n";
 
     // Group items by name and size
-    const itemQuantities = ordersData.reduce((acc: any, order: any) => {
-      order.line_items.forEach((item: any) => {
-        const sizeMeta = item.meta_data.find(
-          (meta: any) => meta.key === "Size"
-        );
-        const size = sizeMeta ? sizeMeta.value : "N/A";
+    const itemQuantities = ordersData.reduce(
+      (acc: Record<string, number>, order: any) => {
+        order.line_items.forEach((item: any) => {
+          // Filter out all size-related metadata that do not start with '_'
+          const sizeMetas = item.meta_data.filter(
+            (meta: any) => !meta.key.startsWith("_")
+          );
 
-        const key = `${item.name}|||${size}`; // Use a delimiter unlikely to appear in names
+          // Generate a concatenated string of all sizes, separated by a delimiter
+          const sizes =
+            sizeMetas.map((meta: any) => meta.value).join(" | ") || "N/A";
 
-        if (acc[key]) {
-          acc[key] += item.quantity;
-        } else {
-          acc[key] = item.quantity;
-        }
-      });
-      return acc;
-    }, {});
+          // Create a unique key for each item based on name and sizes
+          const key = `${item.name}|||${sizes}`; // Use '|||' as a delimiter unlikely to appear in names
+
+          // Accumulate the quantities for each unique key
+          if (acc[key]) {
+            acc[key] += item.quantity;
+          } else {
+            acc[key] = item.quantity;
+          }
+        });
+        return acc;
+      },
+      {}
+    );
+
+    console.log(itemQuantities);
 
     // Sort items alphabetically by name (and size implicitly)
     const sortedItemQuantities = Object.entries(itemQuantities).sort(

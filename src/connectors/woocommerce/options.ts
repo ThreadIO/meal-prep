@@ -23,7 +23,6 @@ export const convertProductAddOnsToOptions = (productAddOns: any) => {
   }
   return [];
 };
-// TO-DO: Convert Options to Product Add On
 
 export const convertOptionsToProductAddOns = (options: any) => {
   if (options && options.length > 0) {

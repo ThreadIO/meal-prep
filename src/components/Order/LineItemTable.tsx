@@ -65,8 +65,19 @@ const LineItemTable = (props: LineItemTableProps) => {
     } else if (columnKey === "name") {
       return <div> {decodeHtmlEntities(getKeyValue(item, columnKey))}</div>;
     } else if (columnKey === "size") {
-      const size = item.meta_data.find((meta: any) => meta.key === "Size");
-      return <div>{size ? size.value : "N/A"}</div>;
+      const sizes = item.meta_data.filter(
+        (meta: any) => !meta.key.startsWith("_")
+      );
+      console.log("Sizes: ", sizes);
+      return (
+        <div>
+          {sizes.length > 0
+            ? sizes.map((size: any, index: string) => (
+                <div key={index}>{size.value}</div>
+              ))
+            : "N/A"}
+        </div>
+      );
     } else if (columnKey === "subtotal") {
       return <div>{`$${parseFloat(item.price || "0").toFixed(2)}`}</div>;
     } else if (columnKey === "total_tax") {
