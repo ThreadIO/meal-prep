@@ -1,6 +1,14 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
-import { Button, Spinner, DatePicker, Input, Tooltip } from "@nextui-org/react";
+import {
+  Button,
+  Spinner,
+  DatePicker,
+  Input,
+  Tooltip,
+  Card,
+  CardBody,
+} from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
@@ -45,6 +53,24 @@ export default function OrdersPage() {
   const [error, setError] = useState<string>("");
   const [deliveryDate, setDeliveryDate] = useState<any>();
   const [searchTerm, setSearchTerm] = useState("");
+
+  const calculateTotalMeals = (orders: any) => {
+    return orders.reduce((total: any, order: any) => {
+      return (
+        total +
+        order.line_items.reduce(
+          (itemTotal: any, item: any) => itemTotal + item.quantity,
+          0
+        )
+      );
+    }, 0);
+  };
+
+  const calculateTotalRevenue = (orders: any) => {
+    return orders.reduce((total: any, order: any) => {
+      return total + parseFloat(order.total);
+    }, 0);
+  };
 
   const getOrders = async () => {
     const url = "/api/woocommerce/getorders";
@@ -322,6 +348,43 @@ export default function OrdersPage() {
     );
   };
 
+  const renderOrderSummary = () => {
+    const totalMeals = calculateTotalMeals(filteredOrders);
+    const totalRevenue = calculateTotalRevenue(filteredOrders);
+
+    // Function to format currency
+    const formatCurrency = (amount: any) => {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    };
+
+    return (
+      <Card className="w-full max-w-sm m-4">
+        {" "}
+        {/* Added margin (m-4) */}
+        <CardBody>
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-md">Total Meals Sold:</p>
+              <p className="text-2xl font-bold" style={{ color: "green" }}>
+                {totalMeals.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-md">Total Revenue:</p>
+              <p className="text-2xl font-bold" style={{ color: "green" }}>
+                {formatCurrency(totalRevenue)}
+              </p>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+    );
+  };
   const generateFilteredCsvData = (filteredOrders: any[], meals: any) => {
     // Generate CSV data from filtered orders
     const filteredCsvData = generateFullCsvData(filteredOrders, meals);
@@ -518,6 +581,7 @@ export default function OrdersPage() {
           width: "100%", // Make sure the parent container takes full width
         }}
       >
+        {renderOrderSummary()}
         {renderSearchBar()}
         <div
           style={{

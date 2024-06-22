@@ -70,6 +70,20 @@ export const MealModal = (props: MealModalProps) => {
       setSelectedKeys(new Set(threadMeal.tags || []));
       setOptions(threadMeal.options || []);
     } else if (meal) {
+      // This means that the meal exists in WooCommerce (Hard coding for a HMP Meal)
+      const facts = meal.acf?.facts || {};
+      const calories = facts?.calories || 0;
+      const items = facts?.items;
+      console.log("Items: ", items);
+      const carbs =
+        items?.find((item: any) => item.nutrition_fact_label === "carbs")
+          ?.amount || 0;
+      const protein =
+        items?.find((item: any) => item.nutrition_fact_label === "protein")
+          ?.amount || 0;
+      const fat =
+        items?.find((item: any) => item.nutrition_fact_label === "fat")
+          ?.amount || 0;
       setMealName(meal.name || "");
       setMealDescription(meal.description || "");
       setMealPrice(meal.regular_price || "");
@@ -88,10 +102,10 @@ export const MealModal = (props: MealModalProps) => {
         ])
       );
       setNutritionFacts({
-        calories: meal.nutrition?.calories || 0,
-        carbs: meal.nutrition?.carbs || 0,
-        fat: meal.nutrition?.fat || 0,
-        protein: meal.nutrition?.protein || 0,
+        calories: calories || 0,
+        carbs: carbs || 0,
+        fat: fat || 0,
+        protein: protein || 0,
       });
       setOptions(convertProductAddOnsToOptions(meal.add_ons) || []);
     }
