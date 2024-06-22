@@ -61,7 +61,6 @@ export const updateMealOnWoocommerce = async (
   // Will need to work this out -> Maybe will need to make api calls here
   const categories = convertTagsToCategories(meal.tags, fullCategories); // Need to convert tags to categories
   const status = convertStatusToStockStatus(meal.status); // Need to convert status to stock_status
-  console.log("Meal: ", meal);
   const body = {
     userid: meal.userid,
     name: meal.name,
@@ -80,4 +79,28 @@ export const updateMealOnWoocommerce = async (
     userid: meal.userid,
   });
   return product;
+};
+
+export const getHMPProductData = (meal: any) => {
+  // TO-DO: Get the product data from HMP
+  // This should return the product data from HMP
+  const facts = meal.acf?.facts || {};
+  const calories = facts?.calories || 0;
+  const items = facts?.items;
+  const carbs =
+    items?.find((item: any) => item.nutrition_fact_label === "carbs")?.amount ||
+    0;
+  const protein =
+    items?.find((item: any) => item.nutrition_fact_label === "protein")
+      ?.amount || 0;
+  const fat =
+    items?.find((item: any) => item.nutrition_fact_label === "fat")?.amount ||
+    0;
+  const productData = {
+    calories: parseInt(calories),
+    protein: parseInt(protein),
+    fat: parseInt(fat),
+    carbs: parseInt(carbs),
+  };
+  return productData;
 };

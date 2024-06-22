@@ -42,9 +42,7 @@ export async function createMeal(mealid: string, body: any) {
       nutrition_facts: body.nutrition_facts,
       options: body.options,
     };
-    console.log("New Meal: ", newMeal);
     const meal = await Meal.create(newMeal);
-    console.log("Meal Created: ", meal);
     return NextResponse.json({ success: true, data: meal });
   } catch (error) {
     return NextResponse.json({ success: false, error: error });

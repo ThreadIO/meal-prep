@@ -19,6 +19,7 @@ import Dropdown from "@/components/Dropdown";
 import { X, Grip, Check, ArrowUp, ArrowDown } from "lucide-react";
 import {
   createMealOnWoocommerce,
+  getHMPProductData,
   updateMealOnWoocommerce,
 } from "@/connectors/woocommerce/meals";
 import { friendlyUrl } from "@/helpers/frontend";
@@ -71,19 +72,7 @@ export const MealModal = (props: MealModalProps) => {
       setOptions(threadMeal.options || []);
     } else if (meal) {
       // This means that the meal exists in WooCommerce (Hard coding for a HMP Meal)
-      const facts = meal.acf?.facts || {};
-      const calories = facts?.calories || 0;
-      const items = facts?.items;
-      console.log("Items: ", items);
-      const carbs =
-        items?.find((item: any) => item.nutrition_fact_label === "carbs")
-          ?.amount || 0;
-      const protein =
-        items?.find((item: any) => item.nutrition_fact_label === "protein")
-          ?.amount || 0;
-      const fat =
-        items?.find((item: any) => item.nutrition_fact_label === "fat")
-          ?.amount || 0;
+      const { calories, carbs, fat, protein } = getHMPProductData(meal);
       setMealName(meal.name || "");
       setMealDescription(meal.description || "");
       setMealPrice(meal.regular_price || "");
@@ -107,7 +96,7 @@ export const MealModal = (props: MealModalProps) => {
         fat: fat || 0,
         protein: protein || 0,
       });
-      setOptions(convertProductAddOnsToOptions(meal.add_ons) || []);
+      setOptions(convertProductAddOnsToOptions(meal) || []);
     }
   }, [meal, threadMeal]);
 
