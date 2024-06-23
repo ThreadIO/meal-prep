@@ -24,6 +24,7 @@ import {
 } from "@/connectors/woocommerce/meals";
 import { friendlyUrl } from "@/helpers/frontend";
 import { convertProductAddOnsToOptions } from "@/connectors/woocommerce/options";
+import { useMutation, useQueryClient } from "react-query";
 
 interface MealModalProps {
   meal: any;
@@ -57,6 +58,8 @@ export const MealModal = (props: MealModalProps) => {
   const [reorderMode, setReorderMode] = useState(false);
   const { loading, user } = useUser();
   const userId = user?.userId || "";
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     if (threadMeal) {
       setMealName(threadMeal.name || "");
@@ -106,95 +109,78 @@ export const MealModal = (props: MealModalProps) => {
     return selectedTagObjects;
   };
 
-  // Update this to save the meal in Mongo instead of WooCommerce
+  const saveMutation = useMutation(
+    async (formData: any) => {
+      const user = await getUser(userId);
+      const url = friendlyUrl(user.settings.url);
+
+      if (mode === "patch" && meal) {
+        // Update existing meal
+        const existing_meal = await getMeal(meal.id, url);
+        if (!existing_meal) {
+          await createMeal(formData);
+        } else {
+          await patchMeal(meal.id, url, formData);
+        }
+        return updateMealOnWoocommerce(formData, mealImage, tags);
+      } else {
+        // Create new meal
+        const woocommerceProduct = await createMealOnWoocommerce(
+          formData,
+          mealImage,
+          tags
+        );
+        if (
+          !(woocommerceProduct.data && woocommerceProduct.data.status === 400)
+        ) {
+          formData.mealid = woocommerceProduct.id;
+          await createMeal(formData);
+        } else {
+          throw new Error("Error creating meal in WooCommerce");
+        }
+        return woocommerceProduct;
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries("products");
+        onUpdate();
+        onClose();
+      },
+      onError: (error) => {
+        console.error("Error saving meal:", error);
+        // Handle error (e.g., show error message to user)
+      },
+      onSettled: () => {
+        setLoadingSave(false);
+      },
+    }
+  );
+
   const handleSave = async () => {
     setLoadingSave(true);
     const selectedTags = Array.from(
       mapSelectedTagsToObjects(),
       (item) => item.name
     );
-    console.log("Selected Tags: ", selectedTags);
-    try {
-      const user = await getUser(userId);
-      const url = friendlyUrl(user.settings.url);
-      const selectedStockStatusString =
-        Array.from(selectedStockStatus).join(", ");
-      console.log("Menu Price: ", mealPrice);
-      const body: {
-        name: string;
-        url: string;
-        status: string;
-        description: string;
-        price: number;
-        userid: string;
-        image: string;
-        tags: any[];
-        nutrition_facts: {
-          calories: number;
-          carbs: number;
-          fat: number;
-          protein: number;
-        };
-        options: any[];
-        mealid?: string; // Add the mealid property
-      } = {
-        name: String(mealName),
-        url: url,
-        status: selectedStockStatusString,
-        description: String(mealDescription),
-        price: parseFloat(mealPrice),
-        userid: userId,
-        tags: selectedTags,
-        nutrition_facts: nutritionFacts,
-        options: options,
-        image: mealImage ? mealImage.src : "",
-      };
+    const selectedStockStatusString =
+      Array.from(selectedStockStatus).join(", ");
 
-      if (meal && mode === "patch") {
-        // Meal exists in Service, need to check if it exists in Thread
-        body.mealid = meal.id;
-        const existing_meal = await getMeal(meal.id, url);
-        if (!existing_meal) {
-          // Create the meal in Thread DB
-          await createMeal(body);
-        } else {
-          // Update the meal in Thread DB
-          await patchMeal(meal.id, url, body);
-          // Update in Service if needed
-        }
-        const woocommerceProduct = await updateMealOnWoocommerce(
-          body,
-          mealImage,
-          tags
-        );
-        console.log("Updated Product: ", woocommerceProduct);
-      } else {
-        // Create it first in Service, then create in Thread DB
-        console.log("Doesn't exist in WC yet");
-        const woocommerceProduct = await createMealOnWoocommerce(
-          body,
-          mealImage,
-          tags
-        );
-        body.mealid = woocommerceProduct.id;
-        // Then create in Thread DB
-        if (
-          !(woocommerceProduct.data && woocommerceProduct.data.status === 400)
-        ) {
-          await createMeal(body);
-        } else {
-          console.log(
-            "Error creating meal in WooCommerce so not making in MongoDB"
-          );
-        }
-      }
-      onUpdate();
-      setLoadingSave(false);
-      onClose();
-    } catch (error) {
-      console.log("Some error: ", error);
-      setLoadingSave(false);
-    }
+    const formData = {
+      name: String(mealName),
+      url: friendlyUrl((await getUser(userId)).settings.url),
+      status: selectedStockStatusString,
+      description: String(mealDescription),
+      price: parseFloat(mealPrice),
+      userid: userId,
+      tags: selectedTags,
+      nutrition_facts: nutritionFacts,
+      options: options,
+      image: mealImage ? mealImage.src : "",
+      mealid: meal && mode === "patch" ? meal.id : undefined,
+    };
+
+    saveMutation.mutate(formData);
   };
 
   const renderContent = () => {

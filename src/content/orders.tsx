@@ -17,6 +17,7 @@ import {
   generateListOfMealIds,
   getCategories,
   getData,
+  getProducts,
 } from "@/helpers/frontend";
 import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
@@ -25,6 +26,8 @@ import FilterDropdown from "@/components/FilterDropdown";
 import OrderTable from "@/components/Order/OrderTable";
 import { statusOptions } from "@/helpers/utils";
 import { Search } from "lucide-react";
+import Papa from "papaparse";
+
 export default function OrdersPage() {
   const { user } = useUser();
   const [endDate, setEndDate] = useState(today(getLocalTimeZone())); // Default to today's date
@@ -33,9 +36,11 @@ export default function OrdersPage() {
   ); // Default to a week ago
   const [orders, setOrders] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [mealsLoading, setMealsLoading] = useState<boolean>(false);
+  const [productsLoading, setProductsLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
@@ -50,6 +55,12 @@ export default function OrdersPage() {
   const [error, setError] = useState<string>("");
   const [deliveryDate, setDeliveryDate] = useState<any>();
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
+    }
+  }, [user]);
 
   const calculateTotalMeals = (orders: any) => {
     return orders.reduce((total: any, order: any) => {
@@ -96,7 +107,8 @@ export default function OrdersPage() {
       body,
       () => {
         setShowOrders(true);
-        getCategories(user, setCategories, setError, setCategoriesLoading);
+        fetchProducts();
+        fetchCategories(); // Call the new function to fetch categories
       },
       (data) => {
         getMeals(data);
@@ -104,6 +116,33 @@ export default function OrdersPage() {
       transformOrdersData
     );
     console.log("Orders: ", orders);
+  };
+
+  // New function to fetch categories
+  const fetchCategories = async () => {
+    setCategoriesLoading(true);
+    try {
+      const categoriesData = await getCategories(user);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setError("Failed to fetch categories");
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setProductsLoading(true);
+    try {
+      const productsData = await getProducts(user?.userId || "");
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("Failed to fetch products");
+    } finally {
+      setProductsLoading(false);
+    }
   };
 
   const getMeals = async (orders: any) => {
@@ -192,9 +231,13 @@ export default function OrdersPage() {
           if (selectedKeys.has("All")) {
             return true;
           }
-          const itemCategories = item.product_data.categories.map(
-            (category: any) => category.name
+          const associatedProduct = products.find(
+            (product) => product.id === item.product_id
           );
+          const itemCategories =
+            associatedProduct?.categories?.map(
+              (category: any) => category.name
+            ) || [];
           return Array.from(selectedKeys).every((selectedCategory: any) =>
             itemCategories.includes(selectedCategory)
           );
@@ -214,13 +257,19 @@ export default function OrdersPage() {
   };
 
   const renderCategoryFilterDropdown = () => {
-    return (
-      <FilterDropdown
-        selectedKeys={selectedMenuKeys}
-        setSelectedKeys={setSelectedMenuKeys}
-        options={categories}
-      />
-    );
+    if (products.length > 0 && !productsLoading && !categoriesLoading) {
+      console.log("Products: ", products);
+      return (
+        <div style={{ textAlign: "center" }}>
+          <h3 style={{ marginBottom: "10px" }}>Select Menu:</h3>
+          <FilterDropdown
+            selectedKeys={selectedMenuKeys}
+            setSelectedKeys={setSelectedMenuKeys}
+            options={categories}
+          />
+        </div>
+      );
+    }
   };
 
   const renderStatusFilterDropdown = () => {
@@ -259,27 +308,19 @@ export default function OrdersPage() {
   ) => {
     console.log("download orders");
 
-    // CSV Header
-    let csvContent = `Delivery Dates Range:, ${startDate} - ${endDate}\n\n`;
-    csvContent += "Meal & Side Name(s), Size, QTY.\n";
-
     // Group items by name and size
     const itemQuantities = ordersData.reduce(
       (acc: Record<string, number>, order: any) => {
         order.line_items.forEach((item: any) => {
-          // Filter out all size-related metadata that do not start with '_'
           const sizeMetas = item.meta_data.filter(
             (meta: any) => !meta.key.startsWith("_")
           );
 
-          // Generate a concatenated string of all sizes, separated by a delimiter
           const sizes =
             sizeMetas.map((meta: any) => meta.value).join(" | ") || "N/A";
 
-          // Create a unique key for each item based on name and sizes
-          const key = `${item.name}|||${sizes}`; // Use '|||' as a delimiter unlikely to appear in names
+          const key = `${item.name}|||${sizes}`;
 
-          // Accumulate the quantities for each unique key
           if (acc[key]) {
             acc[key] += item.quantity;
           } else {
@@ -291,8 +332,6 @@ export default function OrdersPage() {
       {}
     );
 
-    console.log(itemQuantities);
-
     // Sort items alphabetically by name (and size implicitly)
     const sortedItemQuantities = Object.entries(itemQuantities).sort(
       ([keyA], [keyB]) => {
@@ -302,26 +341,35 @@ export default function OrdersPage() {
       }
     );
 
-    // Construct CSV lines from sorted grouped data
-    const lines = sortedItemQuantities.map(([key, quantity]) => {
-      const [name, size] = key.split("|||");
-      return `"${name.replace(/"/g, '""')}", ${size.replace(/"/g, '""')}, ${quantity}`;
+    // Prepare data for CSV
+    const csvData = [
+      [`Delivery Dates Range:, ${startDate} - ${endDate}`],
+      [],
+      ["Meal & Side Name(s)", "Size", "QTY."],
+      ...sortedItemQuantities.map(([key, quantity]) => {
+        const [name, size] = key.split("|||");
+        return [name, size, quantity];
+      }),
+      [],
+      [
+        "",
+        "Total Qty.",
+        sortedItemQuantities.reduce(
+          (sum, [, quantity]) => sum + Number(quantity),
+          0
+        ),
+      ],
+    ];
+
+    // Generate CSV content
+    const csvContent = Papa.unparse(csvData, {
+      quotes: true, // Use quotes around all fields
+      quoteChar: '"',
+      escapeChar: '"',
     });
 
-    // Add each line to the CSV content
-    csvContent += lines.join("\n") + "\n\n";
-
-    // Calculate total quantity
-    const totalQuantity = sortedItemQuantities.reduce(
-      (sum, [, quantity]: any) => sum + quantity,
-      0
-    );
-
-    // Add total quantity to the CSV content
-    csvContent += `,Total Qty., ${totalQuantity}`;
-
     // Create a Blob from the CSV content
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
 
     // Save the CSV file
     saveAs(blob, `orders-${startDate}-${endDate}.csv`);
@@ -434,7 +482,7 @@ export default function OrdersPage() {
           text={showLineItems ? "Show Meal Quantities" : "Show Line Items"}
         />
         <StyledButton
-          onClick={() => downloadOrders(orders, startDate, endDate)}
+          onClick={() => downloadOrders(filteredOrders, startDate, endDate)}
           text="Download Orders"
         />
         <StyledButton onClick={() => clear()} text="Clear Orders" />
@@ -593,10 +641,7 @@ export default function OrdersPage() {
             <h3 style={{ marginBottom: "10px" }}>Delivery Date:</h3>
             {renderDeliveryDateInputs()}
           </div>
-          <div style={{ textAlign: "center" }}>
-            <h3 style={{ marginBottom: "10px" }}>Select Menu:</h3>
-            {renderCategoryFilterDropdown()}
-          </div>
+          {renderCategoryFilterDropdown()}
           <div style={{ textAlign: "center" }}>
             <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
             {renderStatusFilterDropdown()}
