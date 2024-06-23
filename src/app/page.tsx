@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { useUser } from "@propelauth/nextjs/client";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { Spinner } from "@nextui-org/react";
-
+import SwitchBoard from "@/navigation/switchboard";
 const MainPage = () => {
   // For now, it just shows the orders page
   const { loading, isLoggedIn } = useUser();
@@ -16,6 +16,7 @@ const MainPage = () => {
         <Sidebar />
         <div className="flex-1 overflow-auto">
           <Navbar />
+          <SwitchBoard />
         </div>
       </div>
     );

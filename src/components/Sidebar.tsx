@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { Sidebar, SidebarCTA } from "flowbite-react";
 import {
@@ -12,13 +13,15 @@ import BusinessIcon from "@/components/BusinessIcon";
 import UserProfile from "@/components/UserProfile";
 import { AccountModal } from "@/components/Modals/AccountModal";
 import Link from "next/link";
-
+import { useNavigationContext } from "@/components/context/NavigationContext";
 const betaMode = false; // Set to true to enable beta mode, false to disable
 
 const SidebarComponent = () => {
   const { user } = useUser();
-  const [openAccount, setOpenAccount] = useState(false);
+  const { setCurrentPage, currentPage } = useNavigationContext();
 
+  const [openAccount, setOpenAccount] = useState(false);
+  console.log("Current Page: ", currentPage);
   return (
     <Sidebar className="h-full w-64 bg-gray-50 dark:bg-gray-800 transition-all duration-300 flex flex-col">
       <div>
@@ -73,14 +76,14 @@ const SidebarComponent = () => {
             </Sidebar.Item>
           )}
           <Sidebar.Item
-            href="/products"
             icon={CookingPot}
+            onClick={() => setCurrentPage("meals")}
             className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
           >
             Meals
           </Sidebar.Item>
           <Sidebar.Item
-            href="/orders"
+            onClick={() => setCurrentPage("orders")}
             icon={ShoppingBag}
             className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
           >
@@ -98,7 +101,7 @@ const SidebarComponent = () => {
         </Sidebar.ItemGroup>
         <Sidebar.ItemGroup className="mt-4 space-y-2 border-t border-gray-200 pt-4 first:mt-0 first:border-t-0 first:pt-0 dark:border-gray-700">
           <Sidebar.Item
-            href="/settings"
+            onClick={() => setCurrentPage("settings")}
             icon={Settings}
             className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
           >
