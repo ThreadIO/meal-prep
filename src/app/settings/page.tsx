@@ -4,7 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import { useUser } from "@propelauth/nextjs/client";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
-import { useOrgContext } from "@/components/OrgContext";
+import { useOrgContext } from "@/components/context/OrgContext";
 import {
   Spinner,
   Card,
