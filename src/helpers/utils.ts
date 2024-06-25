@@ -109,3 +109,24 @@ export const statusOptions = [
   { name: "refunded", display: "Refunded" },
   { name: "failed", display: "Failed" },
 ];
+
+export const coupon_columns = [
+  {
+    key: "code",
+    label: "CODE",
+  },
+  {
+    key: "amount",
+    label: "AMOUNT",
+  },
+  {
+    key: "discount_type",
+    label: "DISCOUNT TYPE",
+  },
+  { key: "date_expires", label: "DATE EXPIRES" },
+  { key: "total_tax", label: "TOTAL TAX" },
+  // {
+  //   key: "actions",
+  //   label: "ACTIONS",
+  // },
+];

@@ -317,3 +317,17 @@ export async function patchOrg(orgid: string, body: any) {
   if (!success) throw new Error("Error updating org: ", error);
   return data;
 }
+
+export async function createCoupon(body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/coupon`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error creating coupon: ", error);
+  return data;
+}

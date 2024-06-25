@@ -3,6 +3,7 @@ import { useNavigationContext } from "@/components/context/NavigationContext";
 import MealContent from "@/content/meals";
 import OrderContent from "@/content/orders";
 import Settings from "@/content/settings";
+import Coupons from "@/content/coupons";
 
 const SwitchContent: React.FC = () => {
   const { currentPage } = useNavigationContext();
@@ -16,6 +17,8 @@ const SwitchContent: React.FC = () => {
       // Add more cases for other pages
       case "settings":
         return <Settings />;
+      case "coupons":
+        return <Coupons />;
       default:
         return <div></div>;
     }

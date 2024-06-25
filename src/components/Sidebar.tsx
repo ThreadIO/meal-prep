@@ -7,6 +7,7 @@ import {
   ShoppingCart,
   Users,
   Settings,
+  SquarePercent,
 } from "lucide-react";
 import { useUser } from "@propelauth/nextjs/client";
 import BusinessIcon from "@/components/BusinessIcon";
@@ -96,6 +97,15 @@ const SidebarComponent = () => {
               className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
             >
               Pricing
+            </Sidebar.Item>
+          )}
+          {betaMode && (
+            <Sidebar.Item
+              onClick={() => setCurrentPage("coupons")}
+              icon={SquarePercent}
+              className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+            >
+              Coupons
             </Sidebar.Item>
           )}
         </Sidebar.ItemGroup>
