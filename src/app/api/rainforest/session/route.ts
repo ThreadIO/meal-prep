@@ -15,9 +15,14 @@ export async function POST(request: NextRequest) {
 
   const url = "https://api.sandbox.rainforestpay.com/v1/sessions";
 
-  const body = JSON.parse(await request.text());
+  const body = await request.text();
+  const parsedBody = body ? JSON.parse(body) : null; // TOOD: if it goes to null, pulling the variables throws an error
 
-  const { sessionType, payinId, merchantId } = body;
+  const { sessionType, payinId, merchantId } = parsedBody;
+
+  // const sessionType = ""
+  // const payinId= ""
+  // const merchantId = ""
 
   console.log("body attributes: ", sessionType, payinId, merchantId);
 
