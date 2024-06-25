@@ -6,11 +6,15 @@ import {
   ModalFooter,
   Button,
   Spinner,
+  Card,
+  Divider,
+  Chip,
 } from "@nextui-org/react";
 import { useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
 import LineItemTable from "@/components/Order/LineItemTable";
 import { ConfirmationModal } from "./ConfirmationModal";
+import { friendlyDate, getDeliveryDate } from "@/helpers/date";
 
 interface OrderModalProps {
   order: any;
@@ -99,22 +103,75 @@ export const OrderModal = (props: OrderModalProps) => {
       </>
     );
   };
+
+  const renderCustomerInfo = () => {
+    const deliveryDate = friendlyDate(getDeliveryDate(order)) || "N/A";
+    const deliveryDay =
+      order.shipping_lines && order.shipping_lines[0]?.method_title;
+
+    return (
+      <Card className="mb-4 p-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+          <h3 className="text-lg font-bold">Order Summary</h3>
+          {deliveryDate && (
+            <Chip color="primary" variant="solid">
+              Delivery: {deliveryDay} - {deliveryDate}
+            </Chip>
+          )}
+        </div>
+        <div className="flex flex-col sm:flex-row justify-between text-sm">
+          <div>
+            <p>
+              <strong>Customer:</strong> {order.billing.first_name}{" "}
+              {order.billing.last_name}
+            </p>
+            <p>
+              <strong>Email:</strong> {order.billing.email}
+            </p>
+            <p>
+              <strong>Phone:</strong> {order.billing.phone}
+            </p>
+          </div>
+          <div className="mt-2 sm:mt-0">
+            <p>
+              <strong>Billing:</strong> {order.billing.address_1},{" "}
+              {order.billing.city}, {order.billing.state}{" "}
+              {order.billing.postcode}
+            </p>
+            <p>
+              <strong>Shipping:</strong> {order.shipping.address_1},{" "}
+              {order.shipping.city}, {order.shipping.state}{" "}
+              {order.shipping.postcode}
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
   const renderModalContent = () => {
     return (
       <ModalContent>
-        <>
-          <ModalHeader className="flex flex-col gap-1 text-center">
-            Order# {order.id}
-          </ModalHeader>
-          <ModalBody className="flex flex-col overflow-y-auto">
-            <LineItemTable line_items={order.line_items} />
-          </ModalBody>
-          <ModalFooter
-            style={{ display: "flex", justifyContent: "space-between" }}
-          >
-            {renderButtons()}
-          </ModalFooter>
-        </>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1 text-center">
+              Order# {order.id}
+            </ModalHeader>
+            <ModalBody className="flex flex-col overflow-y-auto">
+              {renderCustomerInfo()}
+              <Divider className="my-4" />
+              <LineItemTable line_items={order.line_items} />
+            </ModalBody>
+            <ModalFooter>
+              <div className="flex justify-between w-full">
+                {renderButtons()}
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+              </div>
+            </ModalFooter>
+          </>
+        )}
       </ModalContent>
     );
   };

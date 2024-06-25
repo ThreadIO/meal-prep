@@ -21,9 +21,8 @@ export const getData = async (
     const response = await fetch(url, {
       method,
       headers,
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : undefined,
     });
-
     if (!response.ok) {
       const errorMessage =
         response.statusText || `Failed to fetch ${dataType} from the server`;
@@ -52,28 +51,23 @@ export const getData = async (
   }
 };
 
-export const getCategories = async (
-  user: any,
-  setCategories: (categories: any) => void,
-  setError: (error: any) => void,
-  setCategoriesLoading: (loading: boolean) => void
-) => {
+export const getCategories = async (user: any) => {
   const url = "/api/woocommerce/getproducts/getcategories";
   const method = "POST";
   const headers = {
     "Content-Type": "application/json",
   };
   const body = { userid: user?.userId };
-  getData(
-    "categories",
-    url,
+  const response = await fetch(url, {
     method,
     headers,
-    setCategories,
-    setError,
-    setCategoriesLoading,
-    body
-  );
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch categories");
+  }
+  const data = (await response.json()).data;
+  return data;
 };
 
 export const findObjectByValue = (array: any[], key: string, value: any) => {
@@ -141,4 +135,21 @@ export const generateListOfMealIds = (orders: any[]): string[] => {
 
   // Convert Set to array and return
   return Array.from(mealIdSet);
+};
+
+export const decodeHtmlEntities = (str: string) => {
+  const textArea = document.createElement("textarea");
+  textArea.innerHTML = str;
+  return textArea.value;
+};
+
+export const getProducts = async (userId: string) => {
+  const response = await fetch("/api/woocommerce/getproducts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid: userId }),
+  });
+  if (!response.ok) throw new Error("Failed to fetch products");
+  const products = (await response.json()).data;
+  return products;
 };

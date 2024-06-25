@@ -61,7 +61,6 @@ export async function getAll(
       }
 
       console.log("URL: ", url);
-
       // Fetch data from the current page
       const response = await fetch(url, {
         method: "GET",

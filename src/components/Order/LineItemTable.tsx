@@ -9,6 +9,7 @@ import {
   getKeyValue,
 } from "@nextui-org/react";
 import { line_item_columns } from "@/helpers/utils";
+import { decodeHtmlEntities } from "@/helpers/frontend";
 interface LineItemTableProps {
   line_items: any;
 }
@@ -48,7 +49,7 @@ const LineItemTable = (props: LineItemTableProps) => {
               style={{
                 objectFit: "contain",
                 objectPosition: "center",
-                width: "70px", // Adjust the width to make the image smaller
+                width: "40px", // Adjust the width to make the image smaller
               }}
             />
           </div>
@@ -62,10 +63,21 @@ const LineItemTable = (props: LineItemTableProps) => {
     if (columnKey === "image") {
       return renderImage(lineItemImage);
     } else if (columnKey === "name") {
-      return <div> {getKeyValue(item, columnKey)}</div>;
+      return <div> {decodeHtmlEntities(getKeyValue(item, columnKey))}</div>;
     } else if (columnKey === "size") {
-      const size = item.meta_data.find((meta: any) => meta.key === "Size");
-      return <div>{size ? size.value : "N/A"}</div>;
+      const sizes = item.meta_data.filter(
+        (meta: any) => !meta.key.startsWith("_")
+      );
+      console.log("Sizes: ", sizes);
+      return (
+        <div>
+          {sizes.length > 0
+            ? sizes.map((size: any, index: string) => (
+                <div key={index}>{size.value}</div>
+              ))
+            : "N/A"}
+        </div>
+      );
     } else if (columnKey === "subtotal") {
       return <div>{`$${parseFloat(item.price || "0").toFixed(2)}`}</div>;
     } else if (columnKey === "total_tax") {
@@ -76,7 +88,7 @@ const LineItemTable = (props: LineItemTableProps) => {
   };
 
   return (
-    <div className="mt-4 mr-4 ml-4">
+    <div className="mt-4 mr-4 ml-4 max-h-[50vh] overflow-y-auto">
       <Table isHeaderSticky isStriped aria-label="Table of Line Items">
         <TableHeader columns={line_item_columns}>
           {(column) => (

@@ -1,74 +1,68 @@
 "use client";
-import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
-import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { Button, Spinner, Tooltip } from "@nextui-org/react";
+import { useQuery, useQueryClient } from "react-query";
 import ProductCard from "@/components/Product/ProductCard";
 import { MealModal } from "@/components/Modals/MealModal";
 import Dropdown from "@/components/Dropdown";
 import FilterDropdown from "@/components/FilterDropdown";
-import { getData, getCategories } from "@/helpers/frontend";
+import { getCategories, getProducts } from "@/helpers/frontend";
 import { StockStatusOptions } from "@/helpers/utils";
 import { LayoutGrid, Table as TableIcon } from "lucide-react";
 import ProductTable from "@/components/Product/ProductTable";
 
-const Products = () => {
+const Meals = () => {
   const { loading, isLoggedIn, user } = useUser();
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [selectedKeys, setSelectedKeys] = useState<any>(new Set(["All"]));
-  const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
-    new Set(["All"])
+  const queryClient = useQueryClient();
+
+  const {
+    data: products = [],
+    isLoading: productsLoading,
+    error: productsError,
+  } = useQuery(
+    ["products", user?.userId],
+    () => getProducts(user?.userId ?? ""),
+    {
+      enabled: !!user?.userId,
+    }
   );
 
-  const [productsLoading, setProductsLoading] = useState<boolean>(false);
-  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useQuery(["categories", user?.userId], () => getCategories(user), {
+    enabled: !!user?.userId,
+  });
+
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
+    new Set(["All"])
+  );
+  const [selectedStockStatus, setSelectedStockStatus] = useState<Set<string>>(
+    new Set(["All"])
+  );
   const [openProduct, setOpenProduct] = useState(false);
   const [layout, setLayout] = useState<"grid" | "table">("table");
-  const getProducts = async () => {
-    const url = "/api/woocommerce/getproducts";
-    const method = "POST";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    const body = { userid: user?.userId };
-    getData(
-      "products",
-      url,
-      method,
-      headers,
-      setProducts,
-      setError,
-      setProductsLoading,
-      body,
-      () => {
-        getCategories(user, setCategories, setError, setCategoriesLoading);
-      }
-    );
-  };
 
   useEffect(() => {
-    if (isLoggedIn && !loading && !productsLoading) {
-      getProducts();
+    if (isLoggedIn && !loading) {
+      queryClient.invalidateQueries(["products", user?.userId]);
+      queryClient.invalidateQueries(["categories", user?.userId]);
     }
-  }, [isLoggedIn, loading]);
+  }, [isLoggedIn, loading, queryClient, user?.userId]);
 
   const handleCloseProductModal = () => {
     setOpenProduct(false);
   };
 
-  const renderFilterDropdown = () => {
-    return (
-      <FilterDropdown
-        selectedKeys={selectedKeys}
-        setSelectedKeys={setSelectedKeys}
-        options={categories}
-      />
-    );
-  };
+  const renderFilterDropdown = () => (
+    <FilterDropdown
+      selectedKeys={selectedKeys}
+      setSelectedKeys={setSelectedKeys}
+      options={categories}
+    />
+  );
 
   const renderStockStatusDropdown = () => {
     const getColor = (value: string) => {
@@ -102,7 +96,7 @@ const Products = () => {
   };
 
   const renderProductPage = () => {
-    if (error) {
+    if (productsError || categoriesError) {
       return renderError();
     } else {
       return (
@@ -110,7 +104,11 @@ const Products = () => {
           <div className="mx-auto max-w-4xl text-center mt-10 items-center">
             <h2 className="text-3xl font-semibold leading-7 mb-6">Meals</h2>
             <div className="flex justify-center">
-              <Button color="primary" onPress={() => setOpenProduct(true)}>
+              <Button
+                color="primary"
+                onPress={() => setOpenProduct(true)}
+                className="mt-4"
+              >
                 Create New
               </Button>
             </div>
@@ -123,13 +121,15 @@ const Products = () => {
     }
   };
 
-  const renderError = () => {
-    return (
-      <div style={{ textAlign: "center" }}>
-        <p style={{ color: "red" }}>{error}</p>
-      </div>
-    );
-  };
+  const renderError = () => (
+    <div style={{ textAlign: "center" }}>
+      <p style={{ color: "red" }}>
+        {(productsError as Error)?.message ||
+          (categoriesError as Error)?.message ||
+          "An error occurred"}
+      </p>
+    </div>
+  );
 
   const renderLayoutButtons = () => {
     if (layout === "grid") {
@@ -163,12 +163,14 @@ const Products = () => {
     }
   };
 
-  const renderProductCards = (products: any) => {
+  const renderProductCards = (products: any[]) => {
     return products.map((product: any) => (
       <ProductCard
         key={product.id}
         product={product}
-        onUpdate={() => getProducts()}
+        onUpdate={() =>
+          queryClient.invalidateQueries(["products", user?.userId])
+        }
         userId={user!.userId}
         categories={categories}
       />
@@ -176,25 +178,30 @@ const Products = () => {
   };
 
   const getFilteredProducts = () => {
+    if (!Array.isArray(products)) {
+      console.error("Products is not an array:", products);
+      return [];
+    }
+
     return products
-      .filter((product) => {
+      .filter((product: any) => {
         if (selectedKeys.has("All")) {
           return true;
         }
         const productCategories = product.categories.map(
           (category: any) => category.name
         );
-        return [...selectedKeys].every((selectedCategory: any) =>
+        return Array.from(selectedKeys).every((selectedCategory) =>
           productCategories.includes(selectedCategory)
         );
       })
-      .filter((product) => {
+      .filter((product: any) => {
         if (selectedStockStatus.has("All")) {
           return true;
         }
         const selectedStockStatusValue = Array.from(selectedStockStatus)[0];
         const mappedStockStatus = StockStatusOptions.find(
-          (status: any) => status.display === selectedStockStatusValue
+          (status) => status.display === selectedStockStatusValue
         )?.value;
         return (
           mappedStockStatus === "All" ||
@@ -203,7 +210,7 @@ const Products = () => {
       });
   };
 
-  const renderProducts = (filteredProducts: any) => {
+  const renderProducts = (filteredProducts: any[]) => {
     if (layout === "grid") {
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
@@ -214,7 +221,9 @@ const Products = () => {
       return (
         <ProductTable
           products={filteredProducts}
-          onUpdate={() => getProducts()}
+          onUpdate={() =>
+            queryClient.invalidateQueries(["products", user?.userId])
+          }
           userId={user!.userId}
           categories={categories}
         />
@@ -243,43 +252,29 @@ const Products = () => {
     );
   };
 
-  const renderLoading = () => {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <Spinner label={"Loading Meals"} />
-      </div>
-    );
-  };
+  const renderLoading = () => (
+    <div className="flex justify-center items-center h-full">
+      <Spinner label={"Loading Meals"} />
+    </div>
+  );
 
-  if (isLoggedIn) {
-    return (
-      <div className="flex h-screen">
-        <Sidebar />
-        <div className="flex-1">
-          <Navbar />
-          <MealModal
-            meal={null}
-            threadMeal={null}
-            mealImage={{}}
-            open={openProduct}
-            mode={"create"}
-            onClose={() => handleCloseProductModal()}
-            onUpdate={() => getProducts()}
-            tags={categories}
-          />
-          {renderProductPage()}
-        </div>
-      </div>
-    );
-  } else if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner label="Loading Page" />
-      </div>
-    );
-  } else {
-    return <SignupAndLoginButtons />;
-  }
+  return (
+    <>
+      <MealModal
+        meal={null}
+        threadMeal={null}
+        mealImage={{}}
+        open={openProduct}
+        mode={"create"}
+        onClose={handleCloseProductModal}
+        onUpdate={() =>
+          queryClient.invalidateQueries(["products", user?.userId])
+        }
+        tags={categories}
+      />
+      {renderProductPage()}
+    </>
+  );
 };
 
-export default Products;
+export default Meals;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useOrgContext } from "@/components/OrgContext";
+import { useOrgContext } from "@/components/context/OrgContext";
 import {
   Modal,
   ModalContent,

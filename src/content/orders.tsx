@@ -1,17 +1,23 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
-import { Button, Spinner, DatePicker, Input, Tooltip } from "@nextui-org/react";
+import {
+  Button,
+  Spinner,
+  DatePicker,
+  Input,
+  Tooltip,
+  Card,
+  CardBody,
+} from "@nextui-org/react";
 import { useState, useEffect } from "react";
-import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/Navbar";
 import React from "react";
-import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import { saveAs } from "file-saver";
 import { not_products } from "@/helpers/utils";
 import {
   generateListOfMealIds,
   getCategories,
   getData,
+  getProducts,
 } from "@/helpers/frontend";
 import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
@@ -20,17 +26,21 @@ import FilterDropdown from "@/components/FilterDropdown";
 import OrderTable from "@/components/Order/OrderTable";
 import { statusOptions } from "@/helpers/utils";
 import { Search } from "lucide-react";
+import Papa from "papaparse";
+
 export default function OrdersPage() {
-  const { loading, isLoggedIn, user } = useUser();
+  const { user } = useUser();
   const [endDate, setEndDate] = useState(today(getLocalTimeZone())); // Default to today's date
   const [startDate, setStartDate] = useState(
     today(getLocalTimeZone()).subtract({ weeks: 1 })
   ); // Default to a week ago
   const [orders, setOrders] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [mealsLoading, setMealsLoading] = useState<boolean>(false);
+  const [productsLoading, setProductsLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
@@ -45,6 +55,30 @@ export default function OrdersPage() {
   const [error, setError] = useState<string>("");
   const [deliveryDate, setDeliveryDate] = useState<any>();
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
+    }
+  }, [user]);
+
+  const calculateTotalMeals = (orders: any) => {
+    return orders.reduce((total: any, order: any) => {
+      return (
+        total +
+        order.line_items.reduce(
+          (itemTotal: any, item: any) => itemTotal + item.quantity,
+          0
+        )
+      );
+    }, 0);
+  };
+
+  const calculateTotalRevenue = (orders: any) => {
+    return orders.reduce((total: any, order: any) => {
+      return total + parseFloat(order.total);
+    }, 0);
+  };
 
   const getOrders = async () => {
     const url = "/api/woocommerce/getorders";
@@ -73,7 +107,8 @@ export default function OrdersPage() {
       body,
       () => {
         setShowOrders(true);
-        getCategories(user, setCategories, setError, setCategoriesLoading);
+        fetchProducts();
+        fetchCategories(); // Call the new function to fetch categories
       },
       (data) => {
         getMeals(data);
@@ -81,6 +116,33 @@ export default function OrdersPage() {
       transformOrdersData
     );
     console.log("Orders: ", orders);
+  };
+
+  // New function to fetch categories
+  const fetchCategories = async () => {
+    setCategoriesLoading(true);
+    try {
+      const categoriesData = await getCategories(user);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setError("Failed to fetch categories");
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setProductsLoading(true);
+    try {
+      const productsData = await getProducts(user?.userId || "");
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("Failed to fetch products");
+    } finally {
+      setProductsLoading(false);
+    }
   };
 
   const getMeals = async (orders: any) => {
@@ -93,7 +155,7 @@ export default function OrdersPage() {
     console.log("Meal Ids: ", mealids);
     const body = {
       mealids: generateListOfMealIds(orders),
-      url: "foodandfigure.com",
+      userid: user?.userId,
     };
     getData(
       "meals",
@@ -119,12 +181,12 @@ export default function OrdersPage() {
     setFilteredOrders(filtered);
   }, [selectedMenuKeys, selectedStatusKeys, orders, deliveryDate, searchTerm]);
 
-  const nameSearch = (searchTerm: string) => {
+  const nameSearch = (orders: any, searchTerm: string) => {
     // Extract the name search term (after "name:")
     const nameSearchTerm = searchTerm.slice(5).trim().toLowerCase();
 
     // Filter orders based on the full name derived from first_name and last_name
-    const filteredOrders = orders.filter((order) => {
+    const filteredOrders = orders.filter((order: any) => {
       const fullName =
         `${order.billing.first_name} ${order.billing.last_name}`.toLowerCase();
       return fullName.includes(nameSearchTerm);
@@ -151,7 +213,7 @@ export default function OrdersPage() {
   const filterBySearch = (orders: any[], searchTerm: string) => {
     // Check if the searchTerm contains "name:"
     if (searchTerm.toLowerCase().startsWith("name:")) {
-      return nameSearch(searchTerm);
+      return nameSearch(orders, searchTerm);
     } else {
       // Regular filter based on id field
       const filteredOrders = orders.filter((order) =>
@@ -169,9 +231,13 @@ export default function OrdersPage() {
           if (selectedKeys.has("All")) {
             return true;
           }
-          const itemCategories = item.product_data.categories.map(
-            (category: any) => category.name
+          const associatedProduct = products.find(
+            (product) => product.id === item.product_id
           );
+          const itemCategories =
+            associatedProduct?.categories?.map(
+              (category: any) => category.name
+            ) || [];
           return Array.from(selectedKeys).every((selectedCategory: any) =>
             itemCategories.includes(selectedCategory)
           );
@@ -191,13 +257,19 @@ export default function OrdersPage() {
   };
 
   const renderCategoryFilterDropdown = () => {
-    return (
-      <FilterDropdown
-        selectedKeys={selectedMenuKeys}
-        setSelectedKeys={setSelectedMenuKeys}
-        options={categories}
-      />
-    );
+    if (products.length > 0 && !productsLoading && !categoriesLoading) {
+      console.log("Products: ", products);
+      return (
+        <div style={{ textAlign: "center" }}>
+          <h3 style={{ marginBottom: "10px" }}>Select Menu:</h3>
+          <FilterDropdown
+            selectedKeys={selectedMenuKeys}
+            setSelectedKeys={setSelectedMenuKeys}
+            options={categories}
+          />
+        </div>
+      );
+    }
   };
 
   const renderStatusFilterDropdown = () => {
@@ -236,28 +308,29 @@ export default function OrdersPage() {
   ) => {
     console.log("download orders");
 
-    // CSV Header
-    let csvContent = `Delivery Dates Range:, ${startDate} - ${endDate}\n\n`;
-    csvContent += "Meal & Side Name(s), Size, QTY.\n";
-
     // Group items by name and size
-    const itemQuantities = ordersData.reduce((acc: any, order: any) => {
-      order.line_items.forEach((item: any) => {
-        const sizeMeta = item.meta_data.find(
-          (meta: any) => meta.key === "Size"
-        );
-        const size = sizeMeta ? sizeMeta.value : "N/A";
+    const itemQuantities = ordersData.reduce(
+      (acc: Record<string, number>, order: any) => {
+        order.line_items.forEach((item: any) => {
+          const sizeMetas = item.meta_data.filter(
+            (meta: any) => !meta.key.startsWith("_")
+          );
 
-        const key = `${item.name}|||${size}`; // Use a delimiter unlikely to appear in names
+          const sizes =
+            sizeMetas.map((meta: any) => meta.value).join(" | ") || "N/A";
 
-        if (acc[key]) {
-          acc[key] += item.quantity;
-        } else {
-          acc[key] = item.quantity;
-        }
-      });
-      return acc;
-    }, {});
+          const key = `${item.name}|||${sizes}`;
+
+          if (acc[key]) {
+            acc[key] += item.quantity;
+          } else {
+            acc[key] = item.quantity;
+          }
+        });
+        return acc;
+      },
+      {}
+    );
 
     // Sort items alphabetically by name (and size implicitly)
     const sortedItemQuantities = Object.entries(itemQuantities).sort(
@@ -268,26 +341,35 @@ export default function OrdersPage() {
       }
     );
 
-    // Construct CSV lines from sorted grouped data
-    const lines = sortedItemQuantities.map(([key, quantity]) => {
-      const [name, size] = key.split("|||");
-      return `"${name.replace(/"/g, '""')}", ${size.replace(/"/g, '""')}, ${quantity}`;
+    // Prepare data for CSV
+    const csvData = [
+      [`Delivery Dates Range:, ${startDate} - ${endDate}`],
+      [],
+      ["Meal & Side Name(s)", "Size", "QTY."],
+      ...sortedItemQuantities.map(([key, quantity]) => {
+        const [name, size] = key.split("|||");
+        return [name, size, quantity];
+      }),
+      [],
+      [
+        "",
+        "Total Qty.",
+        sortedItemQuantities.reduce(
+          (sum, [, quantity]) => sum + Number(quantity),
+          0
+        ),
+      ],
+    ];
+
+    // Generate CSV content
+    const csvContent = Papa.unparse(csvData, {
+      quotes: true, // Use quotes around all fields
+      quoteChar: '"',
+      escapeChar: '"',
     });
 
-    // Add each line to the CSV content
-    csvContent += lines.join("\n") + "\n\n";
-
-    // Calculate total quantity
-    const totalQuantity = sortedItemQuantities.reduce(
-      (sum, [, quantity]: any) => sum + quantity,
-      0
-    );
-
-    // Add total quantity to the CSV content
-    csvContent += `,Total Qty., ${totalQuantity}`;
-
     // Create a Blob from the CSV content
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
 
     // Save the CSV file
     saveAs(blob, `orders-${startDate}-${endDate}.csv`);
@@ -311,6 +393,43 @@ export default function OrdersPage() {
     );
   };
 
+  const renderOrderSummary = () => {
+    const totalMeals = calculateTotalMeals(filteredOrders);
+    const totalRevenue = calculateTotalRevenue(filteredOrders);
+
+    // Function to format currency
+    const formatCurrency = (amount: any) => {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    };
+
+    return (
+      <Card className="w-full max-w-sm m-4">
+        {" "}
+        {/* Added margin (m-4) */}
+        <CardBody>
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-md">Total Meals:</p>
+              <p className="text-2xl font-bold" style={{ color: "green" }}>
+                {totalMeals.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-md">Total Revenue:</p>
+              <p className="text-2xl font-bold" style={{ color: "green" }}>
+                {formatCurrency(totalRevenue)}
+              </p>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+    );
+  };
   const generateFilteredCsvData = (filteredOrders: any[], meals: any) => {
     // Generate CSV data from filtered orders
     const filteredCsvData = generateFullCsvData(filteredOrders, meals);
@@ -363,7 +482,7 @@ export default function OrdersPage() {
           text={showLineItems ? "Show Meal Quantities" : "Show Line Items"}
         />
         <StyledButton
-          onClick={() => downloadOrders(orders, startDate, endDate)}
+          onClick={() => downloadOrders(filteredOrders, startDate, endDate)}
           text="Download Orders"
         />
         <StyledButton onClick={() => clear()} text="Clear Orders" />
@@ -507,6 +626,7 @@ export default function OrdersPage() {
           width: "100%", // Make sure the parent container takes full width
         }}
       >
+        {renderOrderSummary()}
         {renderSearchBar()}
         <div
           style={{
@@ -521,10 +641,7 @@ export default function OrdersPage() {
             <h3 style={{ marginBottom: "10px" }}>Delivery Date:</h3>
             {renderDeliveryDateInputs()}
           </div>
-          <div style={{ textAlign: "center" }}>
-            <h3 style={{ marginBottom: "10px" }}>Select Menu:</h3>
-            {renderCategoryFilterDropdown()}
-          </div>
+          {renderCategoryFilterDropdown()}
           <div style={{ textAlign: "center" }}>
             <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
             {renderStatusFilterDropdown()}
@@ -535,7 +652,7 @@ export default function OrdersPage() {
             flex: 1,
             display: "flex",
             flexDirection: "column",
-            maxHeight: "calc(65vh - 80px)", // Adjust based on button height
+            maxHeight: "calc(60vh - 80px)", // Adjust based on button height
             overflowY: "auto",
             marginTop: "20px",
             width: "100%",
@@ -637,37 +754,5 @@ export default function OrdersPage() {
     );
   };
 
-  if (isLoggedIn) {
-    return (
-      <div style={{ display: "flex", height: "100vh" }}>
-        <Sidebar />
-        <div
-          className="flex-1"
-          style={{ display: "flex", flexDirection: "column" }}
-        >
-          <Navbar />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            {renderOrdersContent()}
-          </div>
-        </div>
-      </div>
-    );
-  } else if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <div style={{ textAlign: "center" }}>
-          <Spinner label="Loading Page" />
-        </div>
-      </div>
-    );
-  } else {
-    return <SignupAndLoginButtons />;
-  }
+  return renderOrdersContent();
 }

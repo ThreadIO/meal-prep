@@ -1,7 +1,6 @@
 import {
   Accordion,
   AccordionItem,
-  Image,
   Modal,
   ModalContent,
   ModalHeader,
@@ -13,23 +12,27 @@ import {
 } from "@nextui-org/react";
 import { useState, useEffect } from "react";
 import { useUser } from "@propelauth/nextjs/client";
-import { getUser, getMeal, createMeal, patchMeal } from "@/helpers/request";
+import {
+  getUser,
+  //   getCoupon,
+  //   createCoupon,
+  //   patchCoupon,
+} from "@/helpers/request";
 import { stockStatusOptions } from "@/helpers/utils";
 import Dropdown from "@/components/Dropdown";
 import { X, Grip, Check, ArrowUp, ArrowDown } from "lucide-react";
-import {
-  createMealOnWoocommerce,
-  getHMPProductData,
-  updateMealOnWoocommerce,
-} from "@/connectors/woocommerce/meals";
+// import {
+//   createCouponOnWoocommerce,
+//   updateCouponOnWoocommerce,
+// } from "@/connectors/woocommerce/coupons";
 import { friendlyUrl } from "@/helpers/frontend";
 import { convertProductAddOnsToOptions } from "@/connectors/woocommerce/options";
-import { useMutation, useQueryClient } from "react-query";
+// import { useMutation, useQueryClient } from "react-query";
 
-interface MealModalProps {
-  meal: any;
-  threadMeal: any;
-  mealImage: any;
+interface CouponModalProps {
+  coupon: any;
+  threadCoupon: any;
+  couponImage: any;
   open: boolean;
   onClose: () => void;
   onUpdate: () => void;
@@ -37,13 +40,12 @@ interface MealModalProps {
   mode: "create" | "patch";
 }
 
-export const MealModal = (props: MealModalProps) => {
-  const { meal, threadMeal, mealImage, open, onClose, onUpdate, tags, mode } =
-    props;
+export const CouponModal = (props: CouponModalProps) => {
+  const { coupon, threadCoupon, open, onClose, tags, mode } = props; //On update
   const [loadingSave, setLoadingSave] = useState(false);
-  const [mealDescription, setMealDescription] = useState("");
-  const [mealPrice, setMealPrice] = useState("");
-  const [mealName, setMealName] = useState("");
+  const [couponDescription, setCouponDescription] = useState("");
+  const [couponPrice, setCouponPrice] = useState("");
+  const [couponName, setCouponName] = useState("");
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
     new Set()
   );
@@ -58,50 +60,37 @@ export const MealModal = (props: MealModalProps) => {
   const [reorderMode, setReorderMode] = useState(false);
   const { loading, user } = useUser();
   const userId = user?.userId || "";
-  const queryClient = useQueryClient();
+  //   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (threadMeal) {
-      setMealName(threadMeal.name || "");
-      setMealDescription(threadMeal.description || "");
-      setMealPrice(threadMeal.price || "");
-      setNutritionFacts({
-        calories: threadMeal.nutrition_facts.calories || 0,
-        carbs: threadMeal.nutrition_facts.carbs || 0,
-        fat: threadMeal.nutrition_facts.fat || 0,
-        protein: threadMeal.nutrition_facts.protein || 0,
-      });
-      setSelectedKeys(new Set(threadMeal.tags || []));
-      setOptions(threadMeal.options || []);
-    } else if (meal) {
-      // This means that the meal exists in WooCommerce (Hard coding for a HMP Meal)
-      const { calories, carbs, fat, protein } = getHMPProductData(meal);
-      setMealName(meal.name || "");
-      setMealDescription(meal.description || "");
-      setMealPrice(meal.regular_price || "");
+    if (threadCoupon) {
+      setCouponName(threadCoupon.name || "");
+      setCouponDescription(threadCoupon.description || "");
+      setCouponPrice(threadCoupon.price || "");
+      setSelectedKeys(new Set(threadCoupon.tags || []));
+      setOptions(threadCoupon.options || []);
+    } else if (coupon) {
+      // This means that the coupon exists in WooCommerce
+      setCouponName(coupon.name || "");
+      setCouponDescription(coupon.description || "");
+      setCouponPrice(coupon.regular_price || "");
       setSelectedKeys(
         new Set(
-          meal.categories
-            ? meal.categories.map((category: any) => category.name)
+          coupon.categories
+            ? coupon.categories.map((category: any) => category.name)
             : []
         )
       );
       setSelectedStockStatus(
         new Set([
           stockStatusOptions.find(
-            (option) => option.value === (meal.stock_status || "instock")
+            (option) => option.value === (coupon.stock_status || "instock")
           )?.display || "In Stock",
         ])
       );
-      setNutritionFacts({
-        calories: calories || 0,
-        carbs: carbs || 0,
-        fat: fat || 0,
-        protein: protein || 0,
-      });
-      setOptions(convertProductAddOnsToOptions(meal) || []);
+      setOptions(convertProductAddOnsToOptions(coupon) || []);
     }
-  }, [meal, threadMeal]);
+  }, [coupon, threadCoupon]);
 
   const mapSelectedTagsToObjects = () => {
     console.log("Selected Keys: ", selectedKeys);
@@ -109,53 +98,52 @@ export const MealModal = (props: MealModalProps) => {
     return selectedTagObjects;
   };
 
-  const saveMutation = useMutation(
-    async (formData: any) => {
-      const user = await getUser(userId);
-      const url = friendlyUrl(user.settings.url);
+  //   const saveMutation = useMutation(
+  //     async (formData: any) => {
+  //       const user = await getUser(userId);
+  //       const url = friendlyUrl(user.settings.url);
 
-      if (mode === "patch" && meal) {
-        // Update existing meal
-        const existing_meal = await getMeal(meal.id, url);
-        if (!existing_meal) {
-          await createMeal(formData);
-        } else {
-          await patchMeal(meal.id, url, formData);
-        }
-        return updateMealOnWoocommerce(formData, mealImage, tags);
-      } else {
-        // Create new meal
-        const woocommerceProduct = await createMealOnWoocommerce(
-          formData,
-          mealImage,
-          tags
-        );
-        if (
-          !(woocommerceProduct.data && woocommerceProduct.data.status === 400)
-        ) {
-          formData.mealid = woocommerceProduct.id;
-          await createMeal(formData);
-        } else {
-          throw new Error("Error creating meal in WooCommerce");
-        }
-        return woocommerceProduct;
-      }
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries("products");
-        onUpdate();
-        onClose();
-      },
-      onError: (error) => {
-        console.error("Error saving meal:", error);
-        // Handle error (e.g., show error message to user)
-      },
-      onSettled: () => {
-        setLoadingSave(false);
-      },
-    }
-  );
+  //       if (mode === "patch" && coupon) {
+  //         // Update existing coupon
+  //         const existing_coupon = await getCoupon(coupon.id, url);
+  //         if (!existing_coupon) {
+  //           await createCoupon(formData);
+  //         } else {
+  //           await patchCoupon(coupon.id, url, formData);
+  //         }
+  //         return updateCouponOnWoocommerce(formData, couponImage, tags);
+  //       } else {
+  //         // Create new coupon
+  //         const woocommerceProduct = await createCouponOnWoocommerce(
+  //           formData,
+  //           tags
+  //         );
+  //         if (
+  //           !(woocommerceProduct.data && woocommerceProduct.data.status === 400)
+  //         ) {
+  //           formData.couponid = woocommerceProduct.id;
+  //           await createCoupon(formData);
+  //         } else {
+  //           throw new Error("Error creating coupon in WooCommerce");
+  //         }
+  //         return woocommerceProduct;
+  //       }
+  //     },
+  //     {
+  //       onSuccess: () => {
+  //         queryClient.invalidateQueries("products");
+  //         onUpdate();
+  //         onClose();
+  //       },
+  //       onError: (error) => {
+  //         console.error("Error saving coupon:", error);
+  //         // Handle error (e.g., show error message to user)
+  //       },
+  //       onSettled: () => {
+  //         setLoadingSave(false);
+  //       },
+  //     }
+  //   );
 
   const handleSave = async () => {
     setLoadingSave(true);
@@ -167,20 +155,20 @@ export const MealModal = (props: MealModalProps) => {
       Array.from(selectedStockStatus).join(", ");
 
     const formData = {
-      name: String(mealName),
+      name: String(couponName),
       url: friendlyUrl((await getUser(userId)).settings.url),
       status: selectedStockStatusString,
-      description: String(mealDescription),
-      price: parseFloat(mealPrice),
+      description: String(couponDescription),
+      price: parseFloat(couponPrice),
       userid: userId,
       tags: selectedTags,
       nutrition_facts: nutritionFacts,
       options: options,
-      image: mealImage ? mealImage.src : "",
-      mealid: meal && mode === "patch" ? meal.id : undefined,
+      couponid: coupon && mode === "patch" ? coupon.id : undefined,
     };
 
-    saveMutation.mutate(formData);
+    console.log("Form Data: ", formData);
+    // saveMutation.mutate(formData);
   };
 
   const renderContent = () => {
@@ -203,34 +191,13 @@ export const MealModal = (props: MealModalProps) => {
     }
   };
 
-  const renderImage = () => {
-    if (mealImage && Object.keys(mealImage).length !== 0) {
-      return (
-        <div style={{ flex: 1 }}>
-          <div className="relative h-60 mb-4 flex justify-center items-center">
-            <Image
-              src={mealImage.src}
-              alt={"Meal Image"}
-              width={100}
-              height={100}
-              style={{
-                objectFit: "contain",
-                objectPosition: "center",
-              }}
-            />
-          </div>
-        </div>
-      );
-    }
-  };
-
-  const renderMealBasicInfo = () => {
+  const renderCouponBasicInfo = () => {
     return (
       <div style={{ flex: 2 }}>
         <Input
-          label="Meal Name"
-          value={mealName}
-          onChange={(e) => setMealName(e.target.value)}
+          label="Coupon Name"
+          value={couponName}
+          onChange={(e) => setCouponName(e.target.value)}
         />
         <div
           style={{
@@ -245,8 +212,8 @@ export const MealModal = (props: MealModalProps) => {
         </div>
         <Input
           label="Regular Price"
-          value={mealPrice}
-          onChange={(e) => setMealPrice(e.target.value)}
+          value={couponPrice}
+          onChange={(e) => setCouponPrice(e.target.value)}
         />
       </div>
     );
@@ -531,17 +498,14 @@ export const MealModal = (props: MealModalProps) => {
       <ModalContent>
         <>
           <ModalHeader className="flex flex-col gap-1 text-left">
-            Meal Details
+            Coupon Details
           </ModalHeader>
           <ModalBody
             className="flex flex-col overflow-y-auto"
             style={{ gap: "2rem", paddingBottom: "2rem" }} // Added paddingBottom to ModalBody
           >
             <div>
-              <div style={{ display: "flex" }}>
-                {renderImage()}
-                {renderMealBasicInfo()}
-              </div>
+              <div style={{ display: "flex" }}>{renderCouponBasicInfo()}</div>
               <div style={{ marginTop: "1rem" }}>
                 {renderNutritionFacts()} {/* Added marginTop for spacing */}
               </div>
@@ -571,4 +535,4 @@ export const MealModal = (props: MealModalProps) => {
   );
 };
 
-export default MealModal;
+export default CouponModal;

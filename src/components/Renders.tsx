@@ -1,58 +1,60 @@
+import { Chip, ChipProps } from "@nextui-org/react";
+
 export const renderCategories = (product: any) => {
   return (
-    <div className="flex flex-wrap justify-center mt-4">
+    <div className="flex flex-wrap gap-1 w-full">
       {product.categories.map((category: any) => (
-        <span
-          key={category.id}
-          className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2"
-        >
+        <Chip key={category.id} color="default" size="sm">
           {category.name}
-        </span>
+        </Chip>
       ))}
     </div>
   );
 };
 
 export const renderStockStatus = (product: any) => {
-  let statusColor = "bg-green-200 text-green-800";
+  let color: ChipProps["color"] = "success";
   let statusText = "In Stock";
 
   if (
     product.stock_status === "outofstock" ||
     product.stock_status === "onbackorder"
   ) {
-    statusColor = "bg-red-200 text-red-800";
+    color = product.stock_status === "outofstock" ? "danger" : "warning";
     statusText =
       product.stock_status === "outofstock" ? "Out of Stock" : "On Backorder";
   }
 
   return (
-    <div
-      className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${statusColor}`}
-    >
+    <Chip color={color} variant="solid" size="sm">
       {statusText}
-    </div>
+    </Chip>
   );
 };
 
 export const renderOrderStatus = (order: any) => {
-  let statusColor = "bg-gray-200 text-gray-800";
-  let statusText = order.status;
-  if (order.status === "failed" || order.status === "cancelled") {
-    statusColor = "bg-red-200 text-red-800";
-    statusText = order.status === "failed" ? "Failed" : "Cancelled";
-  } else if (order.status === "completed" || order.status === "processing") {
-    statusText = order.status === "processing" ? "Processing" : "Completed";
-    statusColor = "bg-green-200 text-green-800";
-  } else if (order.status === "pending") {
-    statusColor = "bg-yellow-200 text-yellow-800";
-    statusText = "Pending";
+  let color: ChipProps["color"] = "default";
+  let statusText = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+
+  switch (order.status) {
+    case "failed":
+    case "cancelled":
+      color = "danger";
+      break;
+    case "completed":
+    case "processing":
+      color = "success";
+      break;
+    case "pending":
+      color = "warning";
+      break;
+    default:
+      color = "default";
   }
+
   return (
-    <div
-      className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${statusColor}`}
-    >
+    <Chip color={color} variant="solid" size="sm">
       {statusText}
-    </div>
+    </Chip>
   );
 };
