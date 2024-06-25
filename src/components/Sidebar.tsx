@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Sidebar, SidebarCTA } from "flowbite-react";
 import {
+  ClipboardList,
   CookingPot,
   ShoppingBag,
   ShoppingCart,
@@ -97,6 +98,15 @@ const SidebarComponent = () => {
               className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
             >
               Pricing
+            </Sidebar.Item>
+          )}
+          {betaMode && (
+            <Sidebar.Item
+              href="/deposit-report"
+              icon={ClipboardList}
+              className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+            >
+              Reports
             </Sidebar.Item>
           )}
           {betaMode && (

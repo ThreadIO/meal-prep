@@ -23,6 +23,11 @@ export default function Checkout() {
           headers: {
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            // TODO fix this for the future
+            sessionType: "",
+            merchantId: "",
+          }),
         });
         const result = await response.json();
         console.log("Got session key for payment: ", result);
