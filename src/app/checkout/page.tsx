@@ -24,6 +24,7 @@ export default function Checkout() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            // TODO fix this for the future
             sessionType: "",
             merchantId: "",
           }),
