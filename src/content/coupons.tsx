@@ -1,9 +1,10 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
 import { Button, Spinner } from "@nextui-org/react";
 import { useQuery, useQueryClient } from "react-query";
 import CouponTable from "@/components/Coupon/CouponTable";
+import CouponModal from "@/components/Modals/CouponModal";
 // import { CouponModal } from "@/components/Modals/CouponModal";
 
 const getCoupons = async (userId: string) => {
@@ -29,20 +30,20 @@ const Coupons = () => {
     () => getCoupons(user?.userId ?? ""),
     {
       enabled: !!user?.userId,
+      refetchOnWindowFocus: true,
     }
   );
 
-  //   const [openCoupon, setOpenCoupon] = useState(false);
-
+  const [openCoupon, setOpenCoupon] = useState(false);
   useEffect(() => {
     if (isLoggedIn && !loading) {
       queryClient.invalidateQueries(["coupons", user?.userId]);
     }
   }, [isLoggedIn, loading, queryClient, user?.userId]);
 
-  //   const handleCloseCouponModal = () => {
-  //     setOpenCoupon(false);
-  //   };
+  const handleCloseCouponModal = () => {
+    setOpenCoupon(false);
+  };
 
   const renderCouponPage = () => {
     if (couponsError) {
@@ -53,7 +54,11 @@ const Coupons = () => {
           <div className="mx-auto max-w-4xl text-center mt-10 items-center">
             <h2 className="text-3xl font-semibold leading-7 mb-6">Coupons</h2>
             <div className="flex justify-center">
-              <Button color="primary" onPress={() => {}} className="mt-4">
+              <Button
+                color="primary"
+                onPress={() => setOpenCoupon(true)}
+                className="mt-4"
+              >
                 Create New Coupon
               </Button>
             </div>
@@ -79,6 +84,7 @@ const Coupons = () => {
         onUpdate={() =>
           queryClient.invalidateQueries(["coupons", user?.userId])
         }
+        userId={user?.userId}
       />
     </div>
   );
@@ -91,14 +97,15 @@ const Coupons = () => {
 
   return (
     <>
-      {/* <CouponModal
+      <CouponModal
         coupon={null}
         open={openCoupon}
         onClose={handleCloseCouponModal}
         onUpdate={() =>
           queryClient.invalidateQueries(["coupons", user?.userId])
         }
-      /> */}
+        mode={"create"}
+      />
       {renderCouponPage()}
     </>
   );

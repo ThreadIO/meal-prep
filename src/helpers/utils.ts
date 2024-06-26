@@ -123,10 +123,27 @@ export const coupon_columns = [
     key: "discount_type",
     label: "DISCOUNT TYPE",
   },
+  {
+    key: "minimum_amount",
+    label: "MINIMUM AMOUNT",
+  },
+  {
+    key: "usage_limit",
+    label: "USAGE LIMIT",
+  },
+  {
+    key: "usage_count",
+    label: "USAGE COUNT",
+  },
   { key: "date_expires", label: "DATE EXPIRES" },
-  { key: "total_tax", label: "TOTAL TAX" },
-  // {
-  //   key: "actions",
-  //   label: "ACTIONS",
-  // },
+  {
+    key: "actions",
+    label: "ACTIONS",
+  },
+];
+
+export const CouponDiscountType = [
+  { display: "Fixed Cart", value: "fixed_cart" },
+  { display: "Fixed Product", value: "fixed_product" },
+  { display: "Percent", value: "percent" },
 ];

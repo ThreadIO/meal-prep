@@ -320,7 +320,7 @@ export async function patchOrg(orgid: string, body: any) {
 
 export async function createCoupon(body: any) {
   const { success, data, error } = await (
-    await fetch(`/api/woocommerce/coupon`, {
+    await fetch(`/api/woocommerce/coupons`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -329,5 +329,34 @@ export async function createCoupon(body: any) {
     })
   ).json();
   if (!success) throw new Error("Error creating coupon: ", error);
+  return data;
+}
+
+export async function patchCoupon(couponid: string, body: any) {
+  console.log("In Patch Coupon: ", body);
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/coupons/${couponid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error updating product: ", error);
+  return data;
+}
+
+export async function deleteCoupon(couponid: string, body: any) {
+  const { success, data, error } = await (
+    await fetch(`/api/woocommerce/coupons/${couponid}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error deleting coupon: ", error);
   return data;
 }

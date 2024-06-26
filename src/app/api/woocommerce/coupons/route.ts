@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
     discount_type,
     amount,
     individual_use,
-    excude_sale_items,
+    exclude_sale_items,
     minimum_amount,
+    description,
   } = requestData;
 
   // Use the helper function to filter and process meta_data
@@ -35,8 +36,9 @@ export async function POST(request: NextRequest) {
     discount_type,
     amount,
     individual_use,
-    excude_sale_items,
+    exclude_sale_items,
     minimum_amount,
+    description,
   };
 
   const create_coupons_response = await post(
