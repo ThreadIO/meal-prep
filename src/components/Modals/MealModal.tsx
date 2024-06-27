@@ -56,6 +56,9 @@ export const MealModal = (props: MealModalProps) => {
     protein: 0,
   });
   const [reorderMode, setReorderMode] = useState(false);
+  const [subOptionReorderMode, setSubOptionReorderMode] = useState(false);
+
+  const [customOptions, setCustomOptions] = useState<any[]>([]);
   const { loading, user } = useUser();
   const userId = user?.userId || "";
   const queryClient = useQueryClient();
@@ -75,6 +78,24 @@ export const MealModal = (props: MealModalProps) => {
       setOptions(threadMeal.options || []);
     } else if (meal) {
       // This means that the meal exists in WooCommerce (Hard coding for a HMP Meal)
+      if (meal.add_ons) {
+        const customAddOns = meal.add_ons.filter(
+          (addOn: any) => !addOn.name.includes("Size")
+        );
+        setCustomOptions(
+          customAddOns.map((addOn: any) => ({
+            name: addOn.name,
+            options: addOn.options.map((option: any) => ({
+              label: option.label,
+              price: option.price,
+              calories: option.calories || 0,
+              carbs: option.carbs || 0,
+              protein: option.protein || 0,
+              fat: option.fat || 0,
+            })),
+          }))
+        );
+      }
       const { calories, carbs, fat, protein } = getHMPProductData(meal);
       setMealName(meal.name || "");
       setMealDescription(meal.description || "");
@@ -115,7 +136,6 @@ export const MealModal = (props: MealModalProps) => {
       const url = friendlyUrl(user.settings.url);
 
       if (mode === "patch" && meal) {
-        // Update existing meal
         const existing_meal = await getMeal(meal.id, url);
         if (!existing_meal) {
           await createMeal(formData);
@@ -143,19 +163,356 @@ export const MealModal = (props: MealModalProps) => {
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries("products");
+        queryClient.invalidateQueries(["products", user?.userId]);
         onUpdate();
         onClose();
       },
       onError: (error) => {
         console.error("Error saving meal:", error);
         // Handle error (e.g., show error message to user)
+        queryClient.invalidateQueries(["products", user?.userId]);
       },
       onSettled: () => {
         setLoadingSave(false);
       },
     }
   );
+
+  // Add these functions to handle custom option changes
+  const handleCustomOptionChange = (
+    index: number,
+    field: string,
+    value: string
+  ) => {
+    const updatedOptions = [...customOptions];
+    updatedOptions[index][field] = value;
+    setCustomOptions(updatedOptions);
+  };
+
+  const handleCustomSubOptionChange = (
+    optionIndex: number,
+    subOptionIndex: number,
+    field: string,
+    value: string | number
+  ) => {
+    const updatedOptions = [...customOptions];
+    updatedOptions[optionIndex].options[subOptionIndex][field] = value;
+    setCustomOptions(updatedOptions);
+  };
+
+  const addCustomOption = () => {
+    setCustomOptions([
+      ...customOptions,
+      { name: "", options: [{ label: "", price: "" }] },
+    ]);
+  };
+
+  const addSubOption = (index: number) => {
+    const updatedOptions = [...customOptions];
+    updatedOptions[index].options.push({
+      label: "",
+      price: "",
+      calories: 0,
+      carbs: 0,
+      protein: 0,
+      fat: 0,
+    });
+    setCustomOptions(updatedOptions);
+  };
+
+  const renderCustomOptions = () => {
+    return (
+      <Accordion>
+        <AccordionItem key="custom_options" title="Custom Options">
+          {customOptions.map((option, index) =>
+            renderCustomOption(option, index.toString())
+          )}
+          {addCustomOptionButton()}
+        </AccordionItem>
+      </Accordion>
+    );
+  };
+
+  const renderCustomOption = (option: any, index: string) => {
+    const moveCustomOption = (
+      currentIndex: number,
+      direction: "up" | "down"
+    ) => {
+      const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= customOptions.length) {
+        return; // Index out of bounds, do nothing
+      }
+
+      const updatedOptions = [...customOptions];
+      const temp = updatedOptions[newIndex];
+      updatedOptions[newIndex] = updatedOptions[currentIndex];
+      updatedOptions[currentIndex] = temp;
+      setCustomOptions(updatedOptions);
+    };
+
+    const moveSubOption = (
+      optionIndex: number,
+      subOptionIndex: number,
+      direction: "up" | "down"
+    ) => {
+      const newSubIndex =
+        direction === "up" ? subOptionIndex - 1 : subOptionIndex + 1;
+
+      // Check if the new index is within bounds
+      if (
+        newSubIndex < 0 ||
+        newSubIndex >= customOptions[optionIndex].options.length
+      ) {
+        return; // Do nothing if the new index is out of bounds
+      }
+
+      // Create a copy of the customOptions array
+      const updatedOptions = [...customOptions];
+
+      // Get the current custom option
+      const currentOption = updatedOptions[optionIndex];
+
+      // Swap the sub-options
+      const temp = currentOption.options[newSubIndex];
+      currentOption.options[newSubIndex] =
+        currentOption.options[subOptionIndex];
+      currentOption.options[subOptionIndex] = temp;
+
+      // Update the state
+      setCustomOptions(updatedOptions);
+    };
+
+    const deleteCustomOption = () => {
+      const updatedOptions = customOptions.filter(
+        (_, i) => i !== parseInt(index)
+      );
+      setCustomOptions(updatedOptions);
+    };
+
+    const deleteSubOption = (optionIndex: number, subOptionIndex: number) => {
+      const updatedOptions = [...customOptions];
+      updatedOptions[optionIndex].options = updatedOptions[
+        optionIndex
+      ].options.filter((_: any, index: any) => index !== subOptionIndex);
+      setCustomOptions(updatedOptions);
+    };
+
+    return (
+      <div key={index} style={{ marginBottom: "2rem" }}>
+        <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+          {reorderMode ? (
+            <>
+              <Button
+                onPress={() => moveCustomOption(parseInt(index), "up")}
+                isIconOnly
+                variant="light"
+              >
+                <ArrowUp />
+              </Button>
+              <Button
+                onPress={() => moveCustomOption(parseInt(index), "down")}
+                isIconOnly
+                variant="light"
+              >
+                <ArrowDown />
+              </Button>
+              <Button
+                isIconOnly
+                color="success"
+                variant="light"
+                onPress={() => setReorderMode(false)}
+              >
+                <Check />
+              </Button>
+            </>
+          ) : (
+            <Button
+              isIconOnly
+              variant="light"
+              style={{ cursor: "grab" }}
+              onPress={() => setReorderMode(true)}
+            >
+              <Grip />
+            </Button>
+          )}
+          <Input
+            label="Option Name"
+            value={option.name}
+            onChange={(e) => {
+              const newName = e.target.value;
+              handleCustomOptionChange(parseInt(index), "name", newName);
+            }}
+            fullWidth
+          />
+          {!reorderMode && (
+            <Button
+              isIconOnly
+              color="danger"
+              variant="ghost"
+              onPress={deleteCustomOption}
+            >
+              <X />
+            </Button>
+          )}
+        </div>
+        {!reorderMode && (
+          <div style={{ marginLeft: "2rem" }}>
+            {option.options.map((subOption: any, subIndex: number) => (
+              <div
+                key={subIndex}
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  marginBottom: "0.5rem",
+                  alignItems: "center",
+                }}
+              >
+                {subOptionReorderMode ? (
+                  <>
+                    <Button
+                      onPress={() =>
+                        moveSubOption(parseInt(index), subIndex, "up")
+                      }
+                      isIconOnly
+                      variant="light"
+                    >
+                      <ArrowUp />
+                    </Button>
+                    <Button
+                      onPress={() =>
+                        moveSubOption(parseInt(index), subIndex, "down")
+                      }
+                      isIconOnly
+                      variant="light"
+                    >
+                      <ArrowDown />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      color="success"
+                      variant="light"
+                      onPress={() => setSubOptionReorderMode(false)}
+                    >
+                      <Check />
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    style={{ cursor: "grab" }}
+                    onPress={() => setSubOptionReorderMode(true)}
+                  >
+                    <Grip />
+                  </Button>
+                )}
+                <Input
+                  label="Sub-option Label"
+                  value={subOption.label}
+                  onChange={(e) =>
+                    handleCustomSubOptionChange(
+                      parseInt(index),
+                      subIndex,
+                      "label",
+                      e.target.value
+                    )
+                  }
+                />
+                <Input
+                  label="Price Adjustment"
+                  type="number"
+                  value={subOption.price}
+                  onChange={(e) =>
+                    handleCustomSubOptionChange(
+                      parseInt(index),
+                      subIndex,
+                      "price",
+                      parseFloat(e.target.value)
+                    )
+                  }
+                />
+                <Input
+                  label="Calories"
+                  type="number"
+                  value={subOption.calories}
+                  onChange={(e) =>
+                    handleCustomSubOptionChange(
+                      parseInt(index),
+                      subIndex,
+                      "calories",
+                      parseInt(e.target.value)
+                    )
+                  }
+                />
+                <Input
+                  label="Carbs"
+                  type="number"
+                  value={subOption.carbs}
+                  onChange={(e) =>
+                    handleCustomSubOptionChange(
+                      parseInt(index),
+                      subIndex,
+                      "carbs",
+                      parseInt(e.target.value)
+                    )
+                  }
+                />
+                <Input
+                  label="Fat"
+                  type="number"
+                  value={subOption.fat}
+                  onChange={(e) =>
+                    handleCustomSubOptionChange(
+                      parseInt(index),
+                      subIndex,
+                      "fat",
+                      parseInt(e.target.value)
+                    )
+                  }
+                />
+                <Input
+                  label="Protein"
+                  type="number"
+                  value={subOption.protein}
+                  onChange={(e) =>
+                    handleCustomSubOptionChange(
+                      parseInt(index),
+                      subIndex,
+                      "protein",
+                      parseInt(e.target.value)
+                    )
+                  }
+                />
+                <Button
+                  isIconOnly
+                  color="danger"
+                  variant="ghost"
+                  onPress={() => deleteSubOption(parseInt(index), subIndex)}
+                >
+                  <X />
+                </Button>
+              </div>
+            ))}
+            <Button
+              color="primary"
+              onPress={() => addSubOption(parseInt(index))}
+              style={{ marginTop: "0.5rem" }}
+            >
+              Add Sub-option
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const addCustomOptionButton = () => {
+    return (
+      <Button color="primary" onPress={addCustomOption}>
+        Add Custom Option
+      </Button>
+    );
+  };
 
   const handleSave = async () => {
     setLoadingSave(true);
@@ -165,7 +522,7 @@ export const MealModal = (props: MealModalProps) => {
     );
     const selectedStockStatusString =
       Array.from(selectedStockStatus).join(", ");
-
+    console.log("Custom Options: ", customOptions);
     const formData = {
       name: String(mealName),
       url: friendlyUrl((await getUser(userId)).settings.url),
@@ -176,13 +533,14 @@ export const MealModal = (props: MealModalProps) => {
       tags: selectedTags,
       nutrition_facts: nutritionFacts,
       options: options,
+      custom_options: customOptions,
       image: mealImage ? mealImage.src : "",
       mealid: meal && mode === "patch" ? meal.id : undefined,
     };
 
+    console.log("Form Data: ", formData);
     saveMutation.mutate(formData);
   };
-
   const renderContent = () => {
     if (loading) {
       return (
@@ -547,6 +905,7 @@ export const MealModal = (props: MealModalProps) => {
               </div>
               <div style={{ marginTop: "1rem" }}>
                 {renderOptions()} {/* Added marginTop for spacing */}
+                {renderCustomOptions()}
               </div>
             </div>
           </ModalBody>

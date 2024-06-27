@@ -27,6 +27,21 @@ const MealSchema = new Schema({
       carbs: Number,
     },
   ],
+  custom_options: [
+    {
+      name: String,
+      options: [
+        {
+          name: String,
+          price: Number,
+          calories: Number,
+          carbs: Number,
+          protein: Number,
+          fat: Number,
+        },
+      ],
+    },
+  ],
 });
 
 export default models.Meal || model("Meal", MealSchema);

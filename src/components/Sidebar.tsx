@@ -20,10 +20,9 @@ const betaMode = false; // Set to true to enable beta mode, false to disable
 
 const SidebarComponent = () => {
   const { user } = useUser();
-  const { setCurrentPage, currentPage } = useNavigationContext();
+  const { setCurrentPage } = useNavigationContext();
 
   const [openAccount, setOpenAccount] = useState(false);
-  console.log("Current Page: ", currentPage);
   return (
     <Sidebar className="h-full w-64 bg-gray-50 dark:bg-gray-800 transition-all duration-300 flex flex-col">
       <div>

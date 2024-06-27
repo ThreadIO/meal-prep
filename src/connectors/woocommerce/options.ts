@@ -15,7 +15,6 @@ export const convertProductAddOnsToOptions = (product: any) => {
       option.name.includes("Size")
     );
     if (sizeOption && sizeOption.options && sizeOption.options.length > 0) {
-      console.log("Size Options: ", sizeOption.options);
       // From here, there is an array of size options that follow the above format, return them
       return sizeOption.options.map((size: any) => {
         const totalCarbs = carbs + (parseInt(size.carbs) || 0);
@@ -38,32 +37,64 @@ export const convertProductAddOnsToOptions = (product: any) => {
 
 export const convertOptionsToProductAddOns = (options: any) => {
   if (options && options.length > 0) {
-    const sizeOptions = [
-      {
-        name: "Size",
+    return {
+      fields: [
+        {
+          name: "Size",
+          title_format: "label",
+          description_enable: 0,
+          description: "",
+          type: "multiple_choice",
+          display: "select",
+          position: 0,
+          required: 1,
+          restrictions: 0,
+          restrictions_type: "any_text",
+          adjust_price: 0,
+          price_type: "flat_fee",
+          price: "",
+          min: 0,
+          max: 0,
+          options: options.map((option: any) => ({
+            label: option.name,
+            price: option.price_adjustment,
+            image: "",
+            price_type: "quantity_based",
+          })),
+        },
+      ],
+    };
+  }
+  return { fields: [] };
+};
+
+export const convertCustomOptionsToProductAddOns = (customOptions: any) => {
+  if (customOptions && customOptions.length > 0) {
+    return {
+      fields: customOptions.map((customOption: any, index: number) => ({
+        name: customOption.name,
         title_format: "label",
         description_enable: 0,
         description: "",
         type: "multiple_choice",
         display: "select",
-        position: 0,
-        required: 1,
+        position: index + 1, // Start position after the Size option
+        required: 0,
         restrictions: 0,
         restrictions_type: "any_text",
-        adjust_price: 0,
+        adjust_price: 1,
         price_type: "flat_fee",
         price: "",
         min: 0,
         max: 0,
-        options: options.map((option: any) => ({
-          label: option.name,
-          price: option.price_adjustment,
+        options: customOption.options.map((option: any) => ({
+          label: option.label,
+          price: option.price,
           image: "",
           price_type: "quantity_based",
         })),
-      },
-    ];
-    return { fields: sizeOptions };
+      })),
+    };
   }
-  return [];
+  return { fields: [] };
 };

@@ -68,7 +68,6 @@ const LineItemTable = (props: LineItemTableProps) => {
       const sizes = item.meta_data.filter(
         (meta: any) => !meta.key.startsWith("_")
       );
-      console.log("Sizes: ", sizes);
       return (
         <div>
           {sizes.length > 0

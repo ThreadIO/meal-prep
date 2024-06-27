@@ -9,7 +9,10 @@ import {
   postProductAddOns,
 } from "@/helpers/request";
 import { stockStatusOptions } from "@/helpers/utils";
-import { convertOptionsToProductAddOns } from "@/connectors/woocommerce/options";
+import {
+  convertOptionsToProductAddOns,
+  convertCustomOptionsToProductAddOns,
+} from "@/connectors/woocommerce/options";
 
 const convertTagsToCategories = (tags: string[], fullCategories: any) => {
   const converted_tags = fullCategories.filter((category: any) =>
@@ -43,13 +46,16 @@ export const createMealOnWoocommerce = async (
     stock_status: status,
     images: image ? [image] : [],
   };
-
   const product = await createProduct(body);
-  console.log("Product Add Ons: ", convertOptionsToProductAddOns(meal.options));
-  await postProductAddOns(product.id, {
-    ...convertOptionsToProductAddOns(meal.options),
+  const sizeAddOns = convertOptionsToProductAddOns(meal.options);
+  const customAddOns = convertCustomOptionsToProductAddOns(meal.custom_options);
+  console.log("Custom Add Ons: ", customAddOns);
+  const allAddOns = {
+    fields: [...sizeAddOns.fields, ...customAddOns.fields],
     userid: meal.userid,
-  });
+  };
+  console.log("All Addons: ", allAddOns);
+  await postProductAddOns(product.id, allAddOns);
   return product;
 };
 
@@ -72,12 +78,16 @@ export const updateMealOnWoocommerce = async (
     images: image ? [image] : [],
   };
   const product = await patchProduct(meal.mealid, body);
-  // Need to update the add ons here
+  const sizeAddOns = convertOptionsToProductAddOns(meal.options);
+  const customAddOns = convertCustomOptionsToProductAddOns(meal.custom_options);
+
   console.log("Product Add Ons: ", convertOptionsToProductAddOns(meal.options));
-  await patchProductAddOns(meal.mealid, {
-    ...convertOptionsToProductAddOns(meal.options),
+  const allAddOns = {
+    fields: [...sizeAddOns.fields, ...customAddOns.fields],
     userid: meal.userid,
-  });
+  };
+  console.log("Product Add Ons: ", allAddOns);
+  await patchProductAddOns(meal.mealid, allAddOns);
   return product;
 };
 

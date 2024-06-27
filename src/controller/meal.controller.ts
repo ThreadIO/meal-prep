@@ -41,6 +41,17 @@ export async function createMeal(mealid: string, body: any) {
       price: body.price,
       nutrition_facts: body.nutrition_facts,
       options: body.options,
+      custom_options: body.custom_options.map((option: any) => ({
+        name: option.name,
+        options: option.options.map((subOption: any) => ({
+          label: subOption.label,
+          price: subOption.price,
+          calories: subOption.calories,
+          carbs: subOption.carbs,
+          protein: subOption.protein,
+          fat: subOption.fat,
+        })),
+      })),
     };
     const meal = await Meal.create(newMeal);
     return NextResponse.json({ success: true, data: meal });
@@ -76,6 +87,19 @@ export async function patchMeal(mealid: string, url: string, body: any = {}) {
 
     if (Object.keys(body).length > 0) {
       console.log("Body: ", body);
+      if (body.custom_options) {
+        body.custom_options = body.custom_options.map((option: any) => ({
+          name: option.name,
+          options: option.options.map((subOption: any) => ({
+            label: subOption.label,
+            price: subOption.price,
+            calories: subOption.calories,
+            carbs: subOption.carbs,
+            protein: subOption.protein,
+            fat: subOption.fat,
+          })),
+        }));
+      }
       await Meal.updateOne({ mealid: mealid, url: url }, { $set: body });
       return NextResponse.json({ success: true, updated: mealid });
     } else {
