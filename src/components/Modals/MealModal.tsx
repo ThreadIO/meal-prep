@@ -76,6 +76,7 @@ export const MealModal = (props: MealModalProps) => {
       });
       setSelectedKeys(new Set(threadMeal.tags || []));
       setOptions(threadMeal.options || []);
+      setCustomOptions(threadMeal.custom_options || []);
     } else if (meal) {
       // This means that the meal exists in WooCommerce (Hard coding for a HMP Meal)
       if (meal.add_ons) {
