@@ -8,6 +8,8 @@ import {
   Pagination,
 } from "@nextui-org/react";
 import { useMemo, useState } from "react";
+import { decodeHtmlEntities } from "@/helpers/frontend";
+
 interface DropdownProps {
   // eslint-disable-next-line no-unused-vars
   onSelectionChange: (selectedKeys: any) => void;
@@ -72,7 +74,7 @@ const DropdownComponent = (props: DropdownProps) => {
         className="capitalize min-h-[40px]"
         color={color}
       >
-        {selectedValue}
+        {decodeHtmlEntities(selectedValue)}
         {renderPagination()}
       </Button>
     );

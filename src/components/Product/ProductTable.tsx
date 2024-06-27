@@ -75,7 +75,7 @@ const ProductTable = (props: ProductTableProps) => {
 
   const handleOpenProduct = async (item: any) => {
     const add_ons = await getProductAddons(item.id, { userid: userId });
-    console.log("Addons: ", add_ons.fields);
+    console.log("Add Ons: ", add_ons);
     setProduct({ ...item, add_ons: add_ons.fields }); // Add the add_ons to the product
     const threadMeal = await threadConnector(item, userId, getMeal);
     setThreadMeal(threadMeal);

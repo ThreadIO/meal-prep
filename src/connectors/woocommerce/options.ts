@@ -18,7 +18,7 @@ export const convertProductAddOnsToOptions = (product: any) => {
       console.log("Size Options: ", sizeOption.options);
       // From here, there is an array of size options that follow the above format, return them
       return sizeOption.options.map((size: any) => {
-        const totalCarbs = carbs + (parseInt(size.calories) || 0);
+        const totalCarbs = carbs + (parseInt(size.carbs) || 0);
         const totalProtein = protein + (parseInt(size.protein) || 0);
         const totalFat = fat + (parseInt(size.fat) || 0);
         const totalCalories = calories + (parseInt(size.calories) || 0);

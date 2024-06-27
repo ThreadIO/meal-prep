@@ -1,11 +1,11 @@
 import { Chip, ChipProps } from "@nextui-org/react";
-
+import { decodeHtmlEntities } from "@/helpers/frontend";
 export const renderCategories = (product: any) => {
   return (
     <div className="flex flex-wrap gap-1 w-full">
       {product.categories.map((category: any) => (
         <Chip key={category.id} color="default" size="sm">
-          {category.name}
+          {decodeHtmlEntities(category.name)}
         </Chip>
       ))}
     </div>
