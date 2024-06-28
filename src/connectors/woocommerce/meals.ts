@@ -81,12 +81,10 @@ export const updateMealOnWoocommerce = async (
   const sizeAddOns = convertOptionsToProductAddOns(meal.options);
   const customAddOns = convertCustomOptionsToProductAddOns(meal.custom_options);
 
-  console.log("Product Add Ons: ", convertOptionsToProductAddOns(meal.options));
   const allAddOns = {
     fields: [...sizeAddOns.fields, ...customAddOns.fields],
     userid: meal.userid,
   };
-  console.log("Product Add Ons: ", allAddOns);
   await patchProductAddOns(meal.mealid, allAddOns);
   return product;
 };

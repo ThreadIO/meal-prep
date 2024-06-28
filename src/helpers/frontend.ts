@@ -32,7 +32,9 @@ export const getData = async (
 
     const responseData = await response.json();
     if (transformData) {
-      onSuccess(transformData(responseData.data));
+      const transformedData = transformData(responseData.data);
+      console.log(`Successfully transformed ${dataType}: `, transformedData);
+      onSuccess(transformedData);
     } else {
       onSuccess(responseData.data || []);
     }

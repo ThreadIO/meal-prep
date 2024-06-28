@@ -88,7 +88,7 @@ export const convertCustomOptionsToProductAddOns = (customOptions: any) => {
         min: 0,
         max: 0,
         options: customOption.options.map((option: any) => ({
-          label: option.label,
+          label: option.name,
           price: option.price,
           image: "",
           price_type: "quantity_based",

@@ -98,10 +98,7 @@ export default function OrdersPage() {
       url,
       method,
       headers,
-      (data) => {
-        setOrders(data);
-        setFilteredOrders(data);
-      },
+      (data) => handleSuccessfulFetch(data),
       setError,
       setOrdersLoading,
       body,
@@ -115,7 +112,6 @@ export default function OrdersPage() {
       },
       transformOrdersData
     );
-    console.log("Orders: ", orders);
   };
 
   // New function to fetch categories
@@ -193,6 +189,13 @@ export default function OrdersPage() {
     });
 
     return filteredOrders;
+  };
+
+  const handleSuccessfulFetch = (data: any) => {
+    setOrders(data);
+    setFilteredOrders(data);
+    console.log("Orders: ", data);
+    console.log("Filtered Orders: ", filteredOrders);
   };
 
   const getFilteredOrders = (
@@ -283,12 +286,18 @@ export default function OrdersPage() {
   };
 
   const transformOrdersData = (ordersData: any) => {
-    return ordersData.map((order: any) => ({
-      ...order,
-      line_items: order.line_items.filter(
-        (item: any) => !not_products.includes(item.name)
-      ),
-    }));
+    try {
+      const transformedData = ordersData.map((order: any) => ({
+        ...order,
+        line_items: order.line_items.filter(
+          (item: any) => !not_products.includes(item.name)
+        ),
+      }));
+      return transformedData;
+    } catch (error) {
+      console.log("Error: ", error);
+      return ordersData;
+    }
   };
 
   const clear = async () => {

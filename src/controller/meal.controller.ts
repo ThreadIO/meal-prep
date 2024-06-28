@@ -44,7 +44,7 @@ export async function createMeal(mealid: string, body: any) {
       custom_options: body.custom_options.map((option: any) => ({
         name: option.name,
         options: option.options.map((subOption: any) => ({
-          label: subOption.label,
+          name: subOption.name,
           price: subOption.price,
           calories: subOption.calories,
           carbs: subOption.carbs,
@@ -91,7 +91,7 @@ export async function patchMeal(mealid: string, url: string, body: any = {}) {
         body.custom_options = body.custom_options.map((option: any) => ({
           name: option.name,
           options: option.options.map((subOption: any) => ({
-            label: subOption.label,
+            name: subOption.name,
             price: subOption.price,
             calories: subOption.calories,
             carbs: subOption.carbs,
@@ -116,7 +116,6 @@ export async function patchMeal(mealid: string, url: string, body: any = {}) {
 export async function getAllMeals(mealids: [string], url: string) {
   try {
     const meals = await Meal.find({ mealid: { $in: mealids }, url: url });
-    console.log("Meals: ", meals);
     return NextResponse.json({ success: true, data: meals });
   } catch (error) {
     console.log("Error in Get Meal: ", error);

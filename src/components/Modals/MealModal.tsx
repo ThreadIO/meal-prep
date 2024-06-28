@@ -22,7 +22,7 @@ import {
   getHMPProductData,
   updateMealOnWoocommerce,
 } from "@/connectors/woocommerce/meals";
-import { friendlyUrl } from "@/helpers/frontend";
+import { decodeHtmlEntities, friendlyUrl } from "@/helpers/frontend";
 import { convertProductAddOnsToOptions } from "@/connectors/woocommerce/options";
 import { useMutation, useQueryClient } from "react-query";
 
@@ -87,12 +87,12 @@ export const MealModal = (props: MealModalProps) => {
           customAddOns.map((addOn: any) => ({
             name: addOn.name,
             options: addOn.options.map((option: any) => ({
-              label: option.label,
-              price: option.price,
-              calories: option.calories || 0,
-              carbs: option.carbs || 0,
-              protein: option.protein || 0,
-              fat: option.fat || 0,
+              name: option.label,
+              price: parseFloat(option.price) || 0,
+              calories: parseInt(option.calories) || 0,
+              carbs: parseInt(option.carbs) || 0,
+              protein: parseInt(option.protein) || 0,
+              fat: parseInt(option.fat) || 0,
             })),
           }))
         );
@@ -138,6 +138,7 @@ export const MealModal = (props: MealModalProps) => {
 
       if (mode === "patch" && meal) {
         const existing_meal = await getMeal(meal.id, url);
+        console.log("Form Data: ", formData);
         if (!existing_meal) {
           await createMeal(formData);
         } else {
@@ -409,12 +410,12 @@ export const MealModal = (props: MealModalProps) => {
                 )}
                 <Input
                   label="Sub-option Label"
-                  value={subOption.label}
+                  value={subOption.name}
                   onChange={(e) =>
                     handleCustomSubOptionChange(
                       parseInt(index),
                       subIndex,
-                      "label",
+                      "name",
                       e.target.value
                     )
                   }
@@ -422,7 +423,7 @@ export const MealModal = (props: MealModalProps) => {
                 <Input
                   label="Price Adjustment"
                   type="number"
-                  value={subOption.price}
+                  value={subOption.price} // Set price to "0" if it's null or empty string
                   onChange={(e) =>
                     handleCustomSubOptionChange(
                       parseInt(index),
@@ -588,7 +589,7 @@ export const MealModal = (props: MealModalProps) => {
       <div style={{ flex: 2 }}>
         <Input
           label="Meal Name"
-          value={mealName}
+          value={decodeHtmlEntities(mealName)}
           onChange={(e) => setMealName(e.target.value)}
         />
         <div
