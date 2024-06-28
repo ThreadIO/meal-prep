@@ -79,7 +79,7 @@ export const convertCustomOptionsToProductAddOns = (customOptions: any) => {
         type: "multiple_choice",
         display: "select",
         position: index + 1, // Start position after the Size option
-        required: 0,
+        required: 1,
         restrictions: 0,
         restrictions_type: "any_text",
         adjust_price: 1,
