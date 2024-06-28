@@ -138,7 +138,6 @@ export const MealModal = (props: MealModalProps) => {
 
       if (mode === "patch" && meal) {
         const existing_meal = await getMeal(meal.id, url);
-        console.log("Form Data: ", formData);
         if (!existing_meal) {
           await createMeal(formData);
         } else {
@@ -526,7 +525,7 @@ export const MealModal = (props: MealModalProps) => {
       Array.from(selectedStockStatus).join(", ");
     console.log("Custom Options: ", customOptions);
     const formData = {
-      name: String(mealName),
+      name: decodeHtmlEntities(String(mealName)),
       url: friendlyUrl((await getUser(userId)).settings.url),
       status: selectedStockStatusString,
       description: String(mealDescription),
@@ -539,8 +538,6 @@ export const MealModal = (props: MealModalProps) => {
       image: mealImage ? mealImage.src : "",
       mealid: meal && mode === "patch" ? meal.id : undefined,
     };
-
-    console.log("Form Data: ", formData);
     saveMutation.mutate(formData);
   };
   const renderContent = () => {

@@ -179,20 +179,60 @@ export const generateFullCsvData = (orders: any[], meals: any = []) => {
             allergens = "",
             allSizes = "";
 
+          // This might need to get fixed in the future
           if (meal) {
-            // Find a matching option based on any of the selected sizes
-            const selectedOption =
-              meal.options.find((opt: any) =>
-                selectedSizes.includes(opt.name)
-              ) || meal.options[0];
+            let selectedOption;
+            let customOption;
 
-            calories = selectedOption.calories || 0;
-            protein = selectedOption.protein || 0;
-            carbs = selectedOption.carbs || 0;
-            fat = selectedOption.fat || 0;
-            ingredients = meal.ingredients || "";
-            allergens = meal.allergens || "";
-            allSizes = meal.options.map((opt: any) => opt.name).join(" | ");
+            // Check regular options first
+            selectedOption = meal.options.find((opt: any) =>
+              selectedSizes.includes(opt.name)
+            );
+
+            // If no regular option is found, check custom options
+            if (!selectedOption) {
+              for (const customOptionGroup of meal.custom_options) {
+                customOption = customOptionGroup.options.find((opt: any) =>
+                  selectedSizes.includes(opt.name)
+                );
+                if (customOption) break;
+              }
+            }
+
+            if (selectedOption) {
+              calories = selectedOption.calories || 0;
+              protein = selectedOption.protein || 0;
+              carbs = selectedOption.carbs || 0;
+              fat = selectedOption.fat || 0;
+              ingredients = meal.ingredients || "";
+              allergens = meal.allergens || "";
+              allSizes = meal.options.map((opt: any) => opt.name).join(" | ");
+            } else if (customOption) {
+              calories = customOption.calories || 0;
+              protein = customOption.protein || 0;
+              carbs = customOption.carbs || 0;
+              fat = customOption.fat || 0;
+              ingredients = meal.ingredients || "";
+              allergens = meal.allergens || "";
+              allSizes = meal.custom_options
+                .flatMap((group: any) =>
+                  group.options.map((opt: any) => opt.name)
+                )
+                .join(" | ");
+            } else {
+              // If no option is found, use the base nutrition facts
+              calories = meal.nutrition_facts.calories || 0;
+              protein = meal.nutrition_facts.protein || 0;
+              carbs = meal.nutrition_facts.carbs || 0;
+              fat = meal.nutrition_facts.fat || 0;
+              ingredients = meal.nutrition_facts.ingredients || "";
+              allergens = meal.allergens || "";
+              allSizes = "";
+            }
+          } else {
+            // If no meal is found, set all values to default
+            calories = protein = carbs = fat = 0;
+            ingredients = allergens = allSizes = "";
           }
 
           csvData.push([
