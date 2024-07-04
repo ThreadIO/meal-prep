@@ -1,0 +1,62 @@
+import { NextRequest, NextResponse } from "next/server";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+const s3Client = new S3Client({
+  region: "us-east-2", // TODO: should be process.env.REGION
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+    const image = formData.get("image") as File;
+
+    //
+    if (!image) {
+      return NextResponse.json({ error: "Image is required" }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(await image.arrayBuffer());
+    const imageName = await uploadImageToS3(buffer, image.name);
+
+    return NextResponse.json({ success: true, imageName });
+  } catch (error) {
+    return NextResponse.json({ error: "Error uploading file." });
+  }
+}
+
+async function uploadImageToS3(image: Buffer, imageName: String) {
+  const imageBuffer = image;
+  console.log(imageName);
+
+  // TODO: Remove this code. It was for testing
+  // const command = new ListBucketsCommand({});
+
+  // try {
+  //     const { Owner, Buckets } = await s3Client.send(command);
+  //     console.log(
+  //       `${Owner!.DisplayName} owns ${Buckets!.length} bucket${
+  //         Buckets!.length === 1 ? "" : "s"
+  //       }:`,
+  //     );
+  //     console.log(`${Buckets!.map((b) => ` • ${b.Name}`).join("\n")}`);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+
+  const params = {
+    Bucket: "testwcimages", // TODO: should be process.env.AWS_S3_BUCKET_NAME
+    Key: `${imageName}-${Date.now()}`,
+    Body: imageBuffer,
+    ContentType: "image/jpg",
+  };
+
+  const command = new PutObjectCommand(params);
+
+  await s3Client.send(command);
+
+  return imageName;
+}

@@ -25,6 +25,7 @@ import {
 import { decodeHtmlEntities, friendlyUrl } from "@/helpers/frontend";
 import { convertProductAddOnsToOptions } from "@/connectors/woocommerce/options";
 import { useMutation, useQueryClient } from "react-query";
+import ImageUploader from "../Product/ImageUploader";
 
 interface MealModalProps {
   meal: any;
@@ -44,6 +45,8 @@ export const MealModal = (props: MealModalProps) => {
   const [mealDescription, setMealDescription] = useState("");
   const [mealPrice, setMealPrice] = useState("");
   const [mealName, setMealName] = useState("");
+  const [uploadedImage, setUploadedImage] = useState<any>(null);
+  const [newProductImage, setNewProductImage] = useState<any>(null);
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
     new Set()
   );
@@ -515,12 +518,41 @@ export const MealModal = (props: MealModalProps) => {
     );
   };
 
+  async function uploadImageToS3(selectedImage: File | null) {
+    let imageUrl = null;
+    if (selectedImage) {
+      const formData = new FormData();
+      formData.append("image", selectedImage);
+
+      try {
+        const response = await fetch("/api/s3-upload", {
+          method: "POST",
+          body: "formData",
+        });
+
+        const data = await response.json();
+        console.log(data.status);
+
+        imageUrl = data.url;
+        // Create a new image object for the image array appended to the product
+        setNewProductImage({ src: imageUrl });
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    }
+  }
+
   const handleSave = async () => {
     setLoadingSave(true);
     const selectedTags = Array.from(
       mapSelectedTagsToObjects(),
       (item) => item.name
     );
+
+    // Upload Image
+    // If new product, upload image to S3 Bucket
+    await uploadImageToS3(uploadedImage);
+
     const selectedStockStatusString =
       Array.from(selectedStockStatus).join(", ");
     console.log("Custom Options: ", customOptions);
@@ -535,7 +567,7 @@ export const MealModal = (props: MealModalProps) => {
       nutrition_facts: nutritionFacts,
       options: options,
       custom_options: customOptions,
-      image: mealImage ? mealImage.src : "",
+      image: mealImage ? mealImage.src : newProductImage ? newProductImage : "",
       mealid: meal && mode === "patch" ? meal.id : undefined,
     };
     saveMutation.mutate(formData);
@@ -895,8 +927,12 @@ export const MealModal = (props: MealModalProps) => {
             style={{ gap: "2rem", paddingBottom: "2rem" }} // Added paddingBottom to ModalBody
           >
             <div>
-              <div style={{ display: "flex" }}>
-                {renderImage()}
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ marginBottom: "4px" }}>
+                  {renderImage() ?? (
+                    <ImageUploader onImageSelect={setUploadedImage} />
+                  )}
+                </div>
                 {renderMealBasicInfo()}
               </div>
               <div style={{ marginTop: "1rem" }}>
