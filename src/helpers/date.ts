@@ -81,11 +81,7 @@ const threadDeliveryDate = (order: any): Date | null => {
   }
 
   // Helper function to find the next occurrence of a specific day of the week
-  const getNextDayOfWeek = (
-    date: Date,
-    dayName: string,
-    afterCutoff: boolean
-  ): Date => {
+  const getNextDayOfWeek = (date: Date, dayName: string): Date => {
     const daysOfWeek = [
       "Sunday",
       "Monday",
@@ -98,24 +94,26 @@ const threadDeliveryDate = (order: any): Date | null => {
     const targetDay = daysOfWeek.indexOf(dayName);
     const currentDay = date.getDay();
     let daysUntilNext = (targetDay - currentDay + 7) % 7;
-    if (daysUntilNext === 0) {
-      daysUntilNext = 7; // Move to the next week if the day is today
+
+    // Create a new Date object for the cutoff (Thursday at 23:59)
+    const cutoff = new Date(date);
+    cutoff.setHours(23, 59, 0, 0);
+    if (currentDay < 4) {
+      // If it's earlier in the week, set to previous Thursday
+      cutoff.setDate(cutoff.getDate() - ((cutoff.getDay() + 3) % 7));
     }
+
+    // If it's after the cutoff, add a week
+    if (date > cutoff || currentDay === 5 || currentDay === 6) {
+      daysUntilNext += 7;
+    }
+
     const nextDate = new Date(date);
-    nextDate.setDate(date.getDate() + daysUntilNext + (afterCutoff ? 7 : 0)); // Add 7 days if after the cutoff
+    nextDate.setDate(date.getDate() + daysUntilNext);
+    nextDate.setHours(0, 0, 0, 0); // Set to the beginning of the day
     return nextDate;
   };
 
-  // Calculate cutoff time (Friday at 12 AM) -> This needs to be parameterized
-  const cutoffDate = new Date(datePaid);
-  cutoffDate.setDate(
-    cutoffDate.getDate() + ((5 - cutoffDate.getDay() + 7) % 7)
-  ); // Set to next Friday
-  cutoffDate.setHours(0, 0, 0, 0); // Set to 12 AM
-
-  const isAfterCutoff = datePaid >= cutoffDate; // Check if datePaid is after the cutoff
-
-  const nextDeliveryDate = getNextDayOfWeek(datePaid, dayOfWeek, isAfterCutoff);
-  nextDeliveryDate.setHours(0, 0, 0, 0); // Set to the beginning of the day
-  return nextDeliveryDate; // Return the Date object
+  const nextDeliveryDate = getNextDayOfWeek(datePaid, dayOfWeek);
+  return nextDeliveryDate;
 };
