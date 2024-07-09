@@ -162,7 +162,7 @@ export default function OrdersPage() {
         setMeals(data);
       },
       setError,
-      setOrdersLoading,
+      setMealsLoading,
       body
     );
   };
