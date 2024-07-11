@@ -105,7 +105,6 @@ export default function OrdersPage() {
       () => {
         setShowOrders(true);
         fetchProducts();
-        fetchCategories(); // Call the new function to fetch categories
       },
       (data) => {
         getMeals(data);
