@@ -126,6 +126,8 @@ export default function OrdersPage() {
       } finally {
         setCategoriesLoading(false);
       }
+    } else {
+      console.log("Categories already fetched");
     }
   };
 
