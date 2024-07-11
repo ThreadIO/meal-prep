@@ -116,15 +116,17 @@ export default function OrdersPage() {
 
   // New function to fetch categories
   const fetchCategories = async () => {
-    setCategoriesLoading(true);
-    try {
-      const categoriesData = await getCategories(user);
-      setCategories(categoriesData);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setError("Failed to fetch categories");
-    } finally {
-      setCategoriesLoading(false);
+    if (categories.length == 0) {
+      setCategoriesLoading(true);
+      try {
+        const categoriesData = await getCategories(user);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setError("Failed to fetch categories");
+      } finally {
+        setCategoriesLoading(false);
+      }
     }
   };
 
@@ -552,7 +554,13 @@ export default function OrdersPage() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <Spinner label={ordersLoading ? "Loading Orders" : "Loading Meals"} />
+          {ordersLoading ? (
+            <Spinner label="Loading Orders" />
+          ) : categoriesLoading ? (
+            <Spinner label="Loading Categories" />
+          ) : mealsLoading ? (
+            <Spinner label="Loading Meals" />
+          ) : null}
         </div>
       </div>
     );
