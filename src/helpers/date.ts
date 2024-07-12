@@ -56,62 +56,48 @@ const extractDeliveryDate = (metaData: any[]) => {
 
 const threadDeliveryDate = (order: any): Date | null => {
   const shippingLines = order.shipping_lines;
-  if (!shippingLines || shippingLines.length === 0) {
-    return null; // Handle case where there are no shipping lines
-  }
+  if (!shippingLines || shippingLines.length === 0) return null;
 
-  const shippingLineItem = shippingLines[0];
-  const methodTitle = shippingLineItem.method_title;
-  if (!methodTitle) {
-    return null; // Handle case where there is no method_title
-  }
+  const methodTitle = shippingLines[0].method_title;
+  if (!methodTitle) return null;
 
   const datePaid = new Date(order.date_paid);
-  if (isNaN(datePaid.getTime())) {
-    return null; // Handle invalid date_paid
-  }
+  if (isNaN(datePaid.getTime())) return null;
 
   const isWednesdayDelivery = methodTitle.toLowerCase().includes("wednesday");
   const isSundayDelivery = methodTitle.toLowerCase().includes("sunday");
 
-  if (!isWednesdayDelivery && !isSundayDelivery) {
-    return null; // Handle case where no valid delivery day is found
-  }
+  if (!isWednesdayDelivery && !isSundayDelivery) return null;
 
-  const getCutoffDate = (date: Date): Date => {
+  const getCutoffDate = (date: Date) => {
     const cutoff = new Date(date);
-    cutoff.setDate(cutoff.getDate() + ((5 - cutoff.getDay() + 7) % 7)); // Next Friday
-    cutoff.setHours(0, 0, 0, 0); // Set to midnight
+    cutoff.setDate(cutoff.getDate() + ((5 - cutoff.getDay() + 7) % 7));
+    cutoff.setHours(0, 0, 0, 0);
     return cutoff;
   };
 
-  const getNextDayOfWeek = (date: Date, dayOfWeek: number): Date => {
+  const getNextDayOfWeek = (date: Date, dayOfWeek: number) => {
     const result = new Date(date);
     result.setDate(result.getDate() + ((dayOfWeek - result.getDay() + 7) % 7));
     return result;
   };
 
   const cutoffDate = getCutoffDate(datePaid);
-  let nextDeliveryDate: Date;
+  let nextDeliveryDate;
 
   if (isWednesdayDelivery) {
-    nextDeliveryDate = getNextDayOfWeek(datePaid, 3); // 3 is Wednesday
+    nextDeliveryDate = getNextDayOfWeek(datePaid, 3);
     if (datePaid >= cutoffDate || nextDeliveryDate <= datePaid) {
       nextDeliveryDate.setDate(nextDeliveryDate.getDate() + 7);
     }
   } else {
-    // Sunday delivery
-    nextDeliveryDate = getNextDayOfWeek(datePaid, 0); // 0 is Sunday
+    nextDeliveryDate = getNextDayOfWeek(datePaid, 0);
     if (datePaid >= cutoffDate) {
       nextDeliveryDate.setDate(nextDeliveryDate.getDate() + 7);
     }
   }
 
-  // Sanity check
-  const ensureMinimumDeliveryTime = (
-    datePaid: Date,
-    deliveryDate: Date
-  ): Date => {
+  const ensureMinimumDeliveryTime = (datePaid: Date, deliveryDate: Date) => {
     const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000;
     const timeDifference = deliveryDate.getTime() - datePaid.getTime();
 
@@ -121,6 +107,7 @@ const threadDeliveryDate = (order: any): Date | null => {
 
     return deliveryDate;
   };
+
   nextDeliveryDate = ensureMinimumDeliveryTime(datePaid, nextDeliveryDate);
 
   return nextDeliveryDate;
