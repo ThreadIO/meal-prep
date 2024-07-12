@@ -20,21 +20,22 @@ export const friendlyDate = (
         day: "2-digit",
       });
 };
+
 export const filterOrdersByDate = (
   orders: any,
   orderDeliveryDate: CalendarDate
 ) => {
   if (!orderDeliveryDate) return orders;
-  console.log("order Delivery Date", orderDeliveryDate);
+
   return orders.filter((order: any) => {
     const deliveryDate = getDeliveryDate(order);
     if (!deliveryDate) return false;
 
-    // Extract only the date part as YYYY-MM-DD
-    const isoDateString = deliveryDate.toISOString().split("T")[0];
+    // Get the local date string in YYYY-MM-DD format
+    const localDateString = deliveryDate.toLocaleDateString("en-CA");
 
-    // Parse date in the correct format
-    const parsedDeliveryDate = parseDate(isoDateString);
+    // Parse the local date string
+    const parsedDeliveryDate = parseDate(localDateString);
 
     return isSameDay(parsedDeliveryDate, orderDeliveryDate);
   });
