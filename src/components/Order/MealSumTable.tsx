@@ -7,7 +7,7 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/react";
-
+import { decodeHtmlEntities } from "@/helpers/frontend";
 interface MealSumTableProps {
   mealSum: { [key: string]: number };
   showCosts: boolean;
@@ -78,11 +78,13 @@ const MealSumTable = ({ mealSum, showCosts }: MealSumTableProps) => {
         </TableHeader>
         <TableBody emptyContent={"No meals to display."} items={mealSumArray}>
           {(item: any) => (
-            <TableRow key={item.name}>
+            <TableRow key={decodeHtmlEntities(item.name)}>
               {(columnKey) => {
                 switch (columnKey) {
                   case "name":
-                    return <TableCell>{item.name}</TableCell>;
+                    return (
+                      <TableCell>{decodeHtmlEntities(item.name)}</TableCell>
+                    );
                   case "quantity":
                     return <TableCell>{item.quantity}</TableCell>;
                   case "cisco":
