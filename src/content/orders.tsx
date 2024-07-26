@@ -12,7 +12,7 @@ import {
 import { useState, useEffect } from "react";
 import React from "react";
 import { saveAs } from "file-saver";
-import { not_products } from "@/helpers/utils";
+import { demoFlag, not_products } from "@/helpers/utils";
 import {
   generateListOfMealIds,
   getCategories,
@@ -27,6 +27,7 @@ import OrderTable from "@/components/Order/OrderTable";
 import { statusOptions } from "@/helpers/utils";
 import { Search } from "lucide-react";
 import Papa from "papaparse";
+import MealSumTable from "@/components/Order/MealSumTable";
 
 export default function OrdersPage() {
   const { user } = useUser();
@@ -51,6 +52,7 @@ export default function OrdersPage() {
   );
 
   const [showLineItems, setShowLineItems] = useState(true);
+  const [showCosts, setShowCosts] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
   const [error, setError] = useState<string>("");
   const [deliveryDate, setDeliveryDate] = useState<any>();
@@ -493,6 +495,12 @@ export default function OrdersPage() {
           onClick={() => setShowLineItems((prev) => !prev)}
           text={showLineItems ? "Show Meal Quantities" : "Show Line Items"}
         />
+        {!showLineItems && demoFlag && (
+          <StyledButton
+            onClick={() => setShowCosts((prev) => !prev)}
+            text={"Show Ingredient Costs"}
+          />
+        )}
         <StyledButton
           onClick={() => downloadOrders(filteredOrders, startDate, endDate)}
           text="Download Orders"
@@ -588,16 +596,6 @@ export default function OrdersPage() {
       return mealSum;
     };
 
-    // Function to render aggregated meal information
-    const renderMealSum = (mealSum: { [key: string]: number }) => {
-      return Object.entries(mealSum).map(([meal, quantity], index) => (
-        <div key={index} style={{ marginBottom: "20px" }}>
-          <strong>Meal:</strong> {meal} <strong>Quantity:</strong>{" "}
-          {quantity !== undefined ? quantity : "N/A"}
-        </div>
-      ));
-    };
-
     // Function to render individual order details with line items
     const renderLineItems = () => {
       return (
@@ -676,11 +674,11 @@ export default function OrdersPage() {
             width: "100%",
           }}
         >
-          {showLineItems
-            ? renderLineItems()
-            : Object.keys(mealSum).length > 0
-              ? renderMealSum(mealSum)
-              : null}
+          {showLineItems ? (
+            renderLineItems()
+          ) : Object.keys(mealSum).length > 0 ? (
+            <MealSumTable mealSum={mealSum} showCosts={showCosts} />
+          ) : null}
           <div style={{ height: "80px" }} /> {/* Spacer to prevent overlap */}
         </div>
         <div

@@ -147,3 +147,5 @@ export const CouponDiscountType = [
   { display: "Fixed Product", value: "fixed_product" },
   { display: "Percent", value: "percent" },
 ];
+
+export const demoFlag = true;
