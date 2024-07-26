@@ -20,7 +20,7 @@ const MealSumTable = ({ mealSum, showCosts }: MealSumTableProps) => {
   ];
 
   const costColumns = [
-    { key: "cisco", label: "Cisco" },
+    { key: "sysco", label: "Sysco" },
     { key: "usfoods", label: "US Foods" },
   ];
 
@@ -37,7 +37,7 @@ const MealSumTable = ({ mealSum, showCosts }: MealSumTableProps) => {
     } else if (lowerName.includes("chicken") || lowerName.includes("shrimp")) {
       return [4, 6];
     } else {
-      return [2, 6];
+      return [2, 4];
     }
   };
 
@@ -50,9 +50,9 @@ const MealSumTable = ({ mealSum, showCosts }: MealSumTableProps) => {
   const mealSumArray = Object.entries(mealSum).map(([name, quantity]) => {
     const baseItem = { name, quantity };
     if (showCosts) {
-      const cisco = generatePrice(name, quantity);
+      const sysco = generatePrice(name, quantity);
       const usfoods = generatePrice(name, quantity);
-      return { ...baseItem, cisco, usfoods };
+      return { ...baseItem, sysco, usfoods };
     }
     return baseItem;
   });
@@ -87,15 +87,15 @@ const MealSumTable = ({ mealSum, showCosts }: MealSumTableProps) => {
                     );
                   case "quantity":
                     return <TableCell>{item.quantity}</TableCell>;
-                  case "cisco":
+                  case "sysco":
                     return showCosts ? (
-                      renderCostCell(item.cisco, item.usfoods)
+                      renderCostCell(item.sysco, item.usfoods)
                     ) : (
                       <TableCell> </TableCell>
                     );
                   case "usfoods":
                     return showCosts ? (
-                      renderCostCell(item.usfoods, item.cisco)
+                      renderCostCell(item.usfoods, item.sysco)
                     ) : (
                       <TableCell> </TableCell>
                     );
