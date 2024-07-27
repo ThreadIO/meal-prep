@@ -233,7 +233,7 @@ const Meals = () => {
 
   const renderProductContent = () => {
     const filteredProducts = getFilteredProducts();
-
+    console.log("Products: ", products);
     return (
       <div>
         <div className="text-center mt-5 flex justify-center space-x-4">

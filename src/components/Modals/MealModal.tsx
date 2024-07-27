@@ -22,7 +22,12 @@ import {
   getHMPProductData,
   updateMealOnWoocommerce,
 } from "@/connectors/woocommerce/meals";
-import { decodeHtmlEntities, friendlyUrl } from "@/helpers/frontend";
+import {
+  convertToHtml,
+  decodeHtmlEntities,
+  convertHtmlToPlainText,
+  friendlyUrl,
+} from "@/helpers/frontend";
 import { convertProductAddOnsToOptions } from "@/connectors/woocommerce/options";
 import { useMutation, useQueryClient } from "react-query";
 import ImageUploader from "../Product/ImageUploader";
@@ -69,8 +74,12 @@ export const MealModal = (props: MealModalProps) => {
   useEffect(() => {
     if (threadMeal) {
       setMealName(threadMeal.name || "");
-      setMealDescription(threadMeal.description || "");
-      setMealPrice(threadMeal.price || "");
+      setMealDescription(
+        convertHtmlToPlainText(
+          threadMeal.description || meal.short_description || ""
+        )
+      );
+      setMealPrice(threadMeal.price || "0");
       setNutritionFacts({
         calories: threadMeal.nutrition_facts.calories || 0,
         carbs: threadMeal.nutrition_facts.carbs || 0,
@@ -102,8 +111,8 @@ export const MealModal = (props: MealModalProps) => {
       }
       const { calories, carbs, fat, protein } = getHMPProductData(meal);
       setMealName(meal.name || "");
-      setMealDescription(meal.description || "");
-      setMealPrice(meal.regular_price || "");
+      setMealDescription(convertHtmlToPlainText(meal.short_description || ""));
+      setMealPrice(meal.regular_price || "0");
       setSelectedKeys(
         new Set(
           meal.categories
@@ -560,7 +569,8 @@ export const MealModal = (props: MealModalProps) => {
       name: decodeHtmlEntities(String(mealName)),
       url: friendlyUrl((await getUser(userId)).settings.url),
       status: selectedStockStatusString,
-      description: String(mealDescription),
+      description: convertToHtml(mealDescription),
+      short_description: convertToHtml(mealDescription),
       price: parseFloat(mealPrice),
       userid: userId,
       tags: selectedTags,
@@ -637,6 +647,20 @@ export const MealModal = (props: MealModalProps) => {
           value={mealPrice}
           onChange={(e) => setMealPrice(e.target.value)}
         />
+        <div style={{ marginTop: "1rem" }}>
+          <textarea
+            placeholder="Meal Description"
+            value={mealDescription}
+            onChange={(e) => setMealDescription(e.target.value)}
+            rows={5}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              borderRadius: "0.25rem",
+              border: "1px solid #ccc",
+            }}
+          />
+        </div>
       </div>
     );
   };

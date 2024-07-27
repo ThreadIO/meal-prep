@@ -155,3 +155,31 @@ export const getProducts = async (userId: string) => {
   const products = (await response.json()).data;
   return products;
 };
+
+export const convertHtmlToPlainText = (html: string) => {
+  // Remove all HTML tags
+  let plainText = html.replace(/<[^>]+>/g, "");
+  // Decode HTML entities
+  plainText = decodeHtmlEntities(plainText);
+  // Split into lines and trim
+  const lines = plainText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  // Ensure each line starts with a single bullet point
+  return lines.map((line) => line.replace(/^•?\s*/, "• ")).join("\n");
+};
+
+export const convertToHtml = (formattedString: string) => {
+  const lines = formattedString.split("\n");
+  return lines
+    .map((line) => {
+      const trimmedLine = line.trim().replace(/^•\s*/, ""); // Remove leading bullet point
+      if (trimmedLine) {
+        return `<p class="sh-color-black sh-color" dir="ltr" role="presentation"><span class="sh-color-black sh-color">• ${trimmedLine}</span></p>`;
+      }
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+};

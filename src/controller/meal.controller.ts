@@ -40,6 +40,7 @@ export async function createMeal(mealid: string, body: any) {
       tags: body.tags,
       price: body.price,
       nutrition_facts: body.nutrition_facts,
+      description: body.description,
       options: body.options,
       custom_options: body.custom_options.map((option: any) => ({
         name: option.name,

@@ -8,6 +8,7 @@ const MealSchema = new Schema({
   image: String, // Url of image of meal
   tags: [String], // Tags for the meal, this is menu categories
   price: Number, // Price of the meal
+  description: String, // Description of the meal
   nutrition_facts: {
     // Nutrition facts of the base meal
     calories: Number,

@@ -73,6 +73,7 @@ export const updateMealOnWoocommerce = async (
     type: "simple",
     regular_price: meal.price.toString(),
     description: meal.description,
+    short_description: meal.short_description,
     categories: categories,
     stock_status: status,
     images: image ? [image] : [],
