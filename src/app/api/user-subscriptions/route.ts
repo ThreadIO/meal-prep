@@ -30,14 +30,33 @@ export async function POST(request: NextRequest) {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>My Subscriptions</title>
       <style>
-          .subscription-container {
+          body {
               font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              background-color: #f4f4f4;
+          }
+          .container {
               max-width: 800px;
               margin: 0 auto;
               padding: 20px;
           }
+          .user-info {
+              background-color: #fff;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              padding: 20px;
+              margin-bottom: 20px;
+          }
+          .user-info h2 {
+              color: #2c3e50;
+              margin-top: 0;
+          }
+          .user-info p {
+              margin: 5px 0;
+          }
           .subscription-card {
-              background-color: #f9f9f9;
+              background-color: #fff;
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0,0,0,0.1);
               margin-bottom: 20px;
@@ -48,7 +67,7 @@ export async function POST(request: NextRequest) {
           }
           .subscription-details h3 {
               margin: 0 0 10px 0;
-              color: #333;
+              color: #2c3e50;
           }
           .subscription-details p {
               margin: 5px 0;
@@ -69,7 +88,7 @@ export async function POST(request: NextRequest) {
               color: #f57f17;
           }
           .manage-button {
-              background-color: #4CAF50;
+              background-color: #3498db;
               color: white;
               border: none;
               padding: 10px 20px;
@@ -80,11 +99,22 @@ export async function POST(request: NextRequest) {
               margin: 4px 2px;
               cursor: pointer;
               border-radius: 4px;
+              transition: background-color 0.3s;
+          }
+          .manage-button:hover {
+              background-color: #2980b9;
           }
       </style>
   </head>
   <body>
-    <div class="subscription-container">
+    <div class="container">
+      <div class="user-info">
+        <h2>Account Information</h2>
+        <p><strong>Name:</strong> ${userData.username}</p>
+        <p><strong>Email:</strong> ${userData.email}</p>
+        <p><strong>Member since:</strong> ${new Date(userData.user_registered).toLocaleDateString()}</p>
+      </div>
+      <h2>My Subscriptions</h2>
       ${subscriptionHtml}
     </div>
   </body>
