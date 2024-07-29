@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { createOrg } from "@/helpers/request";
 import { getData } from "@/helpers/frontend";
 import { patchOrg } from "@/helpers/request";
+import RainforestPayment from "@/components/Payment/RainforestPayment";
 
 const Settings = () => {
   const { loading, isLoggedIn, user } = useUser();
@@ -21,6 +22,9 @@ const Settings = () => {
   const [org, setOrg] = useState<any>();
   const [error, setError] = useState<string>("");
   const [orgLoading, setOrgLoading] = useState<boolean>(false);
+  const [sessionKey, setSessionKey] = useState<string | null>(null);
+  const [payinConfigId, setPayinConfigId] = useState<string | null>(null);
+
   const validOptions = ["woocommerce"];
   const isInvalid = !validOptions.includes(selectedService);
 
@@ -29,6 +33,67 @@ const Settings = () => {
       getOrg(currentOrg);
     }
   }, [currentOrg, isLoggedIn, loading]);
+
+  useEffect(() => {
+    console.log("Checkout Page: use effect launched");
+    const fetchSession = async () => {
+      try {
+        const response = await fetch("api/rainforest/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            // TODO fix this for the future
+            sessionType: "",
+            merchantId: "",
+          }),
+        });
+        const result = await response.json();
+        console.log("Got session key for payment: ", result);
+
+        const sessionKey = result.response.data.session_key;
+        setSessionKey(sessionKey);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unknown error occurred for grabbing session key"
+        );
+      }
+    };
+
+    const createPayinConfig = async () => {
+      try {
+        const response = await fetch("api/rainforest/create-payin-config", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const result = await response.json();
+
+        console.log("Got the payin config: ", result);
+
+        const payinConfigId = result.response.data.payin_config_id;
+        setPayinConfigId(payinConfigId);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unknown error occurre for grabbing payin config"
+        );
+      }
+    };
+
+    if (!sessionKey) {
+      fetchSession();
+    }
+
+    if (!payinConfigId) {
+      createPayinConfig();
+    }
+  }, [sessionKey, payinConfigId]);
 
   function getPropelAuthOrg(orgId?: string) {
     if (!orgId) {
@@ -64,6 +129,19 @@ const Settings = () => {
     getOrg(currentOrg);
     setOrgLoading(false);
     // Add your save logic here
+  };
+
+  const renderPaymentBox = () => {
+    if (sessionKey && payinConfigId) {
+      return (
+        <RainforestPayment
+          sessionKey={sessionKey}
+          payinConfigId={payinConfigId}
+        ></RainforestPayment>
+      );
+    } else {
+      return <Spinner label="Loading Payment Settings" />;
+    }
   };
 
   const renderSettingPage = () => {
@@ -110,6 +188,7 @@ const Settings = () => {
               </Radio>
             </RadioGroup>
           </div>
+          <div className="mb-4">{renderPaymentBox()}</div>
           <div className="mb-4">
             {/* <h3 className="text-xl font-semibold mb-2">Additional Settings</h3>
             <div className="flex items-center justify-between">
