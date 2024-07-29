@@ -148,4 +148,4 @@ export const CouponDiscountType = [
   { display: "Percent", value: "percent" },
 ];
 
-export const demoFlag = true;
+export const demoFlag = false;
