@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   const userData = await request.json();
-
+  console.log("User Data: ", userData);
   // Fetch user's subscriptions from your database or another API
   const subscriptions = await fetchUserSubscriptions(userData.user_id);
 
@@ -112,7 +112,6 @@ export async function POST(request: NextRequest) {
         <h2>Account Information</h2>
         <p><strong>Name:</strong> ${userData.username}</p>
         <p><strong>Email:</strong> ${userData.email}</p>
-        <p><strong>Member since:</strong> ${new Date(userData.user_registered).toLocaleDateString()}</p>
       </div>
       <h2>My Subscriptions</h2>
       ${subscriptionHtml}
