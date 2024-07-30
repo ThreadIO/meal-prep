@@ -6,7 +6,7 @@ const OrgSchema = new Schema({
   merchantid: String, // This is the id from rainforest
   url: String, // This is the URL of the company's website
   service: String, // Name of the service (Woocommerce, Shopify, ect.)
-  subscription: { type: Schema.Types.ObjectId, ref: "Subscription" }, // This is the link to the Subscription Model
+  subscriptions: [{ type: Schema.Types.ObjectId, ref: "Subscription" }], // This is the link to the Subscription Model
 });
 
 export default models.Org || model("Org", OrgSchema);
