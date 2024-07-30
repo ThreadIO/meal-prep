@@ -4,7 +4,7 @@ import MealContent from "@/content/meals";
 import OrderContent from "@/content/orders";
 import Settings from "@/content/settings";
 import Coupons from "@/content/coupons";
-
+import Admin from "@/content/admin";
 const SwitchContent: React.FC = () => {
   const { currentPage } = useNavigationContext();
 
@@ -19,6 +19,8 @@ const SwitchContent: React.FC = () => {
         return <Settings />;
       case "coupons":
         return <Coupons />;
+      case "admin":
+        return <Admin />;
       default:
         return <div></div>;
     }
