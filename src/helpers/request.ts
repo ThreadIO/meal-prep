@@ -292,7 +292,7 @@ export async function createOrg(body: any) {
 
 export async function getOrg(orgid: string) {
   const { success, data, error } = await (
-    await fetch(`/api/org/propelauth/${orgid}`, {
+    await fetch(`/api/propelauth/org/${orgid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -306,7 +306,7 @@ export async function getOrg(orgid: string) {
 export async function patchOrg(orgid: string, body: any) {
   console.log("In Patch Org: ", body);
   const { success, data, error } = await (
-    await fetch(`/api/org/propelauth/${orgid}`, {
+    await fetch(`/api/propelauth/org/${orgid}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

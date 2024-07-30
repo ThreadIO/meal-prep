@@ -6,7 +6,13 @@ import { Spinner } from "@nextui-org/react";
 import OrgTable from "@/components/Admin/OrgTable";
 
 const fetchOrgs = async () => {
-  const response = await fetch("/api/orgs");
+  const response = await fetch("/api/propelauth/getorgs", {
+    method: "POST",
+    body: JSON.stringify({}),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   if (!response.ok) throw new Error("Failed to fetch organizations");
   return response.json();
 };
@@ -23,13 +29,19 @@ const Admin = () => {
     enabled: isLoggedIn,
   });
 
+  const renderLoading = () => (
+    <div className="flex justify-center items-center h-full">
+      <Spinner label={"Loading Admin"} />
+    </div>
+  );
+
   useEffect(() => {
     if (isLoggedIn && !loading) {
       queryClient.invalidateQueries("orgs");
     }
   }, [isLoggedIn, loading, queryClient]);
 
-  if (loading || orgsLoading) return <Spinner label="Loading..." />;
+  if (loading || orgsLoading) return renderLoading();
   if (orgsError) return <div>Error: {(orgsError as Error).message}</div>;
 
   return (

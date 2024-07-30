@@ -42,7 +42,7 @@ const Settings = () => {
   }
 
   const getOrg = async (orgId: string) => {
-    const url = `/api/org/propelauth/${orgId}`;
+    const url = `/api/propelauth/org/${orgId}`;
     const method = "GET";
     const headers = {
       "Content-Type": "application/json",
