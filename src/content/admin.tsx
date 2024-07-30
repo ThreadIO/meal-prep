@@ -18,7 +18,7 @@ const fetchOrgs = async () => {
 };
 
 const Admin = () => {
-  const { loading, isLoggedIn } = useUser();
+  const { loading, isLoggedIn, user } = useUser();
   const queryClient = useQueryClient();
 
   const {
@@ -47,7 +47,10 @@ const Admin = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <OrgTable orgs={orgs.orgs} />
+      <OrgTable
+        orgs={orgs.orgs}
+        onUpdate={() => queryClient.invalidateQueries(["orgs", user?.userId])}
+      />
     </div>
   );
 };

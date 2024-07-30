@@ -81,7 +81,7 @@ const Settings = () => {
         setError(
           error instanceof Error
             ? error.message
-            : "Unknown error occurre for grabbing payin config"
+            : "Unknown error occurred for grabbing payin config"
         );
       }
     };
@@ -103,7 +103,7 @@ const Settings = () => {
   }
 
   const getOrg = async (orgId: string) => {
-    const url = `/api/propelauth/org/${orgId}`;
+    const url = `/api/org/propelauth/${orgId}`;
     const method = "GET";
     const headers = {
       "Content-Type": "application/json",
