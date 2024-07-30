@@ -68,7 +68,7 @@ export async function patchRecipe(recipeid: string, body: any) {
 
 export async function getAllUsersInOrg(orgid: string): Promise<User[]> {
   const { success, response } = await (
-    await fetch("/api/user", {
+    await fetch("/api/propelauth/user", {
       headers: {
         orgid: orgid,
       },

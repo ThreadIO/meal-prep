@@ -10,33 +10,33 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import { user_columns } from "@/helpers/utils";
+import { getAllUsersInOrg } from "@/helpers/request";
 
 interface UserTableProps {
   orgId: string;
 }
 
-const fetchUsers = async (orgId: string) => {
-  const response = await fetch("/api/user", {
-    method: "GET",
-    headers: { orgid: orgId },
-  });
-  if (!response.ok) throw new Error("Failed to fetch users");
-  return response.json();
-};
+// const getUser = async (userId: string) => {
+//   const response = await fetch(`/api/user/${userId}`);
+//   if (!response.ok) throw new Error("Failed to fetch user");
+//   return response.json();
+// };
 
 const UserTable: React.FC<UserTableProps> = ({ orgId }) => {
-  const { data, isLoading, error } = useQuery(["users", orgId], () =>
-    fetchUsers(orgId)
-  );
+  const {
+    data: propelAuthData,
+    isLoading,
+    error,
+  } = useQuery(["users", orgId], () => getAllUsersInOrg(orgId));
 
   if (isLoading) return <Spinner />;
   if (error) return <div>Error loading users: {(error as Error).message}</div>;
 
   // Check if data exists and has the expected structure
-  const users = data?.response || [];
+  const users = propelAuthData || [];
 
   if (!Array.isArray(users)) {
-    console.error("Unexpected data structure:", data);
+    console.error("Unexpected data structure:", propelAuthData);
     return <div>Error: Unexpected data structure</div>;
   }
 
