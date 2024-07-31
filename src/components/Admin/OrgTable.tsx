@@ -33,6 +33,7 @@ const OrgTable: React.FC<OrgTableProps> = ({ orgs, onUpdate }) => {
 
   const handleCloseOrgModal = () => {
     setSelectedOrg(null);
+    setThreadOrg(null);
     setOpenOrgModal(false);
   };
 
