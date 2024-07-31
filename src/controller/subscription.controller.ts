@@ -1,7 +1,10 @@
 import Subscription from "@/models/subscription.model";
 import Org from "@/models/org.model";
 import { NextResponse } from "next/server";
-
+import {
+  createPayinConfig,
+  createPayinFromPaymentMethod,
+} from "@/helpers/rainforest";
 /** POST: http://localhost:3000/api/getsubscriptions */
 export async function getSubscriptions(orgid: string) {
   try {
@@ -112,6 +115,49 @@ export async function deleteSubscription(subscriptionId: string) {
     });
 
     return NextResponse.json({ success: true, deleted: subscriptionId });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: error });
+  }
+}
+
+export async function triggerSubscription(
+  subscriptionid: string,
+  nextBillingDate: Date | null = null
+) {
+  try {
+    if (!subscriptionid)
+      return NextResponse.json({
+        success: false,
+        error: "No subscription id present...!",
+      });
+
+    const subscription = await Subscription.findById(subscriptionid);
+    if (!subscription)
+      return NextResponse.json({
+        success: false,
+        error: "Subscription not found...!",
+      });
+
+    console.log("Triggering subscription: ", subscription);
+    const payinConfigReponse = await createPayinConfig({
+      amount: subscription.amount,
+    });
+    const payinConfig = (payinConfigReponse.response as { data: any }).data;
+    console.log("Payin Config: ", payinConfig);
+    const payinConfigId = payinConfig.payin_config_id;
+    const response = await createPayinFromPaymentMethod(
+      subscription.paymentMethodId,
+      payinConfigId
+    );
+    const data = (response.response as { data: any }).data;
+    console.log("Payin Response: ", response);
+    if (nextBillingDate) {
+      console.log("Setting next billing date: ", nextBillingDate);
+      await patchSubscription(subscriptionid, {
+        nextBillingDate: nextBillingDate,
+      });
+    }
+    return NextResponse.json({ success: true, data: data });
   } catch (error) {
     return NextResponse.json({ success: false, error: error });
   }

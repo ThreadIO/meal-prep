@@ -8,7 +8,15 @@ const SubscriptionSchema = new Schema({
     default: "active",
   },
   paymentMethodId: String,
-  nextBillingDate: Date,
+  payinConfigId: String,
+  nextBillingDate: {
+    type: Date,
+    default: () => {
+      const date = new Date();
+      date.setMonth(date.getMonth() + 1);
+      return date;
+    },
+  },
   amount: Number,
   currency: String,
   billingFrequency: {
