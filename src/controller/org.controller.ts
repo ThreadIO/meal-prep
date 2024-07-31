@@ -7,11 +7,22 @@ import {
 
 export async function getOrgByPropelAuth(orgid: string) {
   try {
-    const org = await Org.findOne({ orgid: orgid });
-    console.log("Org: ", org);
+    const org = await Org.findOne({ orgid: orgid }).populate("subscriptions");
     return NextResponse.json({ success: true, data: org });
   } catch (error) {
-    console.log("Error in Get Org: ", error);
+    console.error("Error in Get Org: ", error);
+    return NextResponse.json({ success: false, error: error }, { status: 400 });
+  }
+}
+
+export async function patchOrgByPropelAuth(orgid: string, body: any) {
+  try {
+    const updatedOrg = await Org.findOneAndUpdate({ orgid: orgid }, body, {
+      new: true,
+    }).populate("subscriptions");
+    return NextResponse.json({ success: true, data: updatedOrg });
+  } catch (error) {
+    console.error("Error in Patch Org: ", error);
     return NextResponse.json({ success: false, error: error }, { status: 400 });
   }
 }

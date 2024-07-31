@@ -299,14 +299,13 @@ export async function getOrg(orgid: string) {
       },
     })
   ).json();
-  if (!success) throw new Error("Error creating org: ", error);
+  if (!success) throw new Error("Error fetching org: " + error);
   return data;
 }
 
-export async function patchOrg(propelAuthOrgid: string, body: any) {
-  console.log("In Patch Org: ", body);
+export async function patchOrg(orgid: string, body: any) {
   const { success, data, error } = await (
-    await fetch(`/api/org/propelauth/${propelAuthOrgid}`, {
+    await fetch(`/api/org/propelauth/${orgid}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -314,7 +313,7 @@ export async function patchOrg(propelAuthOrgid: string, body: any) {
       body: JSON.stringify(body),
     })
   ).json();
-  if (!success) throw new Error("Error updating org: ", error);
+  if (!success) throw new Error("Error updating org: " + error);
   return data;
 }
 

@@ -15,6 +15,7 @@ import { createOrg } from "@/helpers/request";
 import { getData } from "@/helpers/frontend";
 import { patchOrg } from "@/helpers/request";
 import RainforestPayment from "@/components/Payment/RainforestPayment";
+import SubscriptionManager from "@/components/SubscriptionManager";
 
 const Settings = () => {
   const { loading, isLoggedIn, user } = useUser();
@@ -26,6 +27,7 @@ const Settings = () => {
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [payinConfigId, setPayinConfigId] = useState<string | null>(null);
   const [amount, setAmount] = useState<string>("200.00");
+  const [subscriptions, setSubscriptions] = useState([]);
   const [isCreatingPayinConfig, setIsCreatingPayinConfig] =
     useState<boolean>(false);
 
@@ -34,9 +36,29 @@ const Settings = () => {
 
   useEffect(() => {
     if (isLoggedIn && !loading && !orgLoading && currentOrg) {
-      getOrg(currentOrg);
+      fetchOrgData(currentOrg);
     }
   }, [currentOrg, isLoggedIn, loading]);
+
+  const fetchOrgData = async (orgId: string) => {
+    const url = `/api/org/propelauth/${orgId}`;
+    const method = "GET";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    getData(
+      "org",
+      url,
+      method,
+      headers,
+      (data) => {
+        setOrg(data);
+        setSubscriptions(data.subscriptions || []);
+      },
+      setError,
+      setOrgLoading
+    );
+  };
 
   useEffect(() => {
     console.log("Checkout Page: use effect launched");
@@ -139,6 +161,11 @@ const Settings = () => {
     createPayinConfig(amountInCents);
   };
 
+  const handleManageSubscription = (subscriptionId: string) => {
+    // Implement subscription management logic
+    console.log(`Managing subscription: ${subscriptionId}`);
+  };
+
   const renderPaymentBox = () => {
     if (sessionKey && payinConfigId) {
       return (
@@ -151,6 +178,38 @@ const Settings = () => {
     } else if (isCreatingPayinConfig) {
       return <Spinner label="Loading Payment Settings" />;
     }
+  };
+
+  const renderSubscriptionCards = () => {
+    if (subscriptions.length === 0) {
+      return (
+        <>
+          {" "}
+          <Input
+            type="number"
+            label="Amount ($)"
+            placeholder="Enter amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+          <Button
+            color="primary"
+            onClick={handleCreatePayinConfig}
+            isLoading={isCreatingPayinConfig}
+          >
+            Pay
+          </Button>
+        </>
+      );
+    }
+
+    return subscriptions.map((subscription: any) => (
+      <SubscriptionManager
+        key={subscription._id}
+        subscription={subscription}
+        onManage={handleManageSubscription}
+      />
+    ));
   };
 
   const renderSettingPage = () => {
@@ -200,20 +259,7 @@ const Settings = () => {
           <div className="mb-4">
             <h3 className="text-xl font-semibold mb-2">Payment Settings</h3>
             <div className="flex items-center space-x-4">
-              <Input
-                type="number"
-                label="Amount ($)"
-                placeholder="Enter amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-              <Button
-                color="primary"
-                onClick={handleCreatePayinConfig}
-                isLoading={isCreatingPayinConfig}
-              >
-                Pay
-              </Button>
+              {renderSubscriptionCards()}
             </div>
           </div>
           <div className="mb-4">{renderPaymentBox()}</div>
