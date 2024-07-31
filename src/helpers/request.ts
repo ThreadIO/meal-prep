@@ -303,10 +303,10 @@ export async function getOrg(orgid: string) {
   return data;
 }
 
-export async function patchOrg(orgid: string, body: any) {
+export async function patchOrg(propelAuthOrgid: string, body: any) {
   console.log("In Patch Org: ", body);
   const { success, data, error } = await (
-    await fetch(`/api/org/propelauth/${orgid}`, {
+    await fetch(`/api/org/propelauth/${propelAuthOrgid}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -358,5 +358,51 @@ export async function deleteCoupon(couponid: string, body: any) {
     })
   ).json();
   if (!success) throw new Error("Error deleting coupon: ", error);
+  return data;
+}
+
+export async function getAllSubscriptions(
+  mongoDbOrgId: string
+): Promise<any[]> {
+  if (!mongoDbOrgId) throw new Error("No MongoDB Org id present");
+  const response = await fetch("/api/getsubscriptions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orgid: mongoDbOrgId }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch subscriptions");
+  }
+  const data = await response.json();
+  return data.data;
+}
+
+export async function createSubscription(body: any) {
+  console.log("In Create Subscription: ", body);
+  const { success, data, error } = await (
+    await fetch(`/api/subscription`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error creating subscription: ", error);
+  return data;
+}
+
+export async function patchSubscription(subscriptionid: string, body: any) {
+  console.log("In Patch Subscription: ", body);
+  const { success, data, error } = await (
+    await fetch(`/api/subscription/${subscriptionid}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+  ).json();
+  if (!success) throw new Error("Error updating org: ", error);
   return data;
 }

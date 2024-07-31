@@ -12,6 +12,6 @@ export async function POST(request: NextRequest) {
       error: err,
     })
   );
-  const res = await createSubscription(body.orgId, body);
+  const res = await createSubscription(body.orgid, body);
   return res;
 }

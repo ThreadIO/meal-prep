@@ -17,7 +17,7 @@ import Dropdown from "@/components/Dropdown";
 
 interface Subscription {
   _id?: string;
-  orgId: string;
+  orgid: string;
   status: "active" | "cancelled" | "paused";
   amount: number;
   currency: string;
@@ -26,8 +26,8 @@ interface Subscription {
 }
 
 interface Org {
-  _id?: string;
-  orgId: string;
+  _id: string;
+  orgid: string;
   name: string;
   merchantid: string;
   url: string;
@@ -50,7 +50,7 @@ export const OrgModal = (props: OrgModalProps) => {
   const [url, setUrl] = useState("");
   const [service, setService] = useState("");
   const [loadingSave, setLoadingSave] = useState(false);
-  const [mongoDbId, setMongoDbId] = useState<string | undefined>(undefined);
+  const [mongoDbId, setMongoDbId] = useState<string>("");
   const [localSubscriptions, setLocalSubscriptions] = useState<Subscription[]>(
     []
   );
@@ -64,13 +64,13 @@ export const OrgModal = (props: OrgModalProps) => {
       setMerchantId(threadOrg.merchantid || "");
       setUrl(threadOrg.url || "");
       setService(threadOrg.service || "");
-      setMongoDbId(threadOrg._id);
+      setMongoDbId(threadOrg._id || "");
     } else if (org) {
       setName(org.name || "");
       setMerchantId("");
       setUrl("");
       setService("");
-      setMongoDbId("");
+      setMongoDbId(org._id || "");
     }
   }, [org, threadOrg]);
 
@@ -196,7 +196,7 @@ export const OrgModal = (props: OrgModalProps) => {
   const handleSave = async () => {
     setLoadingSave(true);
     const formData: Partial<Org> = {
-      orgId: org?.orgId,
+      orgid: org?.orgId,
       _id: mongoDbId,
       name,
       merchantid: merchantId,
@@ -220,7 +220,7 @@ export const OrgModal = (props: OrgModalProps) => {
           // Create new subscription
           await subscriptionMutation.mutateAsync({
             action: "create",
-            data: { ...subscription, orgId: mongoDbId },
+            data: { ...subscription, orgid: mongoDbId },
           });
         }
       }
@@ -248,7 +248,7 @@ export const OrgModal = (props: OrgModalProps) => {
 
   const addSubscription = () => {
     const newSubscription: Subscription = {
-      orgId: mongoDbId || "",
+      orgid: mongoDbId || "",
       status: "active",
       amount: 0,
       currency: "USD",

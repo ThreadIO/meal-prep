@@ -8,6 +8,7 @@ import {
   RadioGroup,
   Image,
   Button,
+  Input,
 } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import { createOrg } from "@/helpers/request";
@@ -24,6 +25,9 @@ const Settings = () => {
   const [orgLoading, setOrgLoading] = useState<boolean>(false);
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [payinConfigId, setPayinConfigId] = useState<string | null>(null);
+  const [amount, setAmount] = useState<string>("200.00");
+  const [isCreatingPayinConfig, setIsCreatingPayinConfig] =
+    useState<boolean>(false);
 
   const validOptions = ["woocommerce"];
   const isInvalid = !validOptions.includes(selectedService);
@@ -63,37 +67,10 @@ const Settings = () => {
       }
     };
 
-    const createPayinConfig = async () => {
-      try {
-        const response = await fetch("api/rainforest/create-payin-config", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const result = await response.json();
-
-        console.log("Got the payin config: ", result);
-
-        const payinConfigId = result.response.data.payin_config_id;
-        setPayinConfigId(payinConfigId);
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Unknown error occurred for grabbing payin config"
-        );
-      }
-    };
-
     if (!sessionKey) {
       fetchSession();
     }
-
-    if (!payinConfigId) {
-      createPayinConfig();
-    }
-  }, [sessionKey, payinConfigId]);
+  }, [sessionKey]);
 
   function getPropelAuthOrg(orgId?: string) {
     if (!orgId) {
@@ -112,12 +89,10 @@ const Settings = () => {
   };
 
   const handleSave = async () => {
-    // Placeholder function for saving settings
     setOrgLoading(true);
     console.log("Org: ", org);
     if (org && Object.keys(org).length > 0) {
-      // Org Exists, patch it
-      await patchOrg(org.id, { service: selectedService });
+      await patchOrg(org.orgid, { service: selectedService });
     } else {
       const body = {
         orgid: currentOrg,
@@ -128,7 +103,40 @@ const Settings = () => {
     }
     getOrg(currentOrg);
     setOrgLoading(false);
-    // Add your save logic here
+  };
+
+  const createPayinConfig = async (amountInCents: number) => {
+    setIsCreatingPayinConfig(true);
+    try {
+      const response = await fetch("api/rainforest/create-payin-config", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: amountInCents,
+        }),
+      });
+      const result = await response.json();
+
+      console.log("Got the payin config: ", result);
+
+      const payinConfigId = result.response.data.payin_config_id;
+      setPayinConfigId(payinConfigId);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred for grabbing payin config"
+      );
+    } finally {
+      setIsCreatingPayinConfig(false);
+    }
+  };
+
+  const handleCreatePayinConfig = () => {
+    const amountInCents = Math.round(parseFloat(amount) * 100);
+    createPayinConfig(amountInCents);
   };
 
   const renderPaymentBox = () => {
@@ -137,9 +145,10 @@ const Settings = () => {
         <RainforestPayment
           sessionKey={sessionKey}
           payinConfigId={payinConfigId}
+          org={org}
         ></RainforestPayment>
       );
-    } else {
+    } else if (isCreatingPayinConfig) {
       return <Spinner label="Loading Payment Settings" />;
     }
   };
@@ -188,14 +197,26 @@ const Settings = () => {
               </Radio>
             </RadioGroup>
           </div>
-          <div className="mb-4">{renderPaymentBox()}</div>
           <div className="mb-4">
-            {/* <h3 className="text-xl font-semibold mb-2">Additional Settings</h3>
-            <div className="flex items-center justify-between">
-              <span>Enable notifications</span>
-              <Switch />
-            </div> */}
+            <h3 className="text-xl font-semibold mb-2">Payment Settings</h3>
+            <div className="flex items-center space-x-4">
+              <Input
+                type="number"
+                label="Amount ($)"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              <Button
+                color="primary"
+                onClick={handleCreatePayinConfig}
+                isLoading={isCreatingPayinConfig}
+              >
+                Pay
+              </Button>
+            </div>
           </div>
+          <div className="mb-4">{renderPaymentBox()}</div>
           <Button color="primary" onClick={handleSave} isLoading={orgLoading}>
             Save Settings
           </Button>

@@ -3,38 +3,41 @@ import fetch from "node-fetch";
 
 const idemptencyStore: { [key: string]: any } = {};
 
-export async function POST() {
-  // Get merchant Id
-  const merchantId = "sbx_mid_2g6zrrR2AgUpICJFqWIc56FRu3Q"; // Test merchant Id
-
-  // TODO: Either take the Idempotency key from the previous method OR create it here
-  const idempotency_key = crypto.randomUUID();
-
-  // TODO: Have this be based on the amount coming from Woocommmerce
-  const amountBilled = 1000; //$10.00
-  const currencyCode = "USD";
-
-  // TODO: change APIKEY to production
-  const auth = process.env.RF_SANDBOX_APIKEY; // Private key
-
-  // TODO: change url to production url
-  const url = "https://api.sandbox.rainforestpay.com/v1/payin_configs";
-  const options = {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-      authorization: `Bearer ${auth}`,
-    },
-    body: JSON.stringify({
-      merchant_id: merchantId,
-      idempotency_key: idempotency_key,
-      amount: amountBilled,
-      currency_code: currencyCode,
-    }),
-  };
-
+export async function POST(request: Request) {
   try {
+    // Parse the request body
+    const body = await request.json().catch(() => ({}));
+
+    // Get merchant Id
+    const merchantId = body.merchantId || "sbx_mid_2g6zrrR2AgUpICJFqWIc56FRu3Q"; // Test merchant Id
+
+    // Use provided idempotency key or generate a new one
+    const idempotency_key = body.idempotencyKey || crypto.randomUUID();
+
+    // Use provided amount or default to 1000 ($10.00)
+    const amountBilled = body.amount || 1000;
+    const currencyCode = body.currencyCode || "USD";
+
+    // TODO: change APIKEY to production
+    const auth = process.env.RF_SANDBOX_APIKEY; // Private key
+
+    // TODO: change url to production url
+    const url = "https://api.sandbox.rainforestpay.com/v1/payin_configs";
+    const options = {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        authorization: `Bearer ${auth}`,
+      },
+      body: JSON.stringify({
+        merchant_id: merchantId,
+        idempotency_key: idempotency_key,
+        amount: amountBilled,
+        currency_code: currencyCode,
+      }),
+    };
+
     // Check DB for payin config
     const payin = checkDBForPayin(idempotency_key);
 

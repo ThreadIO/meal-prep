@@ -53,18 +53,21 @@ export async function createOrg(orgid: string, body: any) {
       subscriptions: [],
     };
     const org = await Org.create(newOrg);
-
-    // Create new subscriptions
-    for (const sub of body.subscriptions) {
-      const { isNew, ...subData } = sub;
-      if (isNew) {
-        await createSubscription(org._id, subData);
+    console.log("Created Org: ", org);
+    if (body.subscriptions && body.subscriptions.length > 0) {
+      // Create new subscriptions
+      for (const sub of body.subscriptions) {
+        const { isNew, ...subData } = sub;
+        if (isNew) {
+          await createSubscription(org._id, subData);
+        }
       }
-    }
 
-    const updatedOrg = await Org.findById(org._id).populate("subscriptions");
-    console.log("Created Org: ", updatedOrg);
-    return NextResponse.json({ success: true, data: updatedOrg });
+      const updatedOrg = await Org.findById(org._id).populate("subscriptions");
+      console.log("Created Org: ", updatedOrg);
+      return NextResponse.json({ success: true, data: updatedOrg });
+    }
+    return NextResponse.json({ success: true, data: org });
   } catch (error) {
     return NextResponse.json({ success: false, error: error });
   }
@@ -96,7 +99,7 @@ export async function patchOrg(orgid: string, body: any = {}) {
       });
 
     if (Object.keys(body).length > 0) {
-      console.log("Body: ", body);
+      console.log("Patch Body: ", body);
 
       // Handle subscriptions separately
       const { subscriptions, ...orgData } = body;
@@ -105,22 +108,25 @@ export async function patchOrg(orgid: string, body: any = {}) {
         new: true,
       });
 
-      // Create new subscriptions and update existing ones
-      for (const sub of subscriptions) {
-        const { isNew, ...subData } = sub;
-        if (isNew) {
-          await createSubscription(orgid, subData);
-        } else {
-          await patchSubscription(sub._id, sub);
+      if (subscriptions && subscriptions.length > 0) {
+        // Create new subscriptions and update existing ones
+        for (const sub of subscriptions) {
+          const { isNew, ...subData } = sub;
+          if (isNew) {
+            await createSubscription(orgid, subData);
+          } else {
+            await patchSubscription(sub._id, sub);
+          }
         }
+
+        // Fetch the updated org with populated subscriptions
+        const finalUpdatedOrg = await Org.findById(updatedOrg._id).populate(
+          "subscriptions"
+        );
+
+        return NextResponse.json({ success: true, data: finalUpdatedOrg });
       }
-
-      // Fetch the updated org with populated subscriptions
-      const finalUpdatedOrg = await Org.findById(updatedOrg._id).populate(
-        "subscriptions"
-      );
-
-      return NextResponse.json({ success: true, data: finalUpdatedOrg });
+      return NextResponse.json({ success: true, data: updatedOrg });
     } else {
       return NextResponse.json({
         success: false,

@@ -151,15 +151,12 @@ export const CouponDiscountType = [
 export const demoFlag = false;
 
 export const org_columns = [
-  { key: "orgId", label: "ID" },
+  { key: "orgId", label: "PropelAuth Org Id" },
   { key: "name", label: "Name" },
   { key: "users", label: "Users" },
 ];
 
 export const user_columns = [
-  { key: "userId", label: "User ID" },
+  { key: "userId", label: "PropelAuth User ID" },
   { key: "email", label: "Email" },
-  { key: "firstName", label: "First Name" },
-  { key: "lastName", label: "Last Name" },
-  { key: "subscription", label: "Subscription" },
 ];

@@ -1,7 +1,7 @@
 import { Schema, model, models } from "mongoose";
 
 const SubscriptionSchema = new Schema({
-  orgId: { type: Schema.Types.ObjectId, ref: "Org" },
+  orgid: { type: Schema.Types.ObjectId, ref: "Org" },
   status: {
     type: String,
     enum: ["active", "cancelled", "paused"],
