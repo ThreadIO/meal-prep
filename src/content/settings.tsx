@@ -15,6 +15,7 @@ import { getData } from "@/helpers/frontend";
 import { patchOrg } from "@/helpers/request";
 import RainforestPayment from "@/components/Payment/RainforestPayment";
 import SubscriptionManager from "@/components/SubscriptionManager";
+import SubscriptionModal from "@/components/Modals/SubscriptionModal";
 
 const Settings = () => {
   const { loading, isLoggedIn, user } = useUser();
@@ -29,6 +30,8 @@ const Settings = () => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [isCreatingPayinConfig, setIsCreatingPayinConfig] =
     useState<boolean>(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
 
   const validOptions = ["woocommerce"];
   const isInvalid = !validOptions.includes(selectedService);
@@ -160,9 +163,13 @@ const Settings = () => {
     createPayinConfig(amountInCents);
   };
 
-  const handleManageSubscription = (subscriptionId: string) => {
-    // Implement subscription management logic
-    console.log(`Managing subscription: ${subscriptionId}`);
+  const handleManageSubscription = (subscription: any) => {
+    setSelectedSubscription(subscription);
+    setIsSubscriptionModalOpen(true);
+  };
+
+  const handleSubscriptionUpdate = () => {
+    fetchOrgData(currentOrg);
   };
 
   const renderPaymentBox = () => {
@@ -214,7 +221,7 @@ const Settings = () => {
       <SubscriptionManager
         key={subscription._id}
         subscription={subscription}
-        onManage={handleManageSubscription}
+        onManage={() => handleManageSubscription(subscription)}
       />
     ));
   };
@@ -271,7 +278,19 @@ const Settings = () => {
       );
     }
   };
-  return renderSettingPage();
+  return (
+    <>
+      {renderSettingPage()}
+      {selectedSubscription && (
+        <SubscriptionModal
+          isOpen={isSubscriptionModalOpen}
+          onClose={() => setIsSubscriptionModalOpen(false)}
+          subscription={selectedSubscription}
+          onUpdate={handleSubscriptionUpdate}
+        />
+      )}
+    </>
+  );
 };
 
 export default Settings;
