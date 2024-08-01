@@ -13,22 +13,91 @@ import { useEffect, useState } from "react";
 import { createOrg } from "@/helpers/request";
 import { getData } from "@/helpers/frontend";
 import { patchOrg } from "@/helpers/request";
+import RainforestPayment from "@/components/Payment/RainforestPayment";
+import SubscriptionManager from "@/components/SubscriptionManager";
+import SubscriptionModal from "@/components/Modals/SubscriptionModal";
 
 const Settings = () => {
   const { loading, isLoggedIn, user } = useUser();
   const { currentOrg } = useOrgContext();
   const [selectedService, setSelectedService] = useState("woocommerce");
-  const [org, setOrg] = useState<any>();
+  const [org, setOrg] = useState<any>({});
   const [error, setError] = useState<string>("");
   const [orgLoading, setOrgLoading] = useState<boolean>(false);
+  const [sessionKey, setSessionKey] = useState<string | null>(null);
+  const [payinConfigId, setPayinConfigId] = useState<string | null>(null);
+  const [amount] = useState<string>("100.00");
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [isCreatingPayinConfig, setIsCreatingPayinConfig] =
+    useState<boolean>(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
+
   const validOptions = ["woocommerce"];
   const isInvalid = !validOptions.includes(selectedService);
 
+  const pa_Org = user?.getOrg(currentOrg);
+  const isOwner = pa_Org?.isRole("Owner");
+
   useEffect(() => {
     if (isLoggedIn && !loading && !orgLoading && currentOrg) {
-      getOrg(currentOrg);
+      fetchOrgData(currentOrg);
     }
   }, [currentOrg, isLoggedIn, loading]);
+
+  const fetchOrgData = async (orgId: string) => {
+    const url = `/api/org/propelauth/${orgId}`;
+    const method = "GET";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    getData(
+      "org",
+      url,
+      method,
+      headers,
+      (data) => {
+        setOrg(data || {});
+        setSubscriptions(data.subscriptions || []);
+      },
+      setError,
+      setOrgLoading
+    );
+  };
+
+  useEffect(() => {
+    console.log("Checkout Page: use effect launched");
+    const fetchSession = async () => {
+      try {
+        const response = await fetch("api/rainforest/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            // TODO fix this for the future
+            sessionType: "",
+            merchantId: "",
+          }),
+        });
+        const result = await response.json();
+        console.log("Got session key for payment: ", result);
+
+        const sessionKey = result.response.data.session_key;
+        setSessionKey(sessionKey);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unknown error occurred for grabbing session key"
+        );
+      }
+    };
+
+    if (!sessionKey) {
+      fetchSession();
+    }
+  }, [sessionKey]);
 
   function getPropelAuthOrg(orgId?: string) {
     if (!orgId) {
@@ -47,12 +116,10 @@ const Settings = () => {
   };
 
   const handleSave = async () => {
-    // Placeholder function for saving settings
     setOrgLoading(true);
     console.log("Org: ", org);
     if (org && Object.keys(org).length > 0) {
-      // Org Exists, patch it
-      await patchOrg(org.id, { service: selectedService });
+      await patchOrg(org.orgid, { service: selectedService });
     } else {
       const body = {
         orgid: currentOrg,
@@ -63,7 +130,104 @@ const Settings = () => {
     }
     getOrg(currentOrg);
     setOrgLoading(false);
-    // Add your save logic here
+  };
+
+  const createPayinConfig = async (amountInCents: number) => {
+    setIsCreatingPayinConfig(true);
+    try {
+      const response = await fetch("api/rainforest/create-payin-config", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: amountInCents,
+        }),
+      });
+      const result = await response.json();
+
+      console.log("Got the payin config: ", result);
+
+      const payinConfigId = result.response.data.payin_config_id;
+      setPayinConfigId(payinConfigId);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred for grabbing payin config"
+      );
+    } finally {
+      setIsCreatingPayinConfig(false);
+    }
+  };
+
+  const handleCreatePayinConfig = () => {
+    const amountInCents = Math.round(parseFloat(amount) * 100);
+    createPayinConfig(amountInCents);
+  };
+
+  const handleManageSubscription = (subscription: any) => {
+    setSelectedSubscription(subscription);
+    setIsSubscriptionModalOpen(true);
+  };
+
+  const handleSubscriptionUpdate = () => {
+    fetchOrgData(currentOrg);
+  };
+
+  const renderPaymentBox = () => {
+    if (sessionKey && payinConfigId) {
+      return (
+        <RainforestPayment
+          sessionKey={sessionKey}
+          payinConfigId={payinConfigId}
+          org={org}
+        ></RainforestPayment>
+      );
+    } else if (isCreatingPayinConfig) {
+      return <Spinner label="Loading Payment Settings" />;
+    }
+  };
+
+  const renderPaymentSettings = () => {
+    if (org && Object.keys(org).length > 0 && isOwner) {
+      // Check if the owner for now, under a "beta flag"
+      return (
+        <>
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold mb-2">Payment Settings</h3>
+            <div className="flex items-center space-x-4">
+              {renderSubscriptionCards()}
+            </div>
+          </div>
+          <div className="mb-4">{renderPaymentBox()}</div>
+        </>
+      );
+    }
+  };
+
+  const renderSubscriptionCards = () => {
+    if (subscriptions.length === 0) {
+      return (
+        <>
+          <Button
+            color="primary"
+            onClick={handleCreatePayinConfig}
+            isLoading={isCreatingPayinConfig}
+          >
+            Pay $100.00
+          </Button>
+        </>
+      );
+    }
+
+    return subscriptions.map((subscription: any) => (
+      <SubscriptionManager
+        key={subscription._id}
+        subscription={subscription}
+        onManage={() => handleManageSubscription(subscription)}
+      />
+    ));
   };
 
   const renderSettingPage = () => {
@@ -110,13 +274,7 @@ const Settings = () => {
               </Radio>
             </RadioGroup>
           </div>
-          <div className="mb-4">
-            {/* <h3 className="text-xl font-semibold mb-2">Additional Settings</h3>
-            <div className="flex items-center justify-between">
-              <span>Enable notifications</span>
-              <Switch />
-            </div> */}
-          </div>
+          {renderPaymentSettings()}
           <Button color="primary" onClick={handleSave} isLoading={orgLoading}>
             Save Settings
           </Button>
@@ -124,7 +282,19 @@ const Settings = () => {
       );
     }
   };
-  return renderSettingPage();
+  return (
+    <>
+      {renderSettingPage()}
+      {selectedSubscription && (
+        <SubscriptionModal
+          isOpen={isSubscriptionModalOpen}
+          onClose={() => setIsSubscriptionModalOpen(false)}
+          subscription={selectedSubscription}
+          onUpdate={handleSubscriptionUpdate}
+        />
+      )}
+    </>
+  );
 };
 
 export default Settings;

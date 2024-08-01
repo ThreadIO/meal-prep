@@ -30,7 +30,7 @@ import {
 } from "@/helpers/frontend";
 import { convertProductAddOnsToOptions } from "@/connectors/woocommerce/options";
 import { useMutation, useQueryClient } from "react-query";
-import ImageUploader from "../Product/ImageUploader";
+import ImageUploader from "@/components/Product/ImageUploader";
 
 interface MealModalProps {
   meal: any;

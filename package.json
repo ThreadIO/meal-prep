@@ -19,6 +19,7 @@
     "@nextui-org/react": "^2.4.1",
     "@nextui-org/spinner": "^2.0.29",
     "@propelauth/nextjs": "^0.0.111",
+    "@propelauth/node": "^2.1.20",
     "@propelauth/react": "^2.0.19",
     "@tailwindcss/forms": "^0.5.7",
     "@types/file-saver": "^2.0.7",

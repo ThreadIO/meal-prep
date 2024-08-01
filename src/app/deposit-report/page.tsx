@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 const RainforestReport = () => {
   const [sessionKey, setSessionKey] = useState<string | null>(null);
-  const [mId] = useState<string>("sbx_mid_2g6zrrR2AgUpICJFqWIc56FRu3Q");
+  const [mId] = useState<string>(process.env.THREAD_MERCHANT_ID || "");
 
   const fetchSession = async () => {
     const response = await fetch("api/rainforest/session", {
