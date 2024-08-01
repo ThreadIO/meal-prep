@@ -8,7 +8,6 @@ import {
   RadioGroup,
   Image,
   Button,
-  Input,
 } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import { createOrg } from "@/helpers/request";
@@ -21,12 +20,12 @@ const Settings = () => {
   const { loading, isLoggedIn, user } = useUser();
   const { currentOrg } = useOrgContext();
   const [selectedService, setSelectedService] = useState("woocommerce");
-  const [org, setOrg] = useState<any>();
+  const [org, setOrg] = useState<any>({});
   const [error, setError] = useState<string>("");
   const [orgLoading, setOrgLoading] = useState<boolean>(false);
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [payinConfigId, setPayinConfigId] = useState<string | null>(null);
-  const [amount, setAmount] = useState<string>("200.00");
+  const [amount] = useState<string>("100.00");
   const [subscriptions, setSubscriptions] = useState([]);
   const [isCreatingPayinConfig, setIsCreatingPayinConfig] =
     useState<boolean>(false);
@@ -52,7 +51,7 @@ const Settings = () => {
       method,
       headers,
       (data) => {
-        setOrg(data);
+        setOrg(data || {});
         setSubscriptions(data.subscriptions || []);
       },
       setError,
@@ -180,24 +179,32 @@ const Settings = () => {
     }
   };
 
+  const renderPaymentSettings = () => {
+    if (org && Object.keys(org).length > 0) {
+      return (
+        <>
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold mb-2">Payment Settings</h3>
+            <div className="flex items-center space-x-4">
+              {renderSubscriptionCards()}
+            </div>
+          </div>
+          <div className="mb-4">{renderPaymentBox()}</div>
+        </>
+      );
+    }
+  };
+
   const renderSubscriptionCards = () => {
     if (subscriptions.length === 0) {
       return (
         <>
-          {" "}
-          <Input
-            type="number"
-            label="Amount ($)"
-            placeholder="Enter amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
           <Button
             color="primary"
             onClick={handleCreatePayinConfig}
             isLoading={isCreatingPayinConfig}
           >
-            Pay
+            Pay $100.00
           </Button>
         </>
       );
@@ -256,13 +263,7 @@ const Settings = () => {
               </Radio>
             </RadioGroup>
           </div>
-          <div className="mb-4">
-            <h3 className="text-xl font-semibold mb-2">Payment Settings</h3>
-            <div className="flex items-center space-x-4">
-              {renderSubscriptionCards()}
-            </div>
-          </div>
-          <div className="mb-4">{renderPaymentBox()}</div>
+          {renderPaymentSettings()}
           <Button color="primary" onClick={handleSave} isLoading={orgLoading}>
             Save Settings
           </Button>

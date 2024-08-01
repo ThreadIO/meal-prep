@@ -62,12 +62,16 @@ const RainforestPayment: React.FC<RainforestPaymentProps> = ({
         const currency = paymentEvent.detail[0]?.data?.currency_code;
         if (pId) {
           try {
+            console.log("Org: ", org);
             if (org) {
               await createSubscription({
                 orgid: org._id,
                 paymentMethodId: paymentMethodId,
                 amount: amount,
                 currency: currency,
+                nextBillingDate: new Date(
+                  new Date().setHours(0, 0, 0, 0) + 30 * 24 * 60 * 60 * 1000
+                ).toISOString(),
               });
             }
             const receiptSessionKey = await fetchReceiptSession(pId);

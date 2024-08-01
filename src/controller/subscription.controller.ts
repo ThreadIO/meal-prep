@@ -185,10 +185,78 @@ export async function triggerSubscription(
     await session.commitTransaction();
     session.endSession();
 
+    console.log("Subscription triggered successfully");
+    console.log("Data: ", data);
+
     return NextResponse.json({ success: true, data: data });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     return NextResponse.json({ success: false, error: error });
   }
+}
+
+export async function checkSubscriptions() {
+  const session = await startSession();
+  session.startTransaction();
+
+  try {
+    const currentDate = new Date();
+    const subscriptions = await Subscription.find({
+      nextBillingDate: { $lte: currentDate },
+      status: "active",
+    }).session(session);
+
+    const results = [];
+
+    for (const subscription of subscriptions) {
+      const nextBillingDate = calculateNextBillingDate(subscription);
+      const result = await triggerSubscription(
+        subscription._id.toString(),
+        nextBillingDate
+      );
+      const data = await result.json();
+      results.push(data);
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    console.log("Results: ", results);
+    return NextResponse.json({ success: true, data: results });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error checking subscriptions:", error);
+    return NextResponse.json({ success: false, error: error });
+  }
+}
+
+function calculateNextBillingDate(subscription: any) {
+  const currentDate = new Date();
+  let nextDate = new Date(subscription.nextBillingDate);
+
+  while (nextDate <= currentDate) {
+    switch (subscription.billingFrequency) {
+      case "weekly":
+        nextDate.setDate(nextDate.getDate() + 7 * subscription.billingInterval);
+        break;
+      case "monthly":
+        nextDate.setMonth(
+          nextDate.getMonth() + 1 * subscription.billingInterval
+        );
+        break;
+      case "quarterly":
+        nextDate.setMonth(
+          nextDate.getMonth() + 3 * subscription.billingInterval
+        );
+        break;
+      case "yearly":
+        nextDate.setFullYear(
+          nextDate.getFullYear() + 1 * subscription.billingInterval
+        );
+        break;
+    }
+  }
+
+  return nextDate;
 }

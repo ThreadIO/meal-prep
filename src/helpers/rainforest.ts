@@ -11,13 +11,13 @@ interface PayinConfigBody {
 
 export async function createPayinConfig(body: PayinConfigBody) {
   try {
-    const merchantId = body.merchantId || "sbx_mid_2g6zrrR2AgUpICJFqWIc56FRu3Q";
+    const merchantId = body.merchantId || process.env.THREAD_MERCHANT_ID;
     const idempotency_key = body.idempotencyKey || crypto.randomUUID();
     const amountBilled = body.amount || 1000;
     const currencyCode = body.currencyCode || "USD";
 
     // TODO: change APIKEY to production
-    const auth = process.env.RF_SANDBOX_APIKEY;
+    const auth = process.env.RF_APIKEY;
 
     // TODO: change url to production url
     const url = "https://api.sandbox.rainforestpay.com/v1/payin_configs";
@@ -71,7 +71,7 @@ export async function createPayinFromPaymentMethod(
   payinConfigId: string
 ) {
   try {
-    const auth = process.env.RF_SANDBOX_APIKEY;
+    const auth = process.env.RF_APIKEY;
     const url = `https://api.sandbox.rainforestpay.com/v1/payment_methods/${paymentMethodId}/payin`;
     const options = {
       method: "POST",

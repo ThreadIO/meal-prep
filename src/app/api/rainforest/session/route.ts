@@ -11,7 +11,7 @@ import fetch from "node-fetch";
 
 export async function POST(request: NextRequest) {
   // Get merchant Id
-  const auth = process.env.RF_SANDBOX_APIKEY; // Private key
+  const auth = process.env.RF_APIKEY; // Private key
 
   const url = "https://api.sandbox.rainforestpay.com/v1/sessions";
 
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
             permissions: ["group#payment_component"],
             // TODO: remove hardcoded merchant Id
             constraints: {
-              merchant: { merchant_id: "sbx_mid_2g6zrrR2AgUpICJFqWIc56FRu3Q" },
+              merchant: { merchant_id: process.env.THREAD_MERCHANT_ID },
             },
           },
         ],
