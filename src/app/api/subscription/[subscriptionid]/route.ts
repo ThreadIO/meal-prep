@@ -24,7 +24,10 @@ export async function PATCH(request: NextRequest, context: { params: Params }) {
   return res;
 }
 
-export async function DELETE(context: { params: Params }) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Params }
+) {
   connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
     NextResponse.json({
       success: false,
