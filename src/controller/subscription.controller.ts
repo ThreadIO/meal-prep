@@ -5,6 +5,7 @@ import {
   createPayinConfig,
   createPayinFromPaymentMethod,
 } from "@/helpers/rainforest";
+import { startSession } from "mongoose";
 /** POST: http://localhost:3000/api/getsubscriptions */
 export async function getSubscriptions(orgid: string) {
   try {
@@ -124,19 +125,35 @@ export async function triggerSubscription(
   subscriptionid: string,
   nextBillingDate: Date | null = null
 ) {
-  try {
-    if (!subscriptionid)
-      return NextResponse.json({
-        success: false,
-        error: "No subscription id present...!",
-      });
+  const session = await startSession();
+  session.startTransaction();
 
-    const subscription = await Subscription.findById(subscriptionid);
-    if (!subscription)
+  try {
+    if (!subscriptionid) {
+      throw new Error("No subscription id present...!");
+    }
+
+    const subscription =
+      await Subscription.findById(subscriptionid).session(session);
+    if (!subscription) {
+      throw new Error("Subscription not found...!");
+    }
+
+    // Generate a unique identifier for this billing cycle
+    const billingCycleId = `${subscriptionid}_${subscription.nextBillingDate.toISOString()}`;
+
+    // Check if this billing cycle has already been processed
+    if (
+      subscription.processedBillingCycles &&
+      subscription.processedBillingCycles.includes(billingCycleId)
+    ) {
+      await session.abortTransaction();
+      session.endSession();
       return NextResponse.json({
-        success: false,
-        error: "Subscription not found...!",
+        success: true,
+        message: "Billing cycle already processed",
       });
+    }
 
     console.log("Triggering subscription: ", subscription);
     const payinConfigReponse = await createPayinConfig({
@@ -151,14 +168,27 @@ export async function triggerSubscription(
     );
     const data = (response.response as { data: any }).data;
     console.log("Payin Response: ", response);
+
+    // Update the subscription with the processed billing cycle and new billing date
+    const updateData: any = {
+      $push: { processedBillingCycles: billingCycleId },
+    };
     if (nextBillingDate) {
       console.log("Setting next billing date: ", nextBillingDate);
-      await patchSubscription(subscriptionid, {
-        nextBillingDate: nextBillingDate,
-      });
+      updateData.nextBillingDate = nextBillingDate;
     }
+
+    await Subscription.findByIdAndUpdate(subscriptionid, updateData, {
+      session,
+    });
+
+    await session.commitTransaction();
+    session.endSession();
+
     return NextResponse.json({ success: true, data: data });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     return NextResponse.json({ success: false, error: error });
   }
 }

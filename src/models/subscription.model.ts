@@ -31,6 +31,10 @@ const SubscriptionSchema = new Schema({
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  processedBillingCycles: [String],
 });
+
+// Add a compound index for faster lookups
+SubscriptionSchema.index({ orgid: 1, nextBillingDate: 1 });
 
 export default models.Subscription || model("Subscription", SubscriptionSchema);
