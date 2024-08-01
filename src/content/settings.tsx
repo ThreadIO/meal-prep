@@ -36,6 +36,9 @@ const Settings = () => {
   const validOptions = ["woocommerce"];
   const isInvalid = !validOptions.includes(selectedService);
 
+  const pa_Org = user?.getOrg(currentOrg);
+  const isOwner = pa_Org?.isRole("Owner");
+
   useEffect(() => {
     if (isLoggedIn && !loading && !orgLoading && currentOrg) {
       fetchOrgData(currentOrg);
@@ -187,7 +190,8 @@ const Settings = () => {
   };
 
   const renderPaymentSettings = () => {
-    if (org && Object.keys(org).length > 0) {
+    if (org && Object.keys(org).length > 0 && isOwner) {
+      // Check if the owner for now, under a "beta flag"
       return (
         <>
           <div className="mb-4">
