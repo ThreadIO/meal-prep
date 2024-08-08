@@ -20,7 +20,7 @@ export async function createPayinConfig(body: PayinConfigBody) {
     const auth = process.env.RF_APIKEY;
 
     // TODO: change url to production url
-    const url = "https://api.sandbox.rainforestpay.com/v1/payin_configs";
+    const url = process.env.RAINFOREST_URL + "/v1/payin_configs";
     const options = {
       method: "POST",
       headers: {
@@ -72,7 +72,9 @@ export async function createPayinFromPaymentMethod(
 ) {
   try {
     const auth = process.env.RF_APIKEY;
-    const url = `https://api.sandbox.rainforestpay.com/v1/payment_methods/${paymentMethodId}/payin`;
+    const url =
+      process.env.RAINFOREST_URL +
+      `/v1/payment_methods/${paymentMethodId}/payin`;
     const options = {
       method: "POST",
       headers: {

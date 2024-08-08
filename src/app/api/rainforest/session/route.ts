@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   // Get merchant Id
   const auth = process.env.RF_APIKEY; // Private key
 
-  const url = "https://api.sandbox.rainforestpay.com/v1/sessions";
+  const url = process.env.RAINFOREST_URL + "/v1/sessions";
 
   const body = await request.text();
   const parsedBody = body ? JSON.parse(body) : null; // TOOD: if it goes to null, pulling the variables throws an error
