@@ -35,6 +35,8 @@ const Meals = () => {
     () => getProducts(user?.userId ?? ""),
     {
       enabled: !!user?.userId,
+      staleTime: 0, // Consider the data stale immediately
+      cacheTime: 0, // Don't cache the data
     }
   );
 
@@ -57,6 +59,11 @@ const Meals = () => {
     const newFilteredProducts = getFilteredProducts();
     setFilteredProducts(newFilteredProducts);
   }, [selectedKeys, selectedStockStatus, products]);
+
+  useEffect(() => {
+    console.log("Invalidating Queries");
+    queryClient.invalidateQueries(["products", user?.userId]);
+  }, [selectedKeys, selectedStockStatus, queryClient, user?.userId]);
 
   const handleCloseProductModal = () => {
     setOpenProduct(false);
@@ -217,6 +224,7 @@ const Meals = () => {
   };
 
   const renderProducts = (filteredProducts: any[]) => {
+    console.log("Products to render: ", filteredProducts);
     if (layout === "grid") {
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
