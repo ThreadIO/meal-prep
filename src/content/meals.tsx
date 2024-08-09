@@ -16,12 +16,22 @@ const Meals = () => {
   const { loading, isLoggedIn, user } = useUser();
   const queryClient = useQueryClient();
 
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
+    new Set(["All"])
+  );
+  const [selectedStockStatus, setSelectedStockStatus] = useState<Set<string>>(
+    new Set(["All"])
+  );
+  const [openProduct, setOpenProduct] = useState(false);
+  const [layout, setLayout] = useState<"grid" | "table">("table");
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
+
   const {
     data: products = [],
     isLoading: productsLoading,
     error: productsError,
   } = useQuery(
-    ["products", user?.userId],
+    ["products", user?.userId, selectedKeys, selectedStockStatus],
     () => getProducts(user?.userId ?? ""),
     {
       enabled: !!user?.userId,
@@ -36,21 +46,17 @@ const Meals = () => {
     enabled: !!user?.userId,
   });
 
-  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
-    new Set(["All"])
-  );
-  const [selectedStockStatus, setSelectedStockStatus] = useState<Set<string>>(
-    new Set(["All"])
-  );
-  const [openProduct, setOpenProduct] = useState(false);
-  const [layout, setLayout] = useState<"grid" | "table">("table");
-
   useEffect(() => {
     if (isLoggedIn && !loading) {
       queryClient.invalidateQueries(["products", user?.userId]);
       queryClient.invalidateQueries(["categories", user?.userId]);
     }
   }, [isLoggedIn, loading, queryClient, user?.userId]);
+
+  useEffect(() => {
+    const newFilteredProducts = getFilteredProducts();
+    setFilteredProducts(newFilteredProducts);
+  }, [selectedKeys, selectedStockStatus, products]);
 
   const handleCloseProductModal = () => {
     setOpenProduct(false);
@@ -232,8 +238,8 @@ const Meals = () => {
   };
 
   const renderProductContent = () => {
-    const filteredProducts = getFilteredProducts();
     console.log("Products: ", products);
+    console.log("Filtered Products: ", filteredProducts);
     return (
       <div>
         <div className="text-center mt-5 flex justify-center space-x-4">
