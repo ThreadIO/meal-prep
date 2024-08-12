@@ -182,15 +182,19 @@ export default function OrdersPage() {
     setFilteredOrders(filtered);
   }, [selectedMenuKeys, selectedStatusKeys, orders, deliveryDate, searchTerm]);
 
-  const nameSearch = (orders: any, searchTerm: string) => {
-    // Extract the name search term (after "name:")
-    const nameSearchTerm = searchTerm.slice(5).trim().toLowerCase();
+  const nameSearch = (orders: any[], searchTerm: string) => {
+    // Extract the name search terms (after "name:")
+    const nameSearchTerms = searchTerm
+      .slice(5)
+      .split(",")
+      .map((term: string) => term.trim().toLowerCase());
 
     // Filter orders based on the full name derived from first_name and last_name
-    const filteredOrders = orders.filter((order: any) => {
+    const filteredOrders = orders.filter((order) => {
       const fullName =
         `${order.billing.first_name} ${order.billing.last_name}`.toLowerCase();
-      return fullName.includes(nameSearchTerm);
+      // Check if any of the search terms match the full name
+      return nameSearchTerms.some((term) => fullName.includes(term));
     });
 
     return filteredOrders;
@@ -219,11 +223,10 @@ export default function OrdersPage() {
   };
 
   const filterBySearch = (orders: any[], searchTerm: string) => {
-    // Check if the searchTerm contains "name:"
     if (searchTerm.toLowerCase().startsWith("name:")) {
       return nameSearch(orders, searchTerm);
     } else {
-      // Regular filter based on id field
+      // Regular filter based on id field (unchanged)
       const filteredOrders = orders.filter((order) =>
         order.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -603,7 +606,7 @@ export default function OrdersPage() {
         <div style={{ width: "70%", marginBottom: "10px", marginTop: "20px" }}>
           <Tooltip
             showArrow={true}
-            content='use "name:" at the start to search for names otherwise search by order id'
+            content='Use "name:" followed by comma-separated names to search for multiple customers, or search by order id'
             delay={1000}
             closeDelay={0}
             placement="bottom-start"
