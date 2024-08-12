@@ -1,15 +1,7 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
-import {
-  Button,
-  Spinner,
-  DatePicker,
-  Input,
-  Tooltip,
-  Card,
-  CardBody,
-} from "@nextui-org/react";
-import { useState, useEffect } from "react";
+import { Button, Spinner, DatePicker, Card, CardBody } from "@nextui-org/react";
+import { useState, useEffect, useCallback } from "react";
 import React from "react";
 import { saveAs } from "file-saver";
 import { demoFlag, not_products } from "@/helpers/utils";
@@ -25,9 +17,9 @@ import { today, getLocalTimeZone } from "@internationalized/date";
 import FilterDropdown from "@/components/FilterDropdown";
 import OrderTable from "@/components/Order/OrderTable";
 import { statusOptions } from "@/helpers/utils";
-import { Search } from "lucide-react";
 import Papa from "papaparse";
 import MealSumTable from "@/components/Order/MealSumTable";
+import Searchbar from "@/components/Searchbar";
 
 export default function OrdersPage() {
   const { user } = useUser();
@@ -81,6 +73,10 @@ export default function OrdersPage() {
       return total + parseFloat(order.total);
     }, 0);
   };
+
+  const handleSearch = useCallback((term: string) => {
+    setSearchTerm(term);
+  }, []);
 
   const getOrders = async () => {
     const url = "/api/woocommerce/getorders";
@@ -603,25 +599,12 @@ export default function OrdersPage() {
     // Function to render search bar with adjusted width
     const renderSearchBar = () => {
       return (
-        <div style={{ width: "70%", marginBottom: "10px", marginTop: "20px" }}>
-          <Tooltip
-            showArrow={true}
-            content='Use "name:" followed by comma-separated names to search for multiple customers, or search by order id'
-            delay={1000}
-            closeDelay={0}
-            placement="bottom-start"
-          >
-            <Input
-              size="sm"
-              radius="sm"
-              startContent={<Search />}
-              isClearable
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onClear={() => setSearchTerm("")}
-            />
-          </Tooltip>
-        </div>
+        <Searchbar
+          onSearch={handleSearch}
+          placeholder="Search orders..."
+          tooltipContent='Use "name:" followed by comma-separated names to search for multiple customers, or search by order id'
+          width="70%"
+        />
       );
     };
 
