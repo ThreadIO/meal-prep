@@ -32,7 +32,7 @@ const Meals = () => {
     isLoading: productsLoading,
     error: productsError,
   } = useQuery(
-    ["products", user?.userId, selectedKeys, selectedStockStatus],
+    ["products", user?.userId],
     () => getProducts(user?.userId ?? ""),
     {
       enabled: !!user?.userId,
@@ -55,11 +55,6 @@ const Meals = () => {
       queryClient.invalidateQueries(["categories", user?.userId]);
     }
   }, [isLoggedIn, loading, queryClient, user?.userId]);
-
-  useEffect(() => {
-    console.log("Invalidating Queries");
-    queryClient.invalidateQueries(["products", user?.userId]);
-  }, [selectedKeys, selectedStockStatus, queryClient, user?.userId]);
 
   useEffect(() => {
     const newFilteredProducts = getFilteredProducts();
