@@ -64,7 +64,7 @@ const Meals = () => {
   useEffect(() => {
     const newFilteredProducts = getFilteredProducts();
     setFilteredProducts(newFilteredProducts);
-  }, [selectedKeys, selectedStockStatus, products, searchTerm]);
+  }, [selectedKeys, selectedStockStatus, searchTerm]);
 
   const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);
