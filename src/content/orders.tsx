@@ -503,9 +503,8 @@ export default function OrdersPage() {
         )}
         <StyledButton
           onClick={() => downloadOrders(filteredOrders, startDate, endDate)}
-          text="Download Orders"
+          text="Download Orders Manifest"
         />
-        <StyledButton onClick={() => clear()} text="Clear Orders" />
         {renderCsvDownloadButtons()}
       </div>
     );
@@ -518,20 +517,11 @@ export default function OrdersPage() {
         <StyledButton
           onClick={() =>
             downloadCsv(
-              generateFullCsvData(orders, meals),
-              `orders-${startDate}-${endDate}-full.csv`
-            )
-          }
-          text="Download Full Labels CSV"
-        />
-        <StyledButton
-          onClick={() =>
-            downloadCsv(
               generateFilteredCsvData(filteredOrders, meals),
               `orders-${startDate}-${endDate}-filtered.csv`
             )
           }
-          text="Download Filtered Labels CSV"
+          text="Download Labels Manifest"
         />
       </div>
     );
@@ -609,7 +599,7 @@ export default function OrdersPage() {
     // Function to render search bar with adjusted width
     const renderSearchBar = () => {
       return (
-        <div style={{ width: "70%", marginBottom: "10px" }}>
+        <div style={{ width: "70%", marginBottom: "10px", marginTop: "20px" }}>
           <Tooltip
             showArrow={true}
             content='use "name:" at the start to search for names otherwise search by order id'
@@ -662,6 +652,7 @@ export default function OrdersPage() {
             <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
             {renderStatusFilterDropdown()}
           </div>
+          <StyledButton onClick={() => clear()} text="Clear Orders" />
         </div>
         <div
           style={{
