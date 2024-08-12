@@ -1,20 +1,36 @@
 "use client";
+import { useEffect } from "react";
 import Dropdown from "@/components/Dropdown";
+
 interface FilterDropdownProps {
-  selectedKeys: any;
+  selectedKeys: Set<string>;
   // eslint-disable-next-line no-unused-vars
-  setSelectedKeys: (selectedKeys: any) => void;
-  options: any[];
+  setSelectedKeys: (selectedKeys: Set<string>) => void;
+  options: { name: string }[];
+  preSelectedOptions?: string[];
 }
 
 const FilterDropdown = (props: FilterDropdownProps) => {
-  const { selectedKeys, setSelectedKeys, options } = props;
-  const handleSelectionChange = (keys: Set<any>) => {
-    // Convert set to array for easier manipulation
+  const {
+    selectedKeys,
+    setSelectedKeys,
+    options,
+    preSelectedOptions = [],
+  } = props;
+
+  useEffect(() => {
+    // Initialize with "All" or preSelectedOptions
+    if (preSelectedOptions.length > 0) {
+      setSelectedKeys(new Set(preSelectedOptions));
+    } else {
+      setSelectedKeys(new Set(["All"]));
+    }
+  }, []);
+
+  const handleSelectionChange = (keys: Set<string>) => {
     const newSelectedKeys = new Set(keys);
-    // Check if "All" is selected and there are other selections
+
     if (newSelectedKeys.has("All")) {
-      // Only keep "All" in the selection
       if (selectedKeys.has("All")) {
         newSelectedKeys.delete("All");
         setSelectedKeys(newSelectedKeys);

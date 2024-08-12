@@ -48,7 +48,7 @@ export default function OrdersPage() {
     new Set(["All"])
   );
   const [selectedStatusKeys, setSelectedStatusKeys] = useState<any>(
-    new Set(["All"])
+    new Set(["processing", "completed"])
   );
 
   const [showLineItems, setShowLineItems] = useState(true);
@@ -286,6 +286,7 @@ export default function OrdersPage() {
         selectedKeys={selectedStatusKeys}
         setSelectedKeys={setSelectedStatusKeys}
         options={statusOptions}
+        preSelectedOptions={["processing", "completed"]}
       />
     );
   };

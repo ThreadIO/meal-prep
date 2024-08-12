@@ -108,6 +108,7 @@ export const statusOptions = [
   { name: "cancelled", display: "Cancelled" },
   { name: "refunded", display: "Refunded" },
   { name: "failed", display: "Failed" },
+  { name: "checkout-draft", display: "Abandoned Cart" },
 ];
 
 export const coupon_columns = [
