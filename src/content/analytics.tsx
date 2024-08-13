@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardBody, Spinner } from "@nextui-org/react";
 import { useUser } from "@propelauth/nextjs/client";
+import { useQuery } from "react-query";
 import {
   DollarSign,
   ShoppingCart,
@@ -9,11 +10,11 @@ import {
   Calendar,
 } from "lucide-react";
 
-const formatCurrency = (value: any) => {
+const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(value as number);
+  }).format(value);
 };
 
 const KPICard = ({
@@ -77,67 +78,50 @@ const CustomerMetricCard = ({
   </Card>
 );
 
+const fetchTotalRevenue = async (userId: string) => {
+  const res = await fetch("/api/woocommerce/analytics/total-revenue", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid: userId }),
+  });
+  return res.json();
+};
+
+const fetchLtvMetrics = async (userId: string) => {
+  const res = await fetch("/api/woocommerce/analytics/ltv", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid: userId }),
+  });
+  return res.json();
+};
+
 const AnalyticsDashboard = () => {
   const { user } = useUser();
-  const [totalRevenue, setTotalRevenue] = useState(null);
-  const [orderCount, setOrderCount] = useState<number>(0);
-  const [ltvMetrics, setLtvMetrics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const userId = user?.userId;
-        const currentDate = new Date();
-        const startDate = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          1
-        );
-        const endDate = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth() + 1,
-          0
-        );
+  const queryOptions = {
+    enabled: !!user?.userId,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  };
 
-        const [totalRevenueRes, ltvRes] = await Promise.all([
-          fetch("/api/woocommerce/analytics/total-revenue", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userid: userId }),
-          }),
-          fetch("/api/woocommerce/analytics/ltv", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userid: userId }),
-          }),
-          fetch("/api/woocommerce/analytics/month-revenue", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userid: userId,
-              startDate: startDate.toISOString(),
-              endDate: endDate.toISOString(),
-            }),
-          }),
-        ]);
+  const { data: totalRevenueData, isLoading: totalRevenueLoading } = useQuery(
+    ["totalRevenue", user?.userId],
+    () => fetchTotalRevenue(user?.userId ?? ""),
+    queryOptions
+  );
 
-        const totalRevenueData = await totalRevenueRes.json();
-        const ltvData = await ltvRes.json();
+  const { data: ltvData, isLoading: ltvLoading } = useQuery(
+    ["ltvMetrics", user?.userId],
+    () => fetchLtvMetrics(user?.userId ?? ""),
+    queryOptions
+  );
 
-        setTotalRevenue(totalRevenueData.data.totalRevenue);
-        setOrderCount(totalRevenueData.data.orderCount);
-        setLtvMetrics(ltvData.data.metrics);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user]);
+  const totalRevenue = totalRevenueData?.data?.totalRevenue;
+  const orderCount = totalRevenueData?.data?.orderCount;
+  const ltvMetrics = ltvData?.data?.metrics;
 
   return (
     <div className="p-4">
@@ -147,27 +131,31 @@ const AnalyticsDashboard = () => {
       <div className="flex rounded-lg overflow-hidden border mb-6">
         <KPICard
           title="Total Sales"
-          value={formatCurrency(totalRevenue)}
+          value={totalRevenue ? formatCurrency(totalRevenue) : "-"}
           icon={<DollarSign size={24} />}
-          isLoading={loading}
+          isLoading={totalRevenueLoading}
         />
         <KPICard
           title="Total Orders"
-          value={orderCount}
+          value={orderCount ?? "-"}
           icon={<ShoppingCart size={24} />}
-          isLoading={loading}
+          isLoading={totalRevenueLoading}
         />
         <KPICard
           title="Avg. Order Value"
-          value={formatCurrency(ltvMetrics?.avgOrderValue)}
+          value={
+            ltvMetrics?.avgOrderValue
+              ? formatCurrency(ltvMetrics.avgOrderValue)
+              : "-"
+          }
           icon={<DollarSign size={24} />}
-          isLoading={loading}
+          isLoading={ltvLoading}
         />
         <KPICard
           title="Total Customers"
-          value={ltvMetrics?.totalCustomers}
+          value={ltvMetrics?.totalCustomers ?? "-"}
           icon={<Users size={24} />}
-          isLoading={loading}
+          isLoading={ltvLoading}
         />
       </div>
 
@@ -176,24 +164,40 @@ const AnalyticsDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <CustomerMetricCard
           title="Average Orders per Customer"
-          value={ltvMetrics?.avgPurchaseFrequency.toFixed(2)}
+          value={
+            ltvMetrics?.avgPurchaseFrequency
+              ? ltvMetrics.avgPurchaseFrequency.toFixed(2)
+              : "-"
+          }
           subvalue="Frequency of purchases"
           icon={<Repeat size={20} />}
-          isLoading={loading}
+          isLoading={ltvLoading}
         />
         <CustomerMetricCard
           title="Average Order Value"
-          value={formatCurrency(ltvMetrics?.avgOrderValue.toFixed(2))}
+          value={
+            ltvMetrics?.avgOrderValue
+              ? formatCurrency(ltvMetrics.avgOrderValue)
+              : "-"
+          }
           subvalue="Typical purchase amount"
           icon={<DollarSign size={20} />}
-          isLoading={loading}
+          isLoading={ltvLoading}
         />
         <CustomerMetricCard
           title="Average Customer Lifetime Value"
-          value={formatCurrency(ltvMetrics?.lifetimeValue.toFixed(2))}
-          subvalue={`Over ${ltvMetrics?.avgCustomerLifespan.toFixed(0)} days`}
+          value={
+            ltvMetrics?.lifetimeValue
+              ? formatCurrency(ltvMetrics.lifetimeValue)
+              : "-"
+          }
+          subvalue={
+            ltvMetrics?.avgCustomerLifespan
+              ? `Over ${ltvMetrics.avgCustomerLifespan.toFixed(0)} days`
+              : "-"
+          }
           icon={<Calendar size={20} />}
-          isLoading={loading}
+          isLoading={ltvLoading}
         />
       </div>
     </div>
