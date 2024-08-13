@@ -265,7 +265,6 @@ export default function OrdersPage() {
 
   const renderCategoryFilterDropdown = () => {
     if (products.length > 0 && !productsLoading && !categoriesLoading) {
-      console.log("Products: ", products);
       return (
         <div style={{ textAlign: "center" }}>
           <h3 style={{ marginBottom: "10px" }}>Select Menu:</h3>
@@ -568,7 +567,6 @@ export default function OrdersPage() {
   const renderOrders = () => {
     // State variable to toggle between line items and meal quantities
     // Assuming showLineItems and filteredOrders are defined elsewhere
-
     // Function to calculate the sum of quantities for each meal
     const calculateMealSum = () => {
       const mealSum: { [key: string]: number } = {};

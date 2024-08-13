@@ -17,21 +17,42 @@ export async function POST(request: NextRequest) {
   );
 
   const requestData = await request.json();
-  const { userid } = requestData;
+  const { userid, startPage = 1, pageCount = 10 } = requestData;
 
-  // Get current date and calculate dates for the current and previous month
+  let allOrders: any[] = [];
+  let hasMore = true;
+  let currentPage = startPage;
 
-  // Fetch all orders and customers
-  const allOrdersData = await (await getAll(userid, "orders")).json();
+  while (hasMore) {
+    const ordersResponse = await getAll(userid, "orders", {
+      startPage: currentPage,
+      pageCount,
+    });
+    const ordersData = await ordersResponse.json();
 
-  const allOrders = allOrdersData.data;
-  // Calculate metrics
+    if (ordersData.success) {
+      allOrders = allOrders.concat(ordersData.data);
+      hasMore = ordersData.pagination.hasMore;
+      currentPage += pageCount;
+    } else {
+      return NextResponse.json({
+        success: false,
+        message: "Failed to fetch orders",
+        error: ordersData.message,
+      });
+    }
+  }
+
   const totalRevenue = calculateTotalRevenue(allOrders);
+  const validOrderCount = allOrders.filter(
+    (order) => order.status === "processing" || order.status === "completed"
+  ).length;
 
   return NextResponse.json({
     success: true,
     data: {
       totalRevenue,
+      orderCount: validOrderCount,
     },
   });
 }

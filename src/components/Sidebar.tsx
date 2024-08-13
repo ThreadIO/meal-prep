@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Sidebar, SidebarCTA } from "flowbite-react";
 import {
+  BarChart,
   ClipboardList,
   CookingPot,
   ShoppingBag,
@@ -80,6 +81,13 @@ const SidebarComponent = () => {
               Customers
             </Sidebar.Item>
           )}
+          <Sidebar.Item
+            icon={BarChart}
+            onClick={() => setCurrentPage("analytics")}
+            className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+          >
+            Analytics
+          </Sidebar.Item>
           <Sidebar.Item
             icon={CookingPot}
             onClick={() => setCurrentPage("meals")}

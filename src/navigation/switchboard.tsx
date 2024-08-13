@@ -5,11 +5,14 @@ import OrderContent from "@/content/orders";
 import Settings from "@/content/settings";
 import Coupons from "@/content/coupons";
 import Admin from "@/content/admin";
+import AnalyticsContent from "@/content/analytics";
 const SwitchContent: React.FC = () => {
   const { currentPage } = useNavigationContext();
 
   const renderContent = () => {
     switch (currentPage) {
+      case "analytics":
+        return <AnalyticsContent />;
       case "meals":
         return <MealContent />;
       case "orders":
@@ -22,7 +25,7 @@ const SwitchContent: React.FC = () => {
       case "admin":
         return <Admin />;
       default:
-        return <div></div>;
+        return <AnalyticsContent />;
     }
   };
 

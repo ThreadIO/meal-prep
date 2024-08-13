@@ -19,13 +19,25 @@ function getHeaders(client_key: string, client_secret: string) {
 export async function getAll(
   userid: string,
   object: string,
-  { startDate, endDate }: { startDate?: string; endDate?: string } = {}
+  {
+    startDate,
+    endDate,
+    startPage = 1,
+    pageCount = 10,
+  }: {
+    startDate?: string;
+    endDate?: string;
+    startPage?: number;
+    pageCount?: number;
+  } = {}
 ) {
   try {
     console.log("Inside getAll woocommerce helper function");
     console.log("Object: ", object);
     console.log("Start Date: ", startDate);
     console.log("End Date: ", endDate);
+    console.log("Start Page: ", startPage);
+    console.log("Page Count: ", pageCount);
 
     // Retrieve user data
     const user_response = await (await getUser(userid)).json();
@@ -42,10 +54,11 @@ export async function getAll(
 
     // Fetch data from the WooCommerce API
     let allData: any[] = [];
-    let page = 1;
+    let page = startPage;
     let nextPageExists = true;
+    let totalPages = 0;
 
-    while (nextPageExists) {
+    while (nextPageExists && page < startPage + pageCount) {
       // Construct the full URL with query parameters for pagination
       let url = `${endpoint}&page=${page}`;
       if (startDate && endDate) {
@@ -73,9 +86,7 @@ export async function getAll(
         const data = await response.json();
         allData = allData.concat(data);
         // Check if there's a next page
-        const totalPages = parseInt(
-          response.headers.get("x-wp-totalpages") || "0"
-        );
+        totalPages = parseInt(response.headers.get("x-wp-totalpages") || "0");
         nextPageExists = page < totalPages;
         page++;
       } else {
@@ -88,8 +99,20 @@ export async function getAll(
       }
     }
 
-    // Return a successful response with the fetched data
-    return NextResponse.json({ success: true, data: allData }, { status: 200 });
+    // Return a successful response with the fetched data and pagination info
+    return NextResponse.json(
+      {
+        success: true,
+        data: allData,
+        pagination: {
+          currentPage: startPage,
+          pageCount: pageCount,
+          totalPages: totalPages,
+          hasMore: page < totalPages,
+        },
+      },
+      { status: 200 }
+    );
   } catch (error) {
     // Handle any errors that occur during the process
     console.error("Error fetching data:", error);
