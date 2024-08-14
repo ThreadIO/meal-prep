@@ -1,11 +1,13 @@
 import { handleError, initBaseAuth } from "@propelauth/node";
 
 export const propelauth = initBaseAuth({
-  authUrl: process.env.NEXT_PUBLIC_AUTH_URL || "default_auth_url",
+  authUrl:
+    process.env.NEXT_PUBLIC_AUTH_URL || "https://auth.meals.usethread.io",
   apiKey: process.env.PROPELAUTH_API_KEY || "default_api_key",
   manualTokenVerificationMetadata: {
     verifierKey: process.env.PROPELAUTH_VERIFIER_KEY || "default_verifier_key",
-    issuer: process.env.NEXT_PUBLIC_AUTH_URL || "default_auth_url",
+    issuer:
+      process.env.NEXT_PUBLIC_AUTH_URL || "https://auth.meals.usethread.io",
   },
 });
 
