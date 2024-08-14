@@ -3,6 +3,7 @@ import { Card, CardBody, Spinner } from "@nextui-org/react";
 import { useUser } from "@propelauth/nextjs/client";
 import { useQuery } from "react-query";
 import {
+  AlertCircle,
   DollarSign,
   ShoppingCart,
   Users,
@@ -22,11 +23,13 @@ const KPICard = ({
   value,
   icon,
   isLoading,
+  error,
 }: {
   title: string;
   value: number | string;
   icon: React.ReactNode;
   isLoading: boolean;
+  error: any;
 }) => (
   <Card className="flex-1 border-r last:border-r-0" radius="none" shadow="none">
     <CardBody className="p-4">
@@ -35,6 +38,11 @@ const KPICard = ({
           <h3 className="text-sm mb-1">{title}</h3>
           {isLoading ? (
             <Spinner size="sm" />
+          ) : error ? (
+            <div className="flex items-center text-red-500">
+              <AlertCircle size={16} className="mr-1" />
+              <span className="text-xs">Error</span>
+            </div>
           ) : (
             <p className="text-2xl font-bold">{value}</p>
           )}
@@ -51,6 +59,7 @@ type CustomerMetricCardProps = {
   subvalue: string;
   icon: React.ReactNode;
   isLoading: boolean;
+  error: any;
 };
 
 const CustomerMetricCard = ({
@@ -59,6 +68,7 @@ const CustomerMetricCard = ({
   subvalue,
   icon,
   isLoading,
+  error,
 }: CustomerMetricCardProps) => (
   <Card className="flex-1">
     <CardBody className="p-4">
@@ -68,6 +78,13 @@ const CustomerMetricCard = ({
       </div>
       {isLoading ? (
         <Spinner size="sm" />
+      ) : error ? (
+        <div className="flex items-center text-red-500">
+          <AlertCircle size={16} className="mr-1" />
+          <span className="text-xs">
+            Error: {error.message || "Failed to fetch data"}
+          </span>
+        </div>
       ) : (
         <>
           <p className="text-2xl font-bold">{value}</p>
@@ -107,13 +124,21 @@ const AnalyticsDashboard = () => {
     cacheTime: 10 * 60 * 1000, // 10 minutes
   };
 
-  const { data: totalRevenueData, isLoading: totalRevenueLoading } = useQuery(
+  const {
+    data: totalRevenueData,
+    isLoading: totalRevenueLoading,
+    error: totalRevenueError,
+  } = useQuery(
     ["totalRevenue", user?.userId],
     () => fetchTotalRevenue(user?.userId ?? ""),
     queryOptions
   );
 
-  const { data: ltvData, isLoading: ltvLoading } = useQuery(
+  const {
+    data: ltvData,
+    isLoading: ltvLoading,
+    error: ltvError,
+  } = useQuery(
     ["ltvMetrics", user?.userId],
     () => fetchLtvMetrics(user?.userId ?? ""),
     queryOptions
@@ -123,23 +148,27 @@ const AnalyticsDashboard = () => {
   const orderCount = totalRevenueData?.data?.orderCount;
   const ltvMetrics = ltvData?.data?.metrics;
 
-  return (
-    <div className="p-4">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+  console.log("totalRevenueData", totalRevenueData);
+  console.log("ltvData", ltvData);
+  console.log("totalRevenueError", totalRevenueError);
+  console.log("ltvError", ltvError);
 
-      {/* KPI Cards */}
+  const renderKPICards = () => {
+    return (
       <div className="flex rounded-lg overflow-hidden border mb-6">
         <KPICard
           title="Total Sales"
           value={totalRevenue ? formatCurrency(totalRevenue) : "-"}
           icon={<DollarSign size={24} />}
           isLoading={totalRevenueLoading}
+          error={totalRevenueError}
         />
         <KPICard
           title="Total Orders"
           value={orderCount ?? "-"}
           icon={<ShoppingCart size={24} />}
           isLoading={totalRevenueLoading}
+          error={totalRevenueError}
         />
         <KPICard
           title="Avg. Order Value"
@@ -150,17 +179,21 @@ const AnalyticsDashboard = () => {
           }
           icon={<DollarSign size={24} />}
           isLoading={ltvLoading}
+          error={ltvError}
         />
         <KPICard
           title="Total Customers"
           value={ltvMetrics?.totalCustomers ?? "-"}
           icon={<Users size={24} />}
           isLoading={ltvLoading}
+          error={ltvError}
         />
       </div>
+    );
+  };
 
-      {/* Customer Metrics */}
-      <h2 className="text-2xl font-bold mb-4">Customer Insights</h2>
+  const renderCustomerMetricsCard = () => {
+    return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <CustomerMetricCard
           title="Average Orders per Customer"
@@ -172,6 +205,7 @@ const AnalyticsDashboard = () => {
           subvalue="Frequency of purchases"
           icon={<Repeat size={20} />}
           isLoading={ltvLoading}
+          error={ltvError}
         />
         <CustomerMetricCard
           title="Average Order Value"
@@ -183,6 +217,7 @@ const AnalyticsDashboard = () => {
           subvalue="Typical purchase amount"
           icon={<DollarSign size={20} />}
           isLoading={ltvLoading}
+          error={ltvError}
         />
         <CustomerMetricCard
           title="Average Customer Lifetime Value"
@@ -198,8 +233,22 @@ const AnalyticsDashboard = () => {
           }
           icon={<Calendar size={20} />}
           isLoading={ltvLoading}
+          error={ltvError}
         />
       </div>
+    );
+  };
+
+  return (
+    <div className="p-4">
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+
+      {/* KPI Cards */}
+      <div className="mb-6">{renderKPICards()}</div>
+
+      {/* Customer Metrics */}
+      <h2 className="text-2xl font-bold mb-4">Customer Insights</h2>
+      <div className="mb-4">{renderCustomerMetricsCard()}</div>
     </div>
   );
 };

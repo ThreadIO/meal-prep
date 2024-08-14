@@ -25,7 +25,7 @@ const SwitchContent: React.FC = () => {
       case "admin":
         return <Admin />;
       default:
-        return <AnalyticsContent />;
+        return <OrderContent />;
     }
   };
 
