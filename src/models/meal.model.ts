@@ -1,4 +1,4 @@
-import { Schema, model, models } from "mongoose";
+import { Schema, model, models, Types } from "mongoose";
 
 const MealSchema = new Schema({
   mealid: String, // This is the id from the service provider
@@ -15,7 +15,14 @@ const MealSchema = new Schema({
     protein: Number,
     fat: Number,
     carbs: Number,
-    ingredients: String,
+    ingredients: [
+      {
+        ingredient: { type: Types.ObjectId, ref: "Ingredient" },
+        quantity: Number,
+        unit: String,
+        cookStyle: String,
+      },
+    ],
   },
   options: [
     {
@@ -26,6 +33,14 @@ const MealSchema = new Schema({
       protein: Number,
       fat: Number,
       carbs: Number,
+      ingredients: [
+        {
+          ingredient: { type: Types.ObjectId, ref: "Ingredient" },
+          quantity: Number,
+          unit: String,
+          cookStyle: String,
+        },
+      ],
     },
   ],
   custom_options: [
@@ -39,6 +54,14 @@ const MealSchema = new Schema({
           carbs: Number,
           protein: Number,
           fat: Number,
+          ingredients: [
+            {
+              ingredient: { type: Types.ObjectId, ref: "Ingredient" },
+              quantity: Number,
+              unit: String,
+              cookStyle: String,
+            },
+          ],
         },
       ],
     },
