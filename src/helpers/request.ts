@@ -405,3 +405,15 @@ export async function patchSubscription(subscriptionid: string, body: any) {
   if (!success) throw new Error("Error updating org: ", error);
   return data;
 }
+
+export async function getAllIngredients(): Promise<any[]> {
+  const response = await fetch("/api/getingredients", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch ingredients");
+  }
+  const data = await response.json();
+  return data.data;
+}

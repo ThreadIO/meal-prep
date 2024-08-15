@@ -31,6 +31,7 @@ import {
 import { convertProductAddOnsToOptions } from "@/connectors/woocommerce/options";
 import { useMutation, useQueryClient } from "react-query";
 import ImageUploader from "@/components/Product/ImageUploader";
+import { getAllIngredients } from "@/helpers/request";
 
 interface MealModalProps {
   meal: any;
@@ -67,9 +68,16 @@ export const MealModal = (props: MealModalProps) => {
   const [subOptionReorderMode, setSubOptionReorderMode] = useState(false);
 
   const [customOptions, setCustomOptions] = useState<any[]>([]);
+
+  const [ingredients, setIngredients] = useState<any[]>([]);
+
   const { loading, user } = useUser();
   const userId = user?.userId || "";
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    fetchIngredients();
+  }, []);
 
   useEffect(() => {
     if (threadMeal) {
@@ -136,6 +144,19 @@ export const MealModal = (props: MealModalProps) => {
       setOptions(convertProductAddOnsToOptions(meal) || []);
     }
   }, [meal, threadMeal]);
+
+  const fetchIngredients = async () => {
+    try {
+      const fetchedIngredients = await getAllIngredients();
+      setIngredients(fetchedIngredients);
+    } catch (error) {
+      console.error("Error fetching ingredients:", error);
+    }
+  };
+
+  const convertToGrams = (quantity: number, unit: string) => {
+    return unit === "oz" ? quantity * 28.3495 : quantity;
+  };
 
   const mapSelectedTagsToObjects = () => {
     console.log("Selected Keys: ", selectedKeys);
@@ -231,6 +252,134 @@ export const MealModal = (props: MealModalProps) => {
       fat: 0,
     });
     setCustomOptions(updatedOptions);
+  };
+
+  const renderIngredientSelection = (
+    optionIngredients: any[],
+    // eslint-disable-next-line no-unused-vars
+    updateIngredients: (newIngredients: any[]) => void
+  ) => {
+    const addIngredient = () => {
+      updateIngredients([
+        ...optionIngredients,
+        {
+          ingredient: "",
+          quantity: "",
+          unit: "g",
+          cookStyle: "",
+        },
+      ]);
+    };
+
+    return (
+      <Accordion>
+        <AccordionItem key="ingredients" title="Ingredients">
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
+            {renderIngredientList(optionIngredients, updateIngredients)}
+            <Button color="primary" onPress={addIngredient}>
+              Add Ingredient
+            </Button>
+          </div>
+        </AccordionItem>
+      </Accordion>
+    );
+  };
+  const renderIngredientList = (
+    optionIngredients: any[],
+    // eslint-disable-next-line no-unused-vars
+    updateIngredients: (newIngredients: any[]) => void
+  ) => {
+    const handleIngredientChange = (
+      index: number,
+      field: string,
+      value: any
+    ) => {
+      const updatedIngredients = [...optionIngredients];
+      updatedIngredients[index][field] = value;
+      updateIngredients(updatedIngredients);
+    };
+
+    const deleteIngredient = (index: number) => {
+      const updatedIngredients = optionIngredients.filter(
+        (_, i) => i !== index
+      );
+      updateIngredients(updatedIngredients);
+    };
+
+    return (
+      <div>
+        {optionIngredients.map((ingredient, index) => {
+          const ingredientId = ingredient.ingredient;
+          const ingredientName =
+            ingredients.find((ing) => ing._id === ingredientId)?.name || "";
+          return (
+            <div
+              key={index}
+              style={{
+                display: "flex",
+                gap: "1rem",
+                marginBottom: "0.5rem",
+                alignItems: "center",
+              }}
+            >
+              <Dropdown
+                aria_label="Select Ingredient"
+                variant="flat"
+                closeOnSelect={false}
+                disallowEmptySelection
+                selectionMode="single"
+                selectedKeys={new Set([ingredientName])}
+                onSelectionChange={(newIngredient) =>
+                  handleIngredientChange(
+                    index,
+                    "ingredient",
+                    Array.from(newIngredient)[0]
+                  )
+                }
+                items={ingredients}
+              />
+              <Input
+                label="Quantity"
+                type="number"
+                value={ingredient.quantity}
+                onChange={(e) =>
+                  handleIngredientChange(index, "quantity", e.target.value)
+                }
+              />
+              <Dropdown
+                aria_label="Select Unit"
+                variant="flat"
+                closeOnSelect={false}
+                disallowEmptySelection
+                selectionMode="single"
+                selectedKeys={new Set([ingredient.unit])}
+                onSelectionChange={(newUnit) =>
+                  handleIngredientChange(index, "unit", Array.from(newUnit)[0])
+                }
+                items={[{ name: "g" }, { name: "oz" }]}
+              />
+              <Input
+                label="Cook Style"
+                value={ingredient.cookStyle}
+                onChange={(e) =>
+                  handleIngredientChange(index, "cookStyle", e.target.value)
+                }
+              />
+              <Button
+                isIconOnly
+                color="danger"
+                variant="ghost"
+                onPress={() => deleteIngredient(index)}
+              >
+                <X />
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   const renderCustomOptions = () => {
@@ -370,142 +519,144 @@ export const MealModal = (props: MealModalProps) => {
         </div>
         {!reorderMode && (
           <div style={{ marginLeft: "2rem" }}>
-            {option.options.map((subOption: any, subIndex: number) => (
-              <div
-                key={subIndex}
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  marginBottom: "0.5rem",
-                  alignItems: "center",
-                }}
-              >
-                {subOptionReorderMode ? (
-                  <>
+            {option.options.map((subOption: any, subIndex: number) => {
+              return (
+                <div
+                  key={subIndex}
+                  style={{
+                    display: "flex",
+                    gap: "1rem",
+                    marginBottom: "0.5rem",
+                    alignItems: "center",
+                  }}
+                >
+                  {subOptionReorderMode ? (
+                    <>
+                      <Button
+                        onPress={() =>
+                          moveSubOption(parseInt(index), subIndex, "up")
+                        }
+                        isIconOnly
+                        variant="light"
+                      >
+                        <ArrowUp />
+                      </Button>
+                      <Button
+                        onPress={() =>
+                          moveSubOption(parseInt(index), subIndex, "down")
+                        }
+                        isIconOnly
+                        variant="light"
+                      >
+                        <ArrowDown />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        color="success"
+                        variant="light"
+                        onPress={() => setSubOptionReorderMode(false)}
+                      >
+                        <Check />
+                      </Button>
+                    </>
+                  ) : (
                     <Button
-                      onPress={() =>
-                        moveSubOption(parseInt(index), subIndex, "up")
-                      }
                       isIconOnly
                       variant="light"
+                      style={{ cursor: "grab" }}
+                      onPress={() => setSubOptionReorderMode(true)}
                     >
-                      <ArrowUp />
+                      <Grip />
                     </Button>
-                    <Button
-                      onPress={() =>
-                        moveSubOption(parseInt(index), subIndex, "down")
-                      }
-                      isIconOnly
-                      variant="light"
-                    >
-                      <ArrowDown />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      color="success"
-                      variant="light"
-                      onPress={() => setSubOptionReorderMode(false)}
-                    >
-                      <Check />
-                    </Button>
-                  </>
-                ) : (
+                  )}
+                  <Input
+                    label="Sub-option Label"
+                    value={subOption.name}
+                    onChange={(e) =>
+                      handleCustomSubOptionChange(
+                        parseInt(index),
+                        subIndex,
+                        "name",
+                        e.target.value
+                      )
+                    }
+                  />
+                  <Input
+                    label="Price Adjustment"
+                    type="number"
+                    value={subOption.price} // Set price to "0" if it's null or empty string
+                    onChange={(e) =>
+                      handleCustomSubOptionChange(
+                        parseInt(index),
+                        subIndex,
+                        "price",
+                        parseFloat(e.target.value)
+                      )
+                    }
+                  />
+                  <Input
+                    label="Calories"
+                    type="number"
+                    value={subOption.calories}
+                    onChange={(e) =>
+                      handleCustomSubOptionChange(
+                        parseInt(index),
+                        subIndex,
+                        "calories",
+                        parseInt(e.target.value)
+                      )
+                    }
+                  />
+                  <Input
+                    label="Carbs"
+                    type="number"
+                    value={subOption.carbs}
+                    onChange={(e) =>
+                      handleCustomSubOptionChange(
+                        parseInt(index),
+                        subIndex,
+                        "carbs",
+                        parseInt(e.target.value)
+                      )
+                    }
+                  />
+                  <Input
+                    label="Fat"
+                    type="number"
+                    value={subOption.fat}
+                    onChange={(e) =>
+                      handleCustomSubOptionChange(
+                        parseInt(index),
+                        subIndex,
+                        "fat",
+                        parseInt(e.target.value)
+                      )
+                    }
+                  />
+                  <Input
+                    label="Protein"
+                    type="number"
+                    value={subOption.protein}
+                    onChange={(e) =>
+                      handleCustomSubOptionChange(
+                        parseInt(index),
+                        subIndex,
+                        "protein",
+                        parseInt(e.target.value)
+                      )
+                    }
+                  />
                   <Button
                     isIconOnly
-                    variant="light"
-                    style={{ cursor: "grab" }}
-                    onPress={() => setSubOptionReorderMode(true)}
+                    color="danger"
+                    variant="ghost"
+                    onPress={() => deleteSubOption(parseInt(index), subIndex)}
                   >
-                    <Grip />
+                    <X />
                   </Button>
-                )}
-                <Input
-                  label="Sub-option Label"
-                  value={subOption.name}
-                  onChange={(e) =>
-                    handleCustomSubOptionChange(
-                      parseInt(index),
-                      subIndex,
-                      "name",
-                      e.target.value
-                    )
-                  }
-                />
-                <Input
-                  label="Price Adjustment"
-                  type="number"
-                  value={subOption.price} // Set price to "0" if it's null or empty string
-                  onChange={(e) =>
-                    handleCustomSubOptionChange(
-                      parseInt(index),
-                      subIndex,
-                      "price",
-                      parseFloat(e.target.value)
-                    )
-                  }
-                />
-                <Input
-                  label="Calories"
-                  type="number"
-                  value={subOption.calories}
-                  onChange={(e) =>
-                    handleCustomSubOptionChange(
-                      parseInt(index),
-                      subIndex,
-                      "calories",
-                      parseInt(e.target.value)
-                    )
-                  }
-                />
-                <Input
-                  label="Carbs"
-                  type="number"
-                  value={subOption.carbs}
-                  onChange={(e) =>
-                    handleCustomSubOptionChange(
-                      parseInt(index),
-                      subIndex,
-                      "carbs",
-                      parseInt(e.target.value)
-                    )
-                  }
-                />
-                <Input
-                  label="Fat"
-                  type="number"
-                  value={subOption.fat}
-                  onChange={(e) =>
-                    handleCustomSubOptionChange(
-                      parseInt(index),
-                      subIndex,
-                      "fat",
-                      parseInt(e.target.value)
-                    )
-                  }
-                />
-                <Input
-                  label="Protein"
-                  type="number"
-                  value={subOption.protein}
-                  onChange={(e) =>
-                    handleCustomSubOptionChange(
-                      parseInt(index),
-                      subIndex,
-                      "protein",
-                      parseInt(e.target.value)
-                    )
-                  }
-                />
-                <Button
-                  isIconOnly
-                  color="danger"
-                  variant="ghost"
-                  onPress={() => deleteSubOption(parseInt(index), subIndex)}
-                >
-                  <X />
-                </Button>
-              </div>
-            ))}
+                </div>
+              );
+            })}
             <Button
               color="primary"
               onPress={() => addSubOption(parseInt(index))}
@@ -575,8 +726,25 @@ export const MealModal = (props: MealModalProps) => {
       userid: userId,
       tags: selectedTags,
       nutrition_facts: nutritionFacts,
-      options: options,
-      custom_options: customOptions,
+      options: options.map((option) => ({
+        ...option,
+        ingredients: option.ingredients?.map((ing: any) => ({
+          ...ing,
+          quantity: convertToGrams(ing.quantity, ing.unit),
+          unit: "g",
+        })),
+      })),
+      custom_options: customOptions.map((customOption) => ({
+        ...customOption,
+        options: customOption.options.map((option: any) => ({
+          ...option,
+          ingredients: option.ingredients?.map((ing: any) => ({
+            ...ing,
+            quantity: convertToGrams(ing.quantity, ing.unit),
+            unit: "g",
+          })),
+        })),
+      })),
       image: mealImage ? mealImage.src : newProductImage ? newProductImage : "",
       mealid: meal && mode === "patch" ? meal.id : undefined,
     };
@@ -815,112 +983,124 @@ export const MealModal = (props: MealModalProps) => {
       setOptions(updatedOptions);
     };
 
+    const updateOptionIngredients = (newIngredients: any[]) => {
+      const updatedOptions = [...options];
+      updatedOptions[parseInt(index)].ingredients = newIngredients;
+      setOptions(updatedOptions);
+    };
+
     return (
-      <div
-        key={index}
-        style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}
-      >
-        {reorderMode ? (
-          <>
+      <div>
+        <div
+          key={index}
+          style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}
+        >
+          {reorderMode ? (
+            <>
+              <Button
+                onPress={() => moveOption(parseInt(index), "up")}
+                isIconOnly
+                variant="light"
+              >
+                <ArrowUp />
+              </Button>
+              <Button
+                onPress={() => moveOption(parseInt(index), "down")}
+                isIconOnly
+                variant="light"
+              >
+                <ArrowDown />
+              </Button>
+              <Button
+                isIconOnly
+                color="success"
+                variant="light"
+                onPress={() => setReorderMode(false)}
+              >
+                <Check />
+              </Button>
+            </>
+          ) : (
             <Button
-              onPress={() => moveOption(parseInt(index), "up")}
               isIconOnly
               variant="light"
+              style={{ cursor: "grab" }}
+              onPress={() => {
+                setReorderMode(true);
+              }}
             >
-              <ArrowUp />
+              <Grip />
             </Button>
-            <Button
-              onPress={() => moveOption(parseInt(index), "down")}
-              isIconOnly
-              variant="light"
-            >
-              <ArrowDown />
-            </Button>
-            <Button
-              isIconOnly
-              color="success"
-              variant="light"
-              onPress={() => setReorderMode(false)}
-            >
-              <Check />
-            </Button>
-          </>
-        ) : (
-          <Button
-            isIconOnly
-            variant="light"
-            style={{ cursor: "grab" }}
-            onPress={() => {
-              setReorderMode(true);
-            }}
-          >
-            <Grip />
-          </Button>
-        )}
-        <Input
-          label="Option Name"
-          value={option.name}
-          onChange={(e) => handleInputChange("name", e.target.value)}
-        />
-        {!reorderMode && (
-          <>
-            <Input
-              label="Price Adjustment"
-              type="number"
-              defaultValue={"0"}
-              value={option.price_adjustment}
-              onChange={(e) =>
-                handleInputChange(
-                  "price_adjustment",
-                  parseFloat(e.target.value)
-                )
-              }
-            />
-            <Input
-              label="Calories"
-              type="number"
-              defaultValue={"0"}
-              value={option.calories}
-              onChange={(e) =>
-                handleInputChange("calories", parseInt(e.target.value))
-              }
-            />
-            <Input
-              label="Carbs"
-              type="number"
-              defaultValue={"0"}
-              value={option.carbs}
-              onChange={(e) =>
-                handleInputChange("carbs", parseInt(e.target.value))
-              }
-            />
-            <Input
-              label="Fat"
-              type="number"
-              defaultValue={"0"}
-              value={option.fat}
-              onChange={(e) =>
-                handleInputChange("fat", parseInt(e.target.value))
-              }
-            />
-            <Input
-              label="Protein"
-              type="number"
-              defaultValue={"0"}
-              value={option.protein}
-              onChange={(e) =>
-                handleInputChange("protein", parseInt(e.target.value))
-              }
-            />
-            <Button
-              isIconOnly
-              color="danger"
-              variant="ghost"
-              onPress={deleteOption}
-            >
-              <X />
-            </Button>
-          </>
+          )}
+          <Input
+            label="Option Name"
+            value={option.name}
+            onChange={(e) => handleInputChange("name", e.target.value)}
+          />
+          {!reorderMode && (
+            <>
+              <Input
+                label="Price Adjustment"
+                type="number"
+                defaultValue={"0"}
+                value={option.price_adjustment}
+                onChange={(e) =>
+                  handleInputChange(
+                    "price_adjustment",
+                    parseFloat(e.target.value)
+                  )
+                }
+              />
+              <Input
+                label="Calories"
+                type="number"
+                defaultValue={"0"}
+                value={option.calories}
+                onChange={(e) =>
+                  handleInputChange("calories", parseInt(e.target.value))
+                }
+              />
+              <Input
+                label="Carbs"
+                type="number"
+                defaultValue={"0"}
+                value={option.carbs}
+                onChange={(e) =>
+                  handleInputChange("carbs", parseInt(e.target.value))
+                }
+              />
+              <Input
+                label="Fat"
+                type="number"
+                defaultValue={"0"}
+                value={option.fat}
+                onChange={(e) =>
+                  handleInputChange("fat", parseInt(e.target.value))
+                }
+              />
+              <Input
+                label="Protein"
+                type="number"
+                defaultValue={"0"}
+                value={option.protein}
+                onChange={(e) =>
+                  handleInputChange("protein", parseInt(e.target.value))
+                }
+              />
+              <Button
+                isIconOnly
+                color="danger"
+                variant="ghost"
+                onPress={deleteOption}
+              >
+                <X />
+              </Button>
+            </>
+          )}
+        </div>
+        {renderIngredientSelection(
+          option.ingredients || [],
+          updateOptionIngredients
         )}
       </div>
     );
