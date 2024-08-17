@@ -8,6 +8,7 @@ interface FilterDropdownProps {
   setSelectedKeys: (selectedKeys: Set<string>) => void;
   options: { name: string }[];
   preSelectedOptions?: string[];
+  selectionMode?: "single" | "multiple";
 }
 
 const FilterDropdown = (props: FilterDropdownProps) => {
@@ -16,6 +17,7 @@ const FilterDropdown = (props: FilterDropdownProps) => {
     setSelectedKeys,
     options,
     preSelectedOptions = [],
+    selectionMode = "multiple",
   } = props;
 
   useEffect(() => {
@@ -48,7 +50,7 @@ const FilterDropdown = (props: FilterDropdownProps) => {
       variant="flat"
       closeOnSelect={false}
       disallowEmptySelection
-      selectionMode="multiple"
+      selectionMode={selectionMode}
       selectedKeys={selectedKeys}
       onSelectionChange={handleSelectionChange}
       items={[
