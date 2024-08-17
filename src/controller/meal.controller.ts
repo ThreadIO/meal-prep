@@ -183,9 +183,22 @@ export async function patchMeal(mealid: string, url: string, body: any = {}) {
   }
 }
 
-export async function getAllMeals(mealids: [string], url: string) {
+export async function getAllMeals(mealids: string[], url: string) {
   try {
-    const meals = await Meal.find({ mealid: { $in: mealids }, url: url });
+    const meals = await Meal.find({ mealid: { $in: mealids }, url: url })
+      .populate({
+        path: "nutrition_facts.ingredients.ingredient",
+        model: "Ingredient",
+      })
+      .populate({
+        path: "options.ingredients.ingredient",
+        model: "Ingredient",
+      })
+      .populate({
+        path: "custom_options.options.ingredients.ingredient",
+        model: "Ingredient",
+      });
+
     return NextResponse.json({ success: true, data: meals });
   } catch (error) {
     console.log("Error in Get Meal: ", error);

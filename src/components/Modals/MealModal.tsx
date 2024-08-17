@@ -296,8 +296,23 @@ export const MealModal = (props: MealModalProps) => {
       field: string,
       value: any
     ) => {
-      const updatedIngredients = [...optionIngredients];
-      updatedIngredients[index][field] = value;
+      const updatedIngredients = optionIngredients.map((ing, i) => {
+        if (i === index) {
+          if (field === "ingredient") {
+            // If the field is 'ingredient', we need to update the ingredient object
+            return {
+              ...ing,
+              ingredient:
+                ingredients.find((ingredient) => ingredient.name === value)
+                  ?._id || "",
+            };
+          } else {
+            // For other fields, we can update directly
+            return { ...ing, [field]: value };
+          }
+        }
+        return ing;
+      });
       updateIngredients(updatedIngredients);
     };
 

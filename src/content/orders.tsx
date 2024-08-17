@@ -20,6 +20,11 @@ import { statusOptions } from "@/helpers/utils";
 import Papa from "papaparse";
 import MealSumTable from "@/components/Order/MealSumTable";
 import Searchbar from "@/components/Searchbar";
+import {
+  calculateMealSum,
+  prepareOrderedMeals,
+  generateIngredientsReport,
+} from "@/helpers/order";
 
 export default function OrdersPage() {
   const { user } = useUser();
@@ -607,6 +612,15 @@ export default function OrdersPage() {
           />
         )}
         <StyledButton
+          onClick={() =>
+            generateIngredientsReport(
+              meals,
+              prepareOrderedMeals(filteredOrders)
+            )
+          }
+          text="Download Ingredients Report"
+        />
+        <StyledButton
           onClick={() => downloadOrders(filteredOrders, startDate, endDate)}
           text="Download Orders Manifest"
         />
@@ -674,21 +688,6 @@ export default function OrdersPage() {
     // State variable to toggle between line items and meal quantities
     // Assuming showLineItems and filteredOrders are defined elsewhere
     // Function to calculate the sum of quantities for each meal
-    const calculateMealSum = () => {
-      const mealSum: { [key: string]: number } = {};
-
-      filteredOrders.forEach((order) => {
-        order.line_items.forEach((item: any) => {
-          if (mealSum[item.name]) {
-            mealSum[item.name] += item.quantity;
-          } else {
-            mealSum[item.name] = item.quantity;
-          }
-        });
-      });
-
-      return mealSum;
-    };
 
     // Function to render individual order details with line items
     const renderLineItems = () => {
@@ -698,7 +697,7 @@ export default function OrdersPage() {
     };
 
     // Get meal sums
-    const mealSum = calculateMealSum();
+    const mealSum = calculateMealSum(filteredOrders);
 
     // Function to render search bar with adjusted width
     const renderSearchBar = () => {
