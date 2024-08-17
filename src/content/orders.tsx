@@ -50,6 +50,12 @@ export default function OrdersPage() {
   const [deliveryDate, setDeliveryDate] = useState<any>();
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [compositeComponents, setCompositeComponents] = useState<any[]>([]);
+  const [selectedComponent, setSelectedComponent] = useState<any>(
+    new Set(["All"])
+  );
+  const [hasCompositeProducts, setHasCompositeProducts] = useState(false);
+
   useEffect(() => {
     if (user) {
       fetchCategories();
@@ -72,6 +78,83 @@ export default function OrdersPage() {
     return orders.reduce((total: any, order: any) => {
       return total + parseFloat(order.total);
     }, 0);
+  };
+
+  const extractCompositeComponents = (orders: any) => {
+    const components = new Set();
+    orders.forEach((order: any) => {
+      order.line_items.forEach((item: any) => {
+        if (item.composite_parent) {
+          const compositeData = item.meta_data.find(
+            (meta: any) => meta.key === "_composite_data"
+          );
+          if (compositeData && compositeData.value) {
+            Object.values(compositeData.value).forEach((component: any) => {
+              components.add(component.title);
+            });
+          }
+        }
+      });
+    });
+    return Array.from(components);
+  };
+
+  const checkForCompositeProducts = (orders: any) => {
+    return orders.some((order: any) =>
+      order.line_items.some((item: any) => item.composite_parent)
+    );
+  };
+
+  useEffect(() => {
+    if (orders.length > 0) {
+      const hasComposite = checkForCompositeProducts(orders);
+      setHasCompositeProducts(hasComposite);
+      if (hasComposite) {
+        const components = extractCompositeComponents(orders);
+        setCompositeComponents(components);
+      }
+    }
+  }, [orders]);
+
+  const filterOrdersByComponent = (
+    orders: any[],
+    selectedKeys: Set<string>
+  ) => {
+    return orders
+      .map((order) => {
+        const includedProducts = new Set();
+        return {
+          ...order,
+          line_items: order.line_items.filter((item: any) => {
+            if (selectedKeys.has("All")) {
+              return true;
+            }
+            if (item.composite_parent) {
+              const compositeData = item.meta_data.find(
+                (meta: any) => meta.key === "_composite_data"
+              );
+              if (compositeData && compositeData.value) {
+                const matchedComponent = Object.values(
+                  compositeData.value
+                ).find(
+                  (component: any) =>
+                    component.product_id === item.product_id &&
+                    selectedKeys.has(component.title)
+                );
+                if (
+                  matchedComponent &&
+                  !includedProducts.has(item.product_id)
+                ) {
+                  includedProducts.add(item.product_id);
+                  return true;
+                }
+              }
+            }
+            return false;
+          }),
+        };
+      })
+      .filter((order) => order.line_items.length > 0);
   };
 
   const handleSearch = useCallback((term: string) => {
@@ -169,14 +252,22 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    console.log("Local time zone: ", getLocalTimeZone());
     const filtered = getFilteredOrders(
       orders,
       selectedMenuKeys,
-      selectedStatusKeys
+      selectedStatusKeys,
+      selectedComponent
     );
+    console.log("Filtered Orders: ", filtered);
     setFilteredOrders(filtered);
-  }, [selectedMenuKeys, selectedStatusKeys, orders, deliveryDate, searchTerm]);
+  }, [
+    selectedMenuKeys,
+    selectedStatusKeys,
+    orders,
+    deliveryDate,
+    searchTerm,
+    selectedComponent,
+  ]);
 
   const nameSearch = (orders: any[], searchTerm: string) => {
     // Extract the name search terms (after "name:")
@@ -200,22 +291,20 @@ export default function OrdersPage() {
     setOrders(data);
     setFilteredOrders(data);
     console.log("Orders: ", data);
-    console.log("Filtered Orders: ", filteredOrders);
   };
 
   const getFilteredOrders = (
     orders: any[],
     selectedMenuKeys: Set<string>,
-    selectedStatusKeys: Set<string>
+    selectedStatusKeys: Set<string>,
+    selectedComponent: Set<string>
   ) => {
-    const filteredByStatus = filterOrdersByStatus(orders, selectedStatusKeys);
-    const filteredByCategory = filterOrdersByCategory(
-      filteredByStatus,
-      selectedMenuKeys
-    );
-    const filteredByDate = filterOrdersByDate(filteredByCategory, deliveryDate);
-    const filteredBySearch = filterBySearch(filteredByDate, searchTerm);
-    return filteredBySearch;
+    let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
+    filtered = filterOrdersByCategory(filtered, selectedMenuKeys);
+    filtered = filterOrdersByDate(filtered, deliveryDate);
+    filtered = filterOrdersByComponent(filtered, selectedComponent);
+    filtered = filterBySearch(filtered, searchTerm);
+    return filtered;
   };
 
   const filterBySearch = (orders: any[], searchTerm: string) => {
@@ -261,6 +350,23 @@ export default function OrdersPage() {
 
     // Filter the orders where the status is one of the selected keys
     return orders.filter((order) => selectedKeys.has(order.status));
+  };
+
+  const renderComponentFilterDropdown = () => {
+    if (!hasCompositeProducts) return null;
+    return (
+      <div style={{ textAlign: "center" }}>
+        <h3 style={{ marginBottom: "10px" }}>Select Meal:</h3>
+        <FilterDropdown
+          selectedKeys={selectedComponent}
+          setSelectedKeys={setSelectedComponent}
+          options={compositeComponents.map((component) => ({
+            name: component,
+          }))}
+          selectionMode="single"
+        />
+      </div>
+    );
   };
 
   const renderCategoryFilterDropdown = () => {
@@ -633,6 +739,7 @@ export default function OrdersPage() {
             {renderDeliveryDateInputs()}
           </div>
           {renderCategoryFilterDropdown()}
+          {renderComponentFilterDropdown()}
           <div style={{ textAlign: "center" }}>
             <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
             {renderStatusFilterDropdown()}
