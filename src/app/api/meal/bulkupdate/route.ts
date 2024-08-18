@@ -14,7 +14,6 @@ export async function PATCH(request: NextRequest) {
   );
   console.log("Body: ", body);
   console.log("Query: ", query);
-  const res = { success: true, data: [] }; // Turning this off until we can add authentication
   //const res = await bulkPatchMeals(body, query);
-  return res;
+  return NextResponse.json({ success: true, data: [] });
 }
