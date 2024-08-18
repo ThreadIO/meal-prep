@@ -205,3 +205,35 @@ export async function getAllMeals(mealids: string[], url: string) {
     return NextResponse.json({ success: false, error: error }, { status: 400 });
   }
 }
+
+// Query is what we should match on
+export async function bulkPatchMeals(body: any, query: any) {
+  try {
+    const meals = await Meal.find(query)
+      .populate({
+        path: "nutrition_facts.ingredients.ingredient",
+        model: "Ingredient",
+      })
+      .populate({
+        path: "options.ingredients.ingredient",
+        model: "Ingredient",
+      })
+      .populate({
+        path: "custom_options.options.ingredients.ingredient",
+        model: "Ingredient",
+      });
+    const updatedMeals = await Promise.all(
+      meals.map(async (meal) => {
+        const updatedMeal = await (
+          await patchMeal(meal.mealid, meal.url, body)
+        ).json();
+        return updatedMeal.data;
+      })
+    );
+
+    return NextResponse.json({ success: true, data: updatedMeals });
+  } catch (error) {
+    console.log("Error in Get Meal: ", error);
+    return NextResponse.json({ success: false, error: error }, { status: 400 });
+  }
+}
