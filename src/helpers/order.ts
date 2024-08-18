@@ -46,7 +46,12 @@ interface MealOption {
 interface Meal {
   name: string;
   options: MealOption[];
+  nutrition_facts: NutritionFacts;
   custom_options?: Array<{ name: string; options: MealOption[] }>;
+}
+
+interface NutritionFacts {
+  ingredients: Ingredient[];
 }
 
 // Functions
@@ -128,72 +133,104 @@ export function generateIngredientsReport(
 ) {
   const ingredientTotals: Record<
     string,
-    { quantity: number; cookStyle: string }
+    Record<string, { quantity: number; cookStyle: string }>
   > = {};
-
-  console.log("Ordered Meals: ", orderedMeals);
-  console.log("Meals: ", meals);
 
   orderedMeals.forEach(({ name, option, quantity }) => {
     const meal = meals.find((m) => m.name === name);
     if (!meal) return;
 
-    let mealOption: MealOption | undefined;
+    const [sizeOption, ...customOptions] = option.split(" | ");
 
-    // Check regular options
-    mealOption = meal.options.find((o) => o.name === option);
-
-    // if (meal.name == "Buttery Lemon Shrimp Linguine") {
-    //   console.log("Meal: ", meal);
-    //   console.log("Meal Options: ", meal.options);
-    //   console.log("Option: ", option);
-    //   console.log("Meal Option: ", mealOption);
-    // }
-
-    // Check custom options if not found in regular options
-    if (!mealOption && meal.custom_options) {
-      meal.custom_options.forEach((customOption) => {
-        const foundOption = customOption.options.find((o) => o.name === option);
-        if (foundOption) mealOption = foundOption;
-      });
+    // Process size option
+    let mealOption = meal.options.find((o) => o.name === sizeOption);
+    if (mealOption) {
+      processIngredients(mealOption.ingredients, ingredientTotals, quantity);
     }
 
-    if (!mealOption) return;
+    // Process custom options
+    customOptions.forEach((customOption) => {
+      const customMealOption = findCustomOption(meal, customOption);
+      if (customMealOption) {
+        processIngredients(
+          customMealOption.ingredients,
+          ingredientTotals,
+          quantity
+        );
+      }
+    });
 
-    processIngredients(mealOption.ingredients, ingredientTotals, quantity);
+    // If no options were found, use default ingredients
+    if (!mealOption && customOptions.length === 0) {
+      processIngredients(
+        meal.nutrition_facts.ingredients,
+        ingredientTotals,
+        quantity
+      );
+    }
   });
 
-  const csvData = [
-    ["Name of Ingredient", "Style of Cooking", "Amount in G", "Amount in Oz"],
-  ];
-
-  Object.entries(ingredientTotals).forEach(
-    ([name, { quantity, cookStyle }]) => {
+  // Collect and sort ingredient data
+  const sortedIngredientData: [string, string, number, number][] = [];
+  Object.entries(ingredientTotals).forEach(([cookStyle, ingredients]) => {
+    Object.entries(ingredients).forEach(([name, { quantity }]) => {
       const amountInOz = quantity * 0.035274; // Convert grams to ounces
-      csvData.push([
-        name,
-        cookStyle,
-        quantity.toFixed(2),
-        amountInOz.toFixed(2),
-      ]);
-    }
-  );
+      sortedIngredientData.push([name, cookStyle, quantity, amountInOz]);
+    });
+  });
+
+  // Sort the data alphabetically by ingredient name
+  sortedIngredientData.sort((a, b) => a[0].localeCompare(b[0]));
+
+  // Generate CSV data
+  const csvData = [
+    ["Name of Ingredient", "Cooking Style", "Amount in G", "Amount in Oz"],
+    ...sortedIngredientData.map(([name, cookStyle, quantity, amountInOz]) => [
+      name,
+      cookStyle,
+      quantity.toFixed(2),
+      amountInOz.toFixed(2),
+    ]),
+  ];
 
   const csv = Papa.unparse(csvData);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   saveAs(blob, "ingredients_report.csv");
 }
 
+function findCustomOption(
+  meal: Meal,
+  customOption: string
+): MealOption | undefined {
+  for (const customOptionGroup of meal.custom_options || []) {
+    const option = customOptionGroup.options.find(
+      (o) => o.name === customOption
+    );
+    if (option) return option;
+  }
+  return undefined;
+}
+
 function processIngredients(
   ingredients: Ingredient[],
-  totals: Record<string, { quantity: number; cookStyle: string }>,
+  totals: Record<
+    string,
+    Record<string, { quantity: number; cookStyle: string }>
+  >,
   mealQuantity: number
 ) {
   ingredients.forEach((ing) => {
     const { name } = ing.ingredient;
-    if (!totals[name]) {
-      totals[name] = { quantity: 0, cookStyle: ing.cookStyle };
+    const cookStyle = ing.cookStyle || "Unspecified";
+
+    if (!totals[cookStyle]) {
+      totals[cookStyle] = {};
     }
-    totals[name].quantity += ing.quantity * mealQuantity;
+
+    if (!totals[cookStyle][name]) {
+      totals[cookStyle][name] = { quantity: 0, cookStyle };
+    }
+
+    totals[cookStyle][name].quantity += ing.quantity * mealQuantity;
   });
 }
