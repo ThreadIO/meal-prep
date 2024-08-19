@@ -246,10 +246,8 @@ const ProductTable: React.FC<ProductTableProps> = ({
           const selectedProduct = uniqueProducts.find(
             (product: any) => product.id === key
           );
-          if (selectedProduct) {
+          if (selectedProduct && uniqueProducts.length > 0) {
             handleOpenProduct(selectedProduct);
-          } else {
-            console.error(`Product with id ${key} not found`);
           }
         }}
       >

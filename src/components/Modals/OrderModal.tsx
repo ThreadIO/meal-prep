@@ -144,6 +144,12 @@ export const OrderModal = (props: OrderModalProps) => {
               {order.shipping.postcode}
             </p>
           </div>
+          {order.customer_note && (
+            <div className="mt-4">
+              <p className="font-bold">Customer Note:</p>
+              <p className="p-2 rounded-md">{order.customer_note}</p>
+            </div>
+          )}
         </div>
       </Card>
     );
