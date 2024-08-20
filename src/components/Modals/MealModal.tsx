@@ -290,6 +290,7 @@ export const MealModal = (props: MealModalProps) => {
       </Accordion>
     );
   };
+
   const renderIngredientList = (
     optionIngredients: any[],
     // eslint-disable-next-line no-unused-vars
@@ -303,15 +304,15 @@ export const MealModal = (props: MealModalProps) => {
       const updatedIngredients = optionIngredients.map((ing, i) => {
         if (i === index) {
           if (field === "ingredient") {
-            // If the field is 'ingredient', we need to update the ingredient object
+            const selectedIngredient = ingredients.find(
+              (ingredient) => ingredient.name === value
+            );
             return {
               ...ing,
-              ingredient:
-                ingredients.find((ingredient) => ingredient.name === value)
-                  ?._id || "",
+              ingredient: selectedIngredient?._id || "",
+              unit: selectedIngredient?.defaultUnit || "g",
             };
           } else {
-            // For other fields, we can update directly
             return { ...ing, [field]: value };
           }
         }
@@ -331,8 +332,12 @@ export const MealModal = (props: MealModalProps) => {
       <div>
         {optionIngredients.map((ingredient, index) => {
           const ingredientId = ingredient.ingredient;
-          const ingredientName =
-            ingredients.find((ing) => ing._id === ingredientId)?.name || "";
+          const selectedIngredient = ingredients.find(
+            (ing) => ing._id === ingredientId
+          );
+          const ingredientName = selectedIngredient?.name || "";
+          const isCountBased = selectedIngredient?.defaultUnit === "count";
+
           return (
             <div
               key={index}
@@ -360,25 +365,31 @@ export const MealModal = (props: MealModalProps) => {
                 items={ingredients}
               />
               <Input
-                label="Quantity"
+                label={isCountBased ? "Count" : "Quantity"}
                 type="number"
                 value={ingredient.quantity}
                 onChange={(e) =>
                   handleIngredientChange(index, "quantity", e.target.value)
                 }
               />
-              <Dropdown
-                aria_label="Select Unit"
-                variant="flat"
-                closeOnSelect={false}
-                disallowEmptySelection
-                selectionMode="single"
-                selectedKeys={new Set([ingredient.unit])}
-                onSelectionChange={(newUnit) =>
-                  handleIngredientChange(index, "unit", Array.from(newUnit)[0])
-                }
-                items={[{ name: "g" }, { name: "oz" }]}
-              />
+              {!isCountBased && (
+                <Dropdown
+                  aria_label="Select Unit"
+                  variant="flat"
+                  closeOnSelect={false}
+                  disallowEmptySelection
+                  selectionMode="single"
+                  selectedKeys={new Set([ingredient.unit])}
+                  onSelectionChange={(newUnit) =>
+                    handleIngredientChange(
+                      index,
+                      "unit",
+                      Array.from(newUnit)[0]
+                    )
+                  }
+                  items={[{ name: "g" }, { name: "oz" }]}
+                />
+              )}
               <Input
                 label="Cook Style"
                 value={ingredient.cookStyle}
@@ -736,6 +747,30 @@ export const MealModal = (props: MealModalProps) => {
     }
   }
 
+  const saveIngredients = (ingredients: any[]) => {
+    if (ingredients.length === 0) {
+      return [];
+    }
+    return ingredients.map((ing: any) => {
+      const selectedIngredient = ingredients.find(
+        (i) => i._id === ing.ingredient
+      );
+      if (selectedIngredient?.defaultUnit === "count") {
+        return {
+          ...ing,
+          quantity: parseInt(ing.quantity),
+          unit: "count",
+        };
+      } else {
+        return {
+          ...ing,
+          quantity: convertToGrams(ing.quantity, ing.unit),
+          unit: "g",
+        };
+      }
+    });
+  };
+
   const handleSave = async () => {
     setLoadingSave(true);
     const selectedTags = Array.from(
@@ -744,7 +779,6 @@ export const MealModal = (props: MealModalProps) => {
     );
 
     // Upload Image
-    // If new product, upload image to S3 Bucket
     await uploadImageToS3(uploadedImage);
 
     const selectedStockStatusString =
@@ -761,29 +795,17 @@ export const MealModal = (props: MealModalProps) => {
       tags: selectedTags,
       nutrition_facts: {
         ...nutritionFacts,
-        ingredients: nutritionFacts.ingredients.map((ing: any) => ({
-          ...ing,
-          quantity: convertToGrams(ing.quantity, ing.unit),
-          unit: "g",
-        })),
+        ingredients: saveIngredients(nutritionFacts.ingredients),
       },
       options: options.map((option) => ({
         ...option,
-        ingredients: option.ingredients?.map((ing: any) => ({
-          ...ing,
-          quantity: convertToGrams(ing.quantity, ing.unit),
-          unit: "g",
-        })),
+        ingredients: saveIngredients(option.ingredients || []),
       })),
       custom_options: customOptions.map((customOption) => ({
         ...customOption,
         options: customOption.options.map((option: any) => ({
           ...option,
-          ingredients: option.ingredients?.map((ing: any) => ({
-            ...ing,
-            quantity: convertToGrams(ing.quantity, ing.unit),
-            unit: "g",
-          })),
+          ingredients: saveIngredients(option.ingredients || []),
         })),
       })),
       image: mealImage ? mealImage.src : newProductImage ? newProductImage : "",
