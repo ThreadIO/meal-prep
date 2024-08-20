@@ -133,9 +133,11 @@ export function generateIngredientsReport(
 ) {
   const ingredientTotals: Record<
     string,
-    Record<string, { quantity: number; cookStyle: string }>
+    Record<string, { quantity: number; cookStyle: string; unit: string }>
   > = {};
 
+  console.log("Ordered Meals: ", orderedMeals);
+  console.log("Meals: ", meals);
   orderedMeals.forEach(({ name, option, quantity }) => {
     const meal = meals.find((m) => m.name === name);
     if (!meal) return;
@@ -171,18 +173,30 @@ export function generateIngredientsReport(
   });
 
   // Collect and sort ingredient data
-  const sortedIngredientData: [string, string, number, number, number][] = [];
+  const sortedIngredientData: [
+    string,
+    string,
+    number,
+    number,
+    number,
+    number,
+  ][] = [];
   Object.entries(ingredientTotals).forEach(([cookStyle, ingredients]) => {
-    Object.entries(ingredients).forEach(([name, { quantity }]) => {
-      const amountInOz = quantity * 0.035274; // Convert grams to ounces
-      const amountInLbs = quantity * 0.00220462; // Convert grams to pounds
-      sortedIngredientData.push([
-        name,
-        cookStyle,
-        quantity,
-        amountInOz,
-        amountInLbs,
-      ]);
+    Object.entries(ingredients).forEach(([name, { quantity, unit }]) => {
+      if (unit === "count") {
+        sortedIngredientData.push([name, cookStyle, 0, 0, 0, quantity]);
+      } else {
+        const amountInOz = quantity * 0.035274; // Convert grams to ounces
+        const amountInLbs = quantity * 0.00220462; // Convert grams to pounds
+        sortedIngredientData.push([
+          name,
+          cookStyle,
+          quantity,
+          amountInOz,
+          amountInLbs,
+          0,
+        ]);
+      }
     });
   });
 
@@ -197,14 +211,16 @@ export function generateIngredientsReport(
       "Amount in G",
       "Amount in Oz",
       "Amount in Lbs",
+      "Count",
     ],
     ...sortedIngredientData.map(
-      ([name, cookStyle, quantity, amountInOz, amountInLbs]) => [
+      ([name, cookStyle, quantity, amountInOz, amountInLbs, count]) => [
         name,
         cookStyle,
         quantity.toFixed(2),
         amountInOz.toFixed(2),
         amountInLbs.toFixed(2),
+        count.toFixed(0),
       ]
     ),
   ];
@@ -212,6 +228,31 @@ export function generateIngredientsReport(
   const csv = Papa.unparse(csvData);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   saveAs(blob, "ingredients_report.csv");
+}
+
+function processIngredients(
+  ingredients: Ingredient[],
+  totals: Record<
+    string,
+    Record<string, { quantity: number; cookStyle: string; unit: string }>
+  >,
+  mealQuantity: number
+) {
+  ingredients.forEach((ing) => {
+    const { name } = ing.ingredient;
+    const cookStyle = ing.cookStyle || "Unspecified";
+    const unit = ing.unit;
+
+    if (!totals[cookStyle]) {
+      totals[cookStyle] = {};
+    }
+
+    if (!totals[cookStyle][name]) {
+      totals[cookStyle][name] = { quantity: 0, cookStyle, unit };
+    }
+
+    totals[cookStyle][name].quantity += ing.quantity * mealQuantity;
+  });
 }
 
 function findCustomOption(
@@ -225,28 +266,4 @@ function findCustomOption(
     if (option) return option;
   }
   return undefined;
-}
-
-function processIngredients(
-  ingredients: Ingredient[],
-  totals: Record<
-    string,
-    Record<string, { quantity: number; cookStyle: string }>
-  >,
-  mealQuantity: number
-) {
-  ingredients.forEach((ing) => {
-    const { name } = ing.ingredient;
-    const cookStyle = ing.cookStyle || "Unspecified";
-
-    if (!totals[cookStyle]) {
-      totals[cookStyle] = {};
-    }
-
-    if (!totals[cookStyle][name]) {
-      totals[cookStyle][name] = { quantity: 0, cookStyle };
-    }
-
-    totals[cookStyle][name].quantity += ing.quantity * mealQuantity;
-  });
 }

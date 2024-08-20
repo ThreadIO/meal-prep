@@ -747,14 +747,17 @@ export const MealModal = (props: MealModalProps) => {
     }
   }
 
-  const saveIngredients = (ingredients: any[]) => {
+  const saveIngredients = (passed_ingredients: any[]) => {
     if (ingredients.length === 0) {
       return [];
     }
-    return ingredients.map((ing: any) => {
+    console.log("Ingredients: ", ingredients);
+    console.log("Passed Ingredients: ", passed_ingredients);
+    return passed_ingredients.map((ing: any) => {
       const selectedIngredient = ingredients.find(
         (i) => i._id === ing.ingredient
       );
+      console.log("Selected Ingredient: ", selectedIngredient);
       if (selectedIngredient?.defaultUnit === "count") {
         return {
           ...ing,
