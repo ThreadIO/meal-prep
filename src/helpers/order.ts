@@ -171,11 +171,18 @@ export function generateIngredientsReport(
   });
 
   // Collect and sort ingredient data
-  const sortedIngredientData: [string, string, number, number][] = [];
+  const sortedIngredientData: [string, string, number, number, number][] = [];
   Object.entries(ingredientTotals).forEach(([cookStyle, ingredients]) => {
     Object.entries(ingredients).forEach(([name, { quantity }]) => {
       const amountInOz = quantity * 0.035274; // Convert grams to ounces
-      sortedIngredientData.push([name, cookStyle, quantity, amountInOz]);
+      const amountInLbs = quantity * 0.00220462; // Convert grams to pounds
+      sortedIngredientData.push([
+        name,
+        cookStyle,
+        quantity,
+        amountInOz,
+        amountInLbs,
+      ]);
     });
   });
 
@@ -184,13 +191,22 @@ export function generateIngredientsReport(
 
   // Generate CSV data
   const csvData = [
-    ["Name of Ingredient", "Cooking Style", "Amount in G", "Amount in Oz"],
-    ...sortedIngredientData.map(([name, cookStyle, quantity, amountInOz]) => [
-      name,
-      cookStyle,
-      quantity.toFixed(2),
-      amountInOz.toFixed(2),
-    ]),
+    [
+      "Name of Ingredient",
+      "Cooking Style",
+      "Amount in G",
+      "Amount in Oz",
+      "Amount in Lbs",
+    ],
+    ...sortedIngredientData.map(
+      ([name, cookStyle, quantity, amountInOz, amountInLbs]) => [
+        name,
+        cookStyle,
+        quantity.toFixed(2),
+        amountInOz.toFixed(2),
+        amountInLbs.toFixed(2),
+      ]
+    ),
   ];
 
   const csv = Papa.unparse(csvData);
