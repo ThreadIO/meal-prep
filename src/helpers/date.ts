@@ -45,14 +45,24 @@ export const getDeliveryDate = (order: any) => {
   return extractDeliveryDate(order.meta_data) || threadDeliveryDate(order);
 };
 
-const extractDeliveryDate = (metaData: any[]) => {
+const extractDeliveryDate = (metaData: any[]): Date | null => {
   const deliveryDateObj = metaData.find(
     (item) => item.key === "_orddd_timestamp"
   );
   if (!deliveryDateObj) return null;
 
-  const deliveryDate = new Date(parseInt(deliveryDateObj.value) * 1000);
-  return deliveryDate;
+  const timestamp = parseInt(deliveryDateObj.value) * 1000;
+  const utcDate = new Date(timestamp);
+
+  // Create a new Date object with local year, month, and day
+  const localDate = new Date(
+    utcDate.getUTCFullYear(),
+    utcDate.getUTCMonth(),
+    utcDate.getUTCDate()
+  );
+
+  console.log(`Timestamp: ${timestamp}, Date: ${localDate}`);
+  return localDate;
 };
 
 const threadDeliveryDate = (order: any): Date | null => {
