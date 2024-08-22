@@ -6,6 +6,7 @@ import Settings from "@/content/settings";
 import Coupons from "@/content/coupons";
 import Admin from "@/content/admin";
 import AnalyticsContent from "@/content/analytics";
+import Delivery from "@/content/delivery";
 const SwitchContent: React.FC = () => {
   const { currentPage } = useNavigationContext();
 
@@ -24,6 +25,8 @@ const SwitchContent: React.FC = () => {
         return <Coupons />;
       case "admin":
         return <Admin />;
+      case "delivery":
+        return <Delivery />;
       default:
         return <OrderContent />;
     }

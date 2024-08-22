@@ -24,10 +24,15 @@ import {
   calculateMealSum,
   prepareOrderedMeals,
   generateIngredientsReport,
+  deliveryList,
 } from "@/helpers/order";
 import { CircleX } from "lucide-react";
+import { useOrgContext } from "@/components/context/OrgContext";
 export default function OrdersPage() {
   const { user } = useUser();
+  const { currentOrg } = useOrgContext();
+  const [org, setOrg] = useState<any>({});
+
   const [endDate, setEndDate] = useState(today(getLocalTimeZone())); // Default to today's date
   const [startDate, setStartDate] = useState(
     today(getLocalTimeZone()).subtract({ weeks: 1 })
@@ -39,6 +44,7 @@ export default function OrdersPage() {
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [mealsLoading, setMealsLoading] = useState<boolean>(false);
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
+  const [orgLoading, setOrgLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
@@ -66,6 +72,12 @@ export default function OrdersPage() {
       fetchCategories();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (currentOrg && !orgLoading) {
+      getOrg(currentOrg);
+    }
+  }, [currentOrg]);
 
   const calculateTotalMeals = (orders: any) => {
     return orders.reduce((total: any, order: any) => {
@@ -244,6 +256,25 @@ export default function OrdersPage() {
     }
   };
 
+  const getOrg = async (orgid: string) => {
+    const url = `/api/org/propelauth/${orgid}`;
+    const method = "GET";
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    getData(
+      "org",
+      url,
+      method,
+      headers,
+      (org) => {
+        setOrg(org);
+      },
+      setError,
+      setOrgLoading
+    );
+  };
+
   const getMeals = async (orders: any) => {
     const url = "/api/getmeals";
     const method = "POST";
@@ -310,6 +341,13 @@ export default function OrdersPage() {
     setOrders(data);
     setFilteredOrders(data);
     console.log("Orders: ", data);
+  };
+
+  const handleDownloadDeliveryList = () => {
+    // hardcoding
+    const areaZipcodeMap = org.zipcodeMap;
+    console.log("Area Zipcode Map: ", areaZipcodeMap);
+    deliveryList(filteredOrders, areaZipcodeMap);
   };
 
   const getFilteredOrders = (
@@ -641,6 +679,12 @@ export default function OrdersPage() {
           onClick={() => downloadOrders(filteredOrders, startDate, endDate)}
           text="Download Orders Manifest"
         />
+        <StyledButton
+          onClick={() => {
+            handleDownloadDeliveryList();
+          }}
+          text="Download Delivery List"
+        />
         {renderCsvDownloadButtons()}
       </div>
     );
@@ -695,6 +739,8 @@ export default function OrdersPage() {
             <Spinner label="Loading Categories" />
           ) : mealsLoading ? (
             <Spinner label="Loading Meals" />
+          ) : orgLoading ? (
+            <Spinner label="Loading Organization" />
           ) : null}
         </div>
       </div>

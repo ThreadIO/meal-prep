@@ -58,3 +58,15 @@ export const renderOrderStatus = (order: any) => {
     </Chip>
   );
 };
+
+export const renderZipcodes = (zipcodes: string[]) => {
+  return (
+    <div className="flex flex-wrap gap-1 w-full">
+      {zipcodes.map((zipcode, index) => (
+        <Chip key={index} color="default" size="sm">
+          {zipcode}
+        </Chip>
+      ))}
+    </div>
+  );
+};
