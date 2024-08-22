@@ -1,7 +1,27 @@
 import Papa from "papaparse";
 import { saveAs } from "file-saver";
-
+import { getDeliveryDate, friendlyDate } from "@/helpers/date";
 // Interfaces
+interface AreaZipcodeMap {
+  [area: string]: string[];
+}
+
+interface DeliveryOrder {
+  shipping: {
+    postcode: string;
+    first_name: string;
+    last_name: string;
+    address_1: string;
+    city: string;
+    state: string;
+  };
+  billing: {
+    phone: string;
+  };
+  customer_note: string;
+  date_created: string;
+}
+
 interface Order {
   line_items: LineItem[];
 }
@@ -266,4 +286,84 @@ function findCustomOption(
     if (option) return option;
   }
   return undefined;
+}
+
+export function deliveryList(
+  orders: DeliveryOrder[],
+  areaZipcodeMap: AreaZipcodeMap
+) {
+  // Group orders by area
+  const ordersByArea: { [area: string]: DeliveryOrder[] } = {};
+
+  orders.forEach((order) => {
+    const zipcode = order.shipping.postcode;
+    let area = Object.keys(areaZipcodeMap).find((area) =>
+      areaZipcodeMap[area].includes(zipcode)
+    );
+
+    // If no matching area is found, use the zipcode as the area
+    if (!area) {
+      area = `Unassigned (${zipcode})`;
+    }
+
+    if (!ordersByArea[area]) {
+      ordersByArea[area] = [];
+    }
+    ordersByArea[area].push(order);
+  });
+
+  // Prepare CSV data
+  const csvData = [
+    [
+      "Area",
+      "Name",
+      "Address",
+      "Phone Number",
+      "Delivery Date",
+      "Customer Note",
+    ],
+  ];
+
+  // Sort areas alphabetically, but put "Unassigned" areas at the end
+  const sortedAreas = Object.keys(ordersByArea).sort((a, b) => {
+    if (a.startsWith("Unassigned") && !b.startsWith("Unassigned")) return 1;
+    if (!a.startsWith("Unassigned") && b.startsWith("Unassigned")) return -1;
+    return a.localeCompare(b);
+  });
+
+  sortedAreas.forEach((area) => {
+    let areaOrders = ordersByArea[area];
+
+    // Sort orders within each area by zipcode numerically
+    areaOrders.sort((a, b) => {
+      const zipA = parseInt(a.shipping.postcode, 10);
+      const zipB = parseInt(b.shipping.postcode, 10);
+      return zipA - zipB;
+    });
+
+    csvData.push([area]); // Add area as a separate row
+    areaOrders.forEach((order) => {
+      const { shipping, billing, customer_note, date_created } = order;
+      const name = `${shipping.first_name} ${shipping.last_name}`;
+      const address = `${shipping.address_1}, ${shipping.city}, ${shipping.state} ${shipping.postcode}`;
+      const phone = billing.phone;
+      const deliveryDate =
+        friendlyDate(getDeliveryDate(order)) ||
+        new Date(date_created).toLocaleDateString();
+
+      csvData.push([
+        "", // Leave area blank for order rows
+        name,
+        address,
+        phone,
+        deliveryDate,
+        customer_note,
+      ]);
+    });
+  });
+
+  // Generate and save CSV file
+  const csv = Papa.unparse(csvData);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  saveAs(blob, "delivery_list.csv");
 }

@@ -24,6 +24,7 @@ import {
   calculateMealSum,
   prepareOrderedMeals,
   generateIngredientsReport,
+  deliveryList,
 } from "@/helpers/order";
 import { CircleX } from "lucide-react";
 export default function OrdersPage() {
@@ -310,6 +311,16 @@ export default function OrdersPage() {
     setOrders(data);
     setFilteredOrders(data);
     console.log("Orders: ", data);
+  };
+
+  const handleDownloadDeliveryList = () => {
+    // hardcoding
+    const areaZipcodeMap = {
+      "Mount Pleasant": ["29464", "29466"],
+      Charleston: ["29401", "29403", "29407"],
+      // Add more areas and their associated zip codes as needed
+    };
+    deliveryList(filteredOrders, areaZipcodeMap);
   };
 
   const getFilteredOrders = (
@@ -640,6 +651,12 @@ export default function OrdersPage() {
         <StyledButton
           onClick={() => downloadOrders(filteredOrders, startDate, endDate)}
           text="Download Orders Manifest"
+        />
+        <StyledButton
+          onClick={() => {
+            handleDownloadDeliveryList();
+          }}
+          text="Download Delivery List"
         />
         {renderCsvDownloadButtons()}
       </div>
