@@ -25,7 +25,7 @@ import {
   prepareOrderedMeals,
   generateIngredientsReport,
 } from "@/helpers/order";
-
+import { CircleX } from "lucide-react";
 export default function OrdersPage() {
   const { user } = useUser();
   const [endDate, setEndDate] = useState(today(getLocalTimeZone())); // Default to today's date
@@ -110,6 +110,20 @@ export default function OrdersPage() {
     );
   };
 
+  const clearDateButton = (onClear: () => void) => {
+    return (
+      <Button
+        variant="light"
+        size="sm"
+        isIconOnly
+        radius="full"
+        disableAnimation
+        onClick={onClear}
+      >
+        <CircleX />
+      </Button>
+    );
+  };
   useEffect(() => {
     if (orders.length > 0) {
       const hasComposite = checkForCompositeProducts(orders);
@@ -512,6 +526,9 @@ export default function OrdersPage() {
           label="Delivery Date"
           value={deliveryDate}
           onChange={(e) => setDeliveryDate(e)}
+          startContent={clearDateButton(() => {
+            setDeliveryDate(null);
+          })}
         />
       </div>
     );
