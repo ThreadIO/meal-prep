@@ -11,6 +11,7 @@ import {
   Settings,
   SquarePercent,
   Shield,
+  Truck,
 } from "lucide-react";
 import { useUser } from "@propelauth/nextjs/client";
 import BusinessIcon from "@/components/BusinessIcon";
@@ -120,6 +121,13 @@ const SidebarComponent = () => {
               Reports
             </Sidebar.Item>
           )}
+          <Sidebar.Item
+            onClick={() => setCurrentPage("delivery")}
+            icon={Truck}
+            className="flex items-center justify-center rounded-lg p-2 text-base font-normal text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+          >
+            Delivery
+          </Sidebar.Item>
           <Sidebar.Item
             onClick={() => setCurrentPage("coupons")}
             icon={SquarePercent}

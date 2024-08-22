@@ -61,7 +61,6 @@ const extractDeliveryDate = (metaData: any[]): Date | null => {
     utcDate.getUTCDate()
   );
 
-  console.log(`Timestamp: ${timestamp}, Date: ${localDate}`);
   return localDate;
 };
 

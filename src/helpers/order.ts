@@ -2,8 +2,9 @@ import Papa from "papaparse";
 import { saveAs } from "file-saver";
 import { getDeliveryDate, friendlyDate } from "@/helpers/date";
 // Interfaces
-interface AreaZipcodeMap {
-  [area: string]: string[];
+interface AreaZipcode {
+  area: string;
+  zipcodes: string[];
 }
 
 interface DeliveryOrder {
@@ -290,16 +291,16 @@ function findCustomOption(
 
 export function deliveryList(
   orders: DeliveryOrder[],
-  areaZipcodeMap: AreaZipcodeMap
+  areaZipcodeMap: AreaZipcode[]
 ) {
   // Group orders by area
   const ordersByArea: { [area: string]: DeliveryOrder[] } = {};
 
   orders.forEach((order) => {
     const zipcode = order.shipping.postcode;
-    let area = Object.keys(areaZipcodeMap).find((area) =>
-      areaZipcodeMap[area].includes(zipcode)
-    );
+    let area = areaZipcodeMap.find((areaZip) =>
+      areaZip.zipcodes.includes(zipcode)
+    )?.area;
 
     // If no matching area is found, use the zipcode as the area
     if (!area) {

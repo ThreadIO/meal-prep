@@ -62,6 +62,7 @@ export async function createOrg(orgid: string, body: any) {
       url: body.url,
       service: body.service,
       subscriptions: [],
+      zipcodeMap: body.zipcodeMap || [],
     };
     const org = await Org.create(newOrg);
     console.log("Created Org: ", org);
