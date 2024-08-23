@@ -29,7 +29,10 @@ interface Org {
   _id: string;
   orgid: string;
   name: string;
-  merchantid: string;
+  rainforest: {
+    merchantid: string;
+    merchant_application_id?: string;
+  };
   url: string;
   service: string;
   subscriptions: string[];
@@ -61,7 +64,7 @@ export const OrgModal = (props: OrgModalProps) => {
     console.log("Thread Org: ", threadOrg);
     if (threadOrg) {
       setName(threadOrg.name || "");
-      setMerchantId(threadOrg.merchantid || "");
+      setMerchantId(threadOrg.rainforest?.merchantid || "");
       setUrl(threadOrg.url || "");
       setService(threadOrg.service || "");
       setMongoDbId(threadOrg._id || "");
@@ -199,7 +202,7 @@ export const OrgModal = (props: OrgModalProps) => {
       orgid: org?.orgId,
       _id: mongoDbId,
       name,
-      merchantid: merchantId,
+      rainforest: { merchantid: merchantId },
       url,
       service,
     };

@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import fetch from "node-fetch";
 
 const idemptencyStore: { [key: string]: any } = {};
@@ -108,33 +107,4 @@ export async function createPayinFromPaymentMethod(
 // For testing locally
 function checkDBForPayin(idempotency_key: string) {
   return idemptencyStore[idempotency_key];
-}
-
-export async function createMerchant(body: any) {
-  const url = process.env.RAINFOREST_URL + "/v1/merchants";
-  const auth = process.env.RF_APIKEY;
-
-  const options = {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-      authorization: `Bearer ${auth}`,
-    },
-    body: JSON.stringify({
-      name: body.name,
-    }),
-  };
-  const rfResponse = await fetch(url, options);
-  const rfResponseJson = await rfResponse.json();
-
-  if (rfResponse.status === 200) {
-    return NextResponse.json({ success: true, response: rfResponseJson });
-  } else {
-    return NextResponse.json({
-      success: false,
-      response: rfResponseJson,
-      status: rfResponse.status,
-    });
-  }
 }

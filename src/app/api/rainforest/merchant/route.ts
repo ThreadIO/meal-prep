@@ -1,6 +1,6 @@
 import connect from "@/database/conn";
 import { NextRequest, NextResponse } from "next/server";
-import { createMerchant } from "@/helpers/rainforest";
+import { createMerchant } from "@/controller/rainforest.controller";
 
 export async function POST(request: NextRequest) {
   connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>

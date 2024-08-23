@@ -1,5 +1,3 @@
-// rainforest.controller.ts
-
 import { NextResponse } from "next/server";
 
 interface SessionParams {
@@ -104,5 +102,63 @@ export async function createSession(
   } catch (e) {
     console.log("Error in creating session:", e);
     return NextResponse.json({ success: false, error: e }, { status: 500 });
+  }
+}
+
+export async function createMerchant(body: any) {
+  const url = process.env.RAINFOREST_URL + "/v1/merchants";
+  const auth = process.env.RF_APIKEY;
+
+  const options = {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      authorization: `Bearer ${auth}`,
+    },
+    body: JSON.stringify({
+      name: body.name,
+    }),
+  };
+  const rfResponse = await fetch(url, options);
+  const rfResponseJson = await rfResponse.json();
+
+  if (rfResponse.status === 200) {
+    return NextResponse.json({ success: true, response: rfResponseJson.data });
+  } else {
+    return NextResponse.json({
+      success: false,
+      response: rfResponseJson,
+      status: rfResponse.status,
+    });
+  }
+}
+
+export async function getMerchants() {
+  const url = process.env.RAINFOREST_URL + "/v1/merchants";
+  const auth = process.env.RF_APIKEY;
+
+  const options = {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      authorization: `Bearer ${auth}`,
+    },
+  };
+  const rfResponse = await fetch(url, options);
+  const rfResponseJson = await rfResponse.json();
+
+  if (rfResponse.status === 200) {
+    return NextResponse.json({
+      success: true,
+      data: rfResponseJson.data.results,
+    });
+  } else {
+    return NextResponse.json({
+      success: false,
+      response: rfResponseJson,
+      status: rfResponse.status,
+    });
   }
 }
