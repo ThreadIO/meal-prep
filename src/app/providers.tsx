@@ -13,17 +13,17 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const queryclient = new QueryClient();
   return (
     <html lang="en">
-      <NavigationProvider>
-        <OrgProvider>
-          <AuthProvider authUrl={auth_url}>
-            <QueryClientProvider client={queryclient}>
+      <AuthProvider authUrl={auth_url}>
+        <QueryClientProvider client={queryclient}>
+          <OrgProvider>
+            <NavigationProvider>
               <NextThemesProvider attribute="class" defaultTheme="dark">
                 <body>{children}</body>
               </NextThemesProvider>
-            </QueryClientProvider>
-          </AuthProvider>
-        </OrgProvider>
-      </NavigationProvider>
+            </NavigationProvider>
+          </OrgProvider>
+        </QueryClientProvider>
+      </AuthProvider>
     </html>
   );
 }

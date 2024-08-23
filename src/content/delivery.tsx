@@ -15,16 +15,13 @@ import {
 } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import { createOrg, patchOrg } from "@/helpers/request";
-import { getData } from "@/helpers/frontend";
 import DeliveryAreaModal from "@/components/Modals/DeliveryAreaModal";
 import { renderZipcodes } from "@/components/Renders";
 
 const Delivery = () => {
-  const { loading, isLoggedIn, user } = useUser();
+  const { user } = useUser();
+  const { org, isLoading: orgLoading, error } = useOrgContext();
   const { currentOrg } = useOrgContext();
-  const [org, setOrg] = useState<any>({});
-  const [error, setError] = useState<string>("");
-  const [orgLoading, setOrgLoading] = useState<boolean>(false);
   const [deliveryAreas, setDeliveryAreas] = useState<
     Array<{ area: string; zipcodes: string[] }>
   >([]);
@@ -33,33 +30,12 @@ const Delivery = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (isLoggedIn && !loading && !orgLoading && currentOrg) {
-      fetchOrgData(currentOrg);
+    if (org) {
+      setDeliveryAreas(org.zipcodeMap || []);
     }
-  }, [currentOrg, isLoggedIn, loading]);
-
-  const fetchOrgData = async (orgId: string) => {
-    const url = `/api/org/propelauth/${orgId}`;
-    const method = "GET";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    getData(
-      "org",
-      url,
-      method,
-      headers,
-      (data) => {
-        setOrg(data || {});
-        setDeliveryAreas(data.zipcodeMap || []);
-      },
-      setError,
-      setOrgLoading
-    );
-  };
+  }, [org]);
 
   const handleSave = async () => {
-    setOrgLoading(true);
     console.log("Org: ", org);
     if (org && Object.keys(org).length > 0) {
       await patchOrg(org.orgid, { zipcodeMap: deliveryAreas });
@@ -71,8 +47,6 @@ const Delivery = () => {
       };
       await createOrg(body);
     }
-    fetchOrgData(currentOrg);
-    setOrgLoading(false);
   };
 
   const handleAddArea = () => {
