@@ -1,6 +1,13 @@
-import React, { createContext, useContext, ReactNode, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+} from "react";
 import { useQuery } from "react-query";
 import { getData } from "@/helpers/frontend";
+import { useUser } from "@propelauth/nextjs/client";
 
 interface OrgContextData {
   currentOrg: string;
@@ -17,6 +24,16 @@ export const OrgProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [currentOrg, setCurrentOrg] = useState<string>("");
+  const { user, loading: userLoading } = useUser();
+
+  useEffect(() => {
+    if (!userLoading && user) {
+      const orgs = user.getOrgs();
+      if (orgs && orgs.length > 0) {
+        setCurrentOrg(orgs[0].orgId);
+      }
+    }
+  }, [user, userLoading]);
 
   const fetchOrgData = async () => {
     if (!currentOrg) return null;
@@ -46,7 +63,7 @@ export const OrgProvider: React.FC<{ children: ReactNode }> = ({
     currentOrg,
     setOrg,
     org,
-    isLoading,
+    isLoading: isLoading || userLoading,
     error,
   };
 
