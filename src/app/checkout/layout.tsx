@@ -1,6 +1,6 @@
 import React from "react";
 import Script from "next/script";
-
+import Providers from "@/app/providers";
 export default function CheckoutLayout({
   children,
 }: {
@@ -8,8 +8,10 @@ export default function CheckoutLayout({
 }) {
   return (
     <>
-      <section>{children}</section>
-      <Script src="https://static.rainforestpay.com/sandbox.payment.js" />
+      <Providers>
+        <section>{children}</section>
+        <Script src="https://static.rainforestpay.com/sandbox.payment.js" />
+      </Providers>
     </>
   );
 }

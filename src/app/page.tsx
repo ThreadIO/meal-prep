@@ -26,8 +26,6 @@ const MainPage = () => {
     return <SignupAndLoginButtons />;
   }
 
-  console.log("org", org);
-
   if (!org || Object.keys(org).length === 0) {
     return <Onboarding />;
   }

@@ -7,7 +7,7 @@ import { createSubscription } from "@/helpers/request";
 interface RainforestPaymentProps {
   sessionKey: string;
   payinConfigId: string;
-  org?: any;
+  org: any;
 }
 
 const RainforestPayment: React.FC<RainforestPaymentProps> = ({
@@ -42,61 +42,64 @@ const RainforestPayment: React.FC<RainforestPaymentProps> = ({
   useEffect(() => {
     console.log("RF Payment Component: use effect launched");
 
-    const component = document.querySelector("rainforest-payment");
+    if (!org) {
+      const component = document.querySelector("rainforest-payment");
 
-    console.log("Component is null, ", !component, component);
-    if (component && !listenerAdded.current) {
-      console.log("adding listener!");
+      console.log("Component is null, ", !component, component);
+      if (component && !listenerAdded.current) {
+        console.log("adding listener!");
 
-      const handleApproved = async function (event: Event) {
-        const paymentEvent = event as CustomEvent;
-        console.log("Here is the payment data after confirmation -- ", event);
-        console.log("payIn Id is ", paymentEvent.detail[0].data.payin_id);
-        console.log(
-          "Payment Method Id is ",
-          paymentEvent.detail[0].data.payment_method_id
-        );
-        const pId = paymentEvent.detail[0]?.data?.payin_id;
-        const paymentMethodId = paymentEvent.detail[0]?.data?.payment_method_id;
-        const amount = paymentEvent.detail[0]?.data?.amount;
-        const currency = paymentEvent.detail[0]?.data?.currency_code;
-        if (pId) {
-          try {
-            console.log("Org: ", org);
-            if (org) {
-              await createSubscription({
-                orgid: org._id,
-                paymentMethodId: paymentMethodId,
-                amount: amount,
-                currency: currency,
-                nextBillingDate: new Date(
-                  new Date().setHours(0, 0, 0, 0) + 30 * 24 * 60 * 60 * 1000
-                ).toISOString(),
-              });
+        const handleApproved = async function (event: Event) {
+          const paymentEvent = event as CustomEvent;
+          console.log("Here is the payment data after confirmation -- ", event);
+          console.log("payIn Id is ", paymentEvent.detail[0].data.payin_id);
+          console.log(
+            "Payment Method Id is ",
+            paymentEvent.detail[0].data.payment_method_id
+          );
+          const pId = paymentEvent.detail[0]?.data?.payin_id;
+          const paymentMethodId =
+            paymentEvent.detail[0]?.data?.payment_method_id;
+          const amount = paymentEvent.detail[0]?.data?.amount;
+          const currency = paymentEvent.detail[0]?.data?.currency_code;
+          if (pId) {
+            try {
+              console.log("Org: ", org);
+              if (org) {
+                await createSubscription({
+                  orgid: org._id,
+                  paymentMethodId: paymentMethodId,
+                  amount: amount,
+                  currency: currency,
+                  nextBillingDate: new Date(
+                    new Date().setHours(0, 0, 0, 0) + 30 * 24 * 60 * 60 * 1000
+                  ).toISOString(),
+                });
+              }
+              const receiptSessionKey = await fetchReceiptSession(pId);
+              router.push(
+                `/checkout/confirmation?payinid=${pId}&sessionkey=${receiptSessionKey}`
+              );
+            } catch (error) {
+              setError(
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error upon confirmation redirection"
+              );
+              console.log("Confirmation redirection error: ", error);
             }
-            const receiptSessionKey = await fetchReceiptSession(pId);
-            router.push(
-              `/checkout/confirmation?payinid=${pId}&sessionkey=${receiptSessionKey}`
-            );
-          } catch (error) {
-            setError(
-              error instanceof Error
-                ? error.message
-                : "Unknown error upon confirmation redirection"
-            );
-            console.log("Confirmation redirection error: ", error);
           }
-        }
-      };
+        };
 
-      component.addEventListener("approved", handleApproved);
-      listenerAdded.current = true;
+        component.addEventListener("approved", handleApproved);
+        listenerAdded.current = true;
 
-      // Cleanup function
-      return () => {
-        component.removeEventListener("approved", handleApproved);
-        listenerAdded.current = false;
-      };
+        // Cleanup function
+        return () => {
+          component.removeEventListener("approved", handleApproved);
+          listenerAdded.current = false;
+        };
+      }
     }
   }, [router, org._id]);
 
