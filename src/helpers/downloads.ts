@@ -49,7 +49,7 @@ const extractMealOption = (item: any, compositeItemKey: string) => {
     if (compositeData && compositeData.value) {
       const component = compositeData.value[compositeItemKey];
       if (component && component.title) {
-        return `${component.title} - ${component.addons?.[0]?.value || ""}`;
+        return `${component.title}`;
       }
     }
   }
