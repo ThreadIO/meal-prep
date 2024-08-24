@@ -11,11 +11,26 @@ export async function createSession(
 ): Promise<NextResponse> {
   const { sessionType, payinId, merchantId } = params;
   const auth = process.env.RF_APIKEY;
-  const url = `${process.env.RAINFOREST_URL}/v1/sessions`;
+  const url = `${process.env.RAINFOREST_API_URL}/v1/sessions`;
 
   let body;
 
   switch (sessionType) {
+    case "merchant-onboarding":
+      body = {
+        statements: [
+          {
+            permissions: ["group#merchant_onboarding_component"],
+            constraints: {
+              merchant: {
+                merchant_id: merchantId,
+              },
+            },
+          },
+        ],
+        ttl: 86400,
+      };
+      break;
     case "receipt":
       body = {
         statements: [
@@ -106,7 +121,7 @@ export async function createSession(
 }
 
 export async function createMerchant(body: any) {
-  const url = process.env.RAINFOREST_URL + "/v1/merchants";
+  const url = process.env.RAINFOREST_API_URL + "/v1/merchants";
   const auth = process.env.RF_APIKEY;
 
   const options = {
@@ -134,9 +149,13 @@ export async function createMerchant(body: any) {
   }
 }
 
-export async function getMerchants() {
-  const url = process.env.RAINFOREST_URL + "/v1/merchants";
+export async function getMerchants(body: any = {}) {
+  const { name } = body;
   const auth = process.env.RF_APIKEY;
+  const url =
+    process.env.RAINFOREST_API_URL +
+    "/v1/merchants" +
+    (name ? `?name=${name}` : "");
 
   const options = {
     method: "GET",

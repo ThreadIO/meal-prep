@@ -9,7 +9,12 @@ export default function DepositReportLayout({
   return (
     <>
       <section>{children}</section>
-      <Script src="https://static.rainforestpay.com/sandbox.merchant.js" />
+      <Script
+        src={
+          process.env.NEXT_PUBLIC_RAINFOREST_JAVASCRIPT_BUNDLE_URL +
+          "merchant.js"
+        }
+      />
     </>
   );
 }

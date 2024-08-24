@@ -15,6 +15,8 @@ import RainforestPayment from "@/components/Payment/RainforestPayment";
 import SubscriptionManager from "@/components/SubscriptionManager";
 import SubscriptionModal from "@/components/Modals/SubscriptionModal";
 import { useQueryClient } from "react-query";
+import ApplicationStatusCard from "@/components/Settings/EnhancedApplicationStatusCard";
+import RainforestOnboarding from "@/components/Rainforest/RainforestOnboarding";
 
 const Settings = () => {
   const { loading: authLoading, user } = useUser();
@@ -26,13 +28,19 @@ const Settings = () => {
   } = useOrgContext();
   const [selectedService, setSelectedService] = useState("woocommerce");
   const [sessionKey, setSessionKey] = useState<string | null>(null);
+  const [onboardingSessionKey, setOnboardingSessionKey] = useState<
+    string | null
+  >(null);
   const [payinConfigId, setPayinConfigId] = useState<string | null>(null);
+  const [merchant, setMerchant] = useState<any>(null);
   const [amount] = useState<string>("100.00");
   const [subscriptions, setSubscriptions] = useState([]);
   const [isCreatingPayinConfig, setIsCreatingPayinConfig] =
     useState<boolean>(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+
   const queryClient = useQueryClient();
 
   const validOptions = ["woocommerce"];
@@ -45,16 +53,41 @@ const Settings = () => {
     if (org) {
       setSelectedService(org.service || "woocommerce");
       setSubscriptions(org.subscriptions || []);
+      fetchMerchant();
     }
   }, [org]);
 
   useEffect(() => {
+    if (
+      merchant &&
+      merchant.latest_merchant_application.status === "NEEDS_INFORMATION"
+    ) {
+      setIsOnboarding(true);
+    }
+  }, [merchant]);
+
+  useEffect(() => {
     if (!sessionKey) {
-      fetchSession();
+      fetchSession("", org.rainforest.merchantid, setSessionKey);
     }
   }, [sessionKey]);
 
-  const fetchSession = async () => {
+  const fetchMerchant = async () => {
+    const response = await fetch("/api/rainforest/get-merchants", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: org.name }),
+    });
+    const data = await response.json();
+    setMerchant(data.data[0]);
+  };
+
+  const fetchSession = async (
+    sessionType: string,
+    merchantId: string,
+    // eslint-disable-next-line no-unused-vars
+    onSuccess: (data: any) => void
+  ) => {
     try {
       const response = await fetch("api/rainforest/session", {
         method: "POST",
@@ -62,12 +95,12 @@ const Settings = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          sessionType: "",
-          merchantId: "",
+          sessionType: sessionType,
+          merchantId: merchantId,
         }),
       });
       const result = await response.json();
-      setSessionKey(result.response.data.session_key);
+      onSuccess(result.response.data.session_key);
     } catch (error) {
       console.error("Error fetching session key:", error);
     }
@@ -147,6 +180,7 @@ const Settings = () => {
             </div>
           </div>
           <div className="mb-4">{renderPaymentBox()}</div>
+          <ApplicationStatusCard org={org} merchant={merchant} />
         </>
       );
     }
@@ -172,6 +206,33 @@ const Settings = () => {
         onManage={() => handleManageSubscription(subscription)}
       />
     ));
+  };
+
+  const renderOnboarding = () => {
+    if (isOnboarding) {
+      if (!onboardingSessionKey) {
+        fetchSession(
+          "merchant-onboarding",
+          org.rainforest.merchantid,
+          setOnboardingSessionKey
+        );
+      } else {
+        return (
+          <>
+            <RainforestOnboarding
+              sessionKey={onboardingSessionKey || ""}
+              merchantId={org.rainforest.merchantid}
+              merchantApplicationId={org.rainforest.merchant_application_id}
+              onSubmitted={() => {
+                setIsOnboarding(false);
+                queryClient.invalidateQueries(["org", currentOrg]);
+                fetchMerchant();
+              }}
+            />
+          </>
+        );
+      }
+    }
   };
 
   if (authLoading || orgLoading) {
@@ -217,6 +278,7 @@ const Settings = () => {
         </RadioGroup>
       </div>
       {renderPaymentSettings()}
+      {renderOnboarding()}
       <Button
         color="primary"
         onClick={handleSave}

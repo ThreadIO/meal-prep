@@ -9,6 +9,7 @@ import SwitchBoard from "@/navigation/switchboard";
 import ScriptLoader from "@/navigation/scriptloader";
 import { useOrgContext } from "@/components/context/OrgContext";
 import Onboarding from "@/components/Onboarding";
+import Script from "next/script";
 
 const MainPage = () => {
   const { loading, isLoggedIn } = useUser();
@@ -26,8 +27,24 @@ const MainPage = () => {
     return <SignupAndLoginButtons />;
   }
 
-  if (!org || Object.keys(org).length === 0) {
-    return <Onboarding />;
+  if (
+    !org ||
+    Object.keys(org).length === 0 ||
+    !org.rainforest ||
+    !org.rainforest.merchantid
+  ) {
+    return (
+      <>
+        <Navbar />
+        <Onboarding />
+        <Script
+          src={
+            process.env.NEXT_PUBLIC_RAINFOREST_JAVASCRIPT_BUNDLE_URL +
+            "merchant.js"
+          }
+        />
+      </>
+    );
   }
 
   return (

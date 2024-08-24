@@ -42,7 +42,7 @@ const RainforestPayment: React.FC<RainforestPaymentProps> = ({
   useEffect(() => {
     console.log("RF Payment Component: use effect launched");
 
-    if (!org) {
+    if (org) {
       const component = document.querySelector("rainforest-payment");
 
       console.log("Component is null, ", !component, component);
