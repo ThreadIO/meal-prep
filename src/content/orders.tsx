@@ -13,7 +13,7 @@ import {
 } from "@/helpers/frontend";
 import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
-import { today, getLocalTimeZone } from "@internationalized/date";
+import { now, getLocalTimeZone } from "@internationalized/date";
 import FilterDropdown from "@/components/FilterDropdown";
 import OrderTable from "@/components/Order/OrderTable";
 import { statusOptions } from "@/helpers/utils";
@@ -33,9 +33,9 @@ export default function OrdersPage() {
   const { currentOrg } = useOrgContext();
   const [org, setOrg] = useState<any>({});
 
-  const [endDate, setEndDate] = useState(today(getLocalTimeZone())); // Default to today's date
+  const [endDate, setEndDate] = useState(now(getLocalTimeZone())); // Default to today's date
   const [startDate, setStartDate] = useState(
-    today(getLocalTimeZone()).subtract({ weeks: 1 })
+    now(getLocalTimeZone()).subtract({ weeks: 1 })
   ); // Default to a week ago
   const [orders, setOrders] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
@@ -198,12 +198,11 @@ export default function OrdersPage() {
     const headers = {
       "Content-Type": "application/json",
     };
-    const start_one = startDate.copy().subtract({ days: 1 }).toString();
-    const end_one = endDate.copy().add({ days: 1 }).toString();
+
     const body = {
       userid: user?.userId,
-      startDate: start_one,
-      endDate: end_one,
+      startDate: startDate.toString(),
+      endDate: endDate.toString(),
     };
     getData(
       "orders",
@@ -883,12 +882,14 @@ export default function OrdersPage() {
               value={startDate}
               onChange={(e) => setStartDate(e)}
               maxValue={endDate.copy().subtract({ days: 1 })}
+              showMonthAndYearPickers
             />
             <DatePicker
               label="End Date"
               value={endDate}
               onChange={(e) => setEndDate(e)}
               minValue={startDate.copy().add({ days: 1 })}
+              showMonthAndYearPickers
             />
           </div>
           <div

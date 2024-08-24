@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fetch from "node-fetch";
-import { format } from "date-fns";
+import { removeTimezoneInfo } from "@/helpers/date";
+
 import { getUser } from "@/controller/user.controller";
 import { decryptField } from "@/helpers/encrypt";
 
@@ -61,15 +62,14 @@ export async function getAll(
     while (nextPageExists && page < startPage + pageCount) {
       // Construct the full URL with query parameters for pagination
       let url = `${endpoint}&page=${page}`;
+
       if (startDate && endDate) {
-        const formattedStartDate = format(
-          new Date(startDate),
-          "yyyy-MM-dd'T'HH:mm:ss"
-        );
-        const formattedEndDate = format(
-          new Date(endDate),
-          "yyyy-MM-dd'T'HH:mm:ss"
-        );
+        // Convert to UTC strings for the API
+        const formattedStartDate = removeTimezoneInfo(startDate);
+        const formattedEndDate = removeTimezoneInfo(endDate);
+
+        console.log("Zoned End Date: ", formattedEndDate);
+
         url += `&after=${formattedStartDate}&before=${formattedEndDate}`;
       }
 
