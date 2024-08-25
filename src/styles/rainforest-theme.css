@@ -1,0 +1,136 @@
+:root {
+  /* Light mode colors */
+  --rf-light-background: #f1f1f1;
+  --rf-light-foreground: #000000;
+  --rf-light-primary: #003b36;
+  --rf-light-primary-foreground: #f1f1f1;
+  --rf-light-focus: #f182f6;
+
+  /* Dark mode colors */
+  --rf-dark-background: #000000;
+  --rf-dark-foreground: #f1f1f1;
+  --rf-dark-primary: #003b36;
+  --rf-dark-primary-foreground: #f1f1f1;
+  --rf-dark-focus: #f182f6;
+}
+
+/* Light mode styles */
+rainforest-merchant-onboarding {
+  --rf-background: var(--rf-light-background);
+  --rf-foreground: var(--rf-light-foreground);
+  --rf-primary: var(--rf-light-primary);
+  --rf-primary-foreground: var(--rf-light-primary-foreground);
+  --rf-focus: var(--rf-light-focus);
+
+  background-color: var(--rf-background);
+  color: var(--rf-foreground);
+}
+
+/* Dark mode styles */
+.dark rainforest-merchant-onboarding {
+  --rf-background: var(--rf-dark-background);
+  --rf-foreground: var(--rf-dark-foreground);
+  --rf-primary: var(--rf-dark-primary);
+  --rf-primary-foreground: var(--rf-dark-primary-foreground);
+  --rf-focus: var(--rf-dark-focus);
+}
+
+rainforest-merchant-onboarding {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+}
+
+rainforest-merchant-onboarding input,
+rainforest-merchant-onboarding select,
+rainforest-merchant-onboarding textarea {
+  background-color: var(--rf-background);
+  color: var(--rf-foreground);
+  border: 1px solid var(--rf-primary);
+}
+
+rainforest-merchant-onboarding button {
+  background-color: var(--rf-primary);
+  color: var(--rf-primary-foreground);
+}
+
+rainforest-merchant-onboarding h1,
+rainforest-merchant-onboarding h2,
+rainforest-merchant-onboarding h3,
+rainforest-merchant-onboarding h4,
+rainforest-merchant-onboarding h5,
+rainforest-merchant-onboarding h6,
+rainforest-merchant-onboarding p,
+rainforest-merchant-onboarding label,
+rainforest-merchant-onboarding span {
+  color: var(--rf-foreground);
+}
+
+/* Style for dropdowns */
+rainforest-merchant-onboarding select option {
+  background-color: var(--rf-background);
+  color: var(--rf-foreground);
+}
+
+/* Ensure text contrast for buttons */
+rainforest-merchant-onboarding button {
+  background-color: var(--rf-primary);
+  color: var(--rf-primary-foreground);
+}
+
+rainforest-merchant-onboarding button:hover {
+  opacity: 0.9;
+}
+
+rainforest-merchant-onboarding select {
+  background-color: var(--rf-background);
+  color: var(--rf-foreground);
+  border: 1px solid var(--rf-primary);
+  padding: 8px;
+  border-radius: 4px;
+  appearance: none; /* Remove default arrow */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23131313%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px top 50%;
+  background-size: 12px auto;
+  padding-right: 24px; /* Space for custom arrow */
+}
+
+rainforest-merchant-onboarding select::-ms-expand {
+  display: none; /* Remove default arrow in IE */
+}
+
+rainforest-merchant-onboarding select option {
+  background-color: var(--rf-background);
+  color: var(--rf-foreground);
+}
+
+/* Style for placeholder option */
+rainforest-merchant-onboarding select option[value=""][disabled] {
+  color: var(--rf-foreground);
+  opacity: 0.5;
+}
+
+/* Ensure placeholder text is visible when nothing is selected */
+rainforest-merchant-onboarding select:invalid {
+  color: var(--rf-foreground);
+  opacity: 0.5;
+}
+
+/* Dark mode adjustments */
+.dark rainforest-merchant-onboarding select {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/* Add more specific styles as needed */

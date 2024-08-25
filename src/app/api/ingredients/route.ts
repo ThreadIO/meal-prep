@@ -6,23 +6,23 @@ import connect from "@/database/conn";
 export async function POST(request: NextRequest) {
   try {
     console.log("Incoming POST request to /api/ingredients");
-    connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
+    console.log("Connecting to the db...");
+    await connect(process.env.NEXT_PUBLIC_COMPANY).catch((err) =>
       NextResponse.json({
         success: false,
         message: "Database connection error",
         error: err,
       })
     );
+    console.log("connected to the db");
     const data = await request.json();
     const { orders, orgid } = data;
     if (orders) {
       const meals = getMealsFromOrders(orders);
-      console.log("Meals: ", meals);
       const response = await (await getAllRecipesInOrg(orgid)).json();
       const recipes = response.data;
       if (recipes) {
         const ingredients = getIngredientsForMeals(meals, recipes);
-        printIngredients(ingredients);
         return NextResponse.json(
           { success: true, ingredients },
           { status: 200 }
@@ -56,16 +56,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function printIngredients(ingredients: {
-  [x: string]: { quantity: any; unit: any };
-}) {
-  console.log("Ingredients:");
-  console.log("=============================");
-  Object.keys(ingredients).forEach((ingredient) => {
-    const { quantity, unit } = ingredients[ingredient];
-    console.log(`${ingredient}: ${quantity} ${unit}`);
-  });
-  console.log("=============================");
 }

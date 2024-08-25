@@ -59,6 +59,12 @@ body {
   left: calc(50% - 64px);
 }
 
+.product-description {
+  color: #333; /* Change the color to suit your design */
+  font-size: 0.875rem; /* Adjust font size as needed */
+  line-height: 1.5; /* Adjust line height as needed */
+}
+
 @layer base {
   .react-markdown ul,
   ol {

@@ -22,6 +22,7 @@
         "name": "next",
       },
     ],
+    "typeRoots": ["./node_modules/@types","./src/custom-elements.d.ts"]
   },
   "include": [
     "next-env.d.ts",
