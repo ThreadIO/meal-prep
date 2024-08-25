@@ -24,7 +24,7 @@ import {
 import { CircleX } from "lucide-react";
 import { useOrgContext } from "@/components/context/OrgContext";
 import { CreateOrderModal } from "@/components/Modals/CreateOrderModal";
-import { getCategories, getProducts } from "@/helpers/request";
+import { getAllMeals, getCategories, getProducts } from "@/helpers/request";
 import { useQuery } from "react-query";
 
 export default function OrdersPage() {
@@ -36,10 +36,8 @@ export default function OrdersPage() {
     now(getLocalTimeZone()).subtract({ weeks: 1 })
   ); // Default to a week ago
   const [orders, setOrders] = useState<any[]>([]);
-  const [meals, setMeals] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
-  const [mealsLoading, setMealsLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
     new Set(["All"])
   );
@@ -68,6 +66,18 @@ export default function OrdersPage() {
       onError: (error: any) => {
         console.error("Error fetching categories: ", error.message);
         setError(`Error fetching categories: ${error.message}`);
+      },
+      enabled: !!user?.userId,
+    }
+  );
+
+  const { data: meals = [], isLoading: mealsLoading } = useQuery(
+    ["meals", user?.userId],
+    () => getAllMeals(user?.userId ?? "", generateListOfMealIds(orders)),
+    {
+      onError: (error: any) => {
+        console.error("Error fetching meals: ", error.message);
+        setError(`Error fetching meals: ${error.message}`);
       },
       enabled: !!user?.userId,
     }
@@ -224,36 +234,8 @@ export default function OrdersPage() {
       () => {
         setShowOrders(true);
       },
-      (data) => {
-        getMeals(data);
-      },
+      () => {},
       transformOrdersData
-    );
-  };
-
-  const getMeals = async (orders: any) => {
-    const url = "/api/getmeals";
-    const method = "POST";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    const mealids = generateListOfMealIds(orders);
-    console.log("Meal Ids: ", mealids);
-    const body = {
-      mealids: generateListOfMealIds(orders),
-      userid: user?.userId,
-    };
-    getData(
-      "meals",
-      url,
-      method,
-      headers,
-      (data) => {
-        setMeals(data);
-      },
-      setError,
-      setMealsLoading,
-      body
     );
   };
 
@@ -432,7 +414,6 @@ export default function OrdersPage() {
   const clearOrders = async () => {
     setOrders([]);
     setOrdersLoading(false);
-    setMealsLoading(false);
     setShowOrders(false);
   };
 
