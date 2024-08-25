@@ -417,3 +417,46 @@ export async function getAllIngredients(): Promise<any[]> {
   const data = await response.json();
   return data.data;
 }
+
+export const createOrder = async (userId: string, order: any) => {
+  const response = await fetch("/api/woocommerce/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid: userId, ...order }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Failed to create order: ${JSON.stringify(data)}`);
+  }
+  return data;
+};
+
+export const getProducts = async (userId: string) => {
+  const response = await fetch("/api/woocommerce/getproducts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid: userId }),
+  });
+  if (!response.ok) throw new Error("Failed to fetch products");
+  const products = (await response.json()).data;
+  return products;
+};
+
+export const getCategories = async (user: any) => {
+  const url = "/api/woocommerce/getproducts/getcategories";
+  const method = "POST";
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  const body = { userid: user?.userId };
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch categories");
+  }
+  const data = (await response.json()).data;
+  return data;
+};

@@ -5,12 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import React from "react";
 import { saveAs } from "file-saver";
 import { demoFlag, not_products } from "@/helpers/utils";
-import {
-  generateListOfMealIds,
-  getCategories,
-  getData,
-  getProducts,
-} from "@/helpers/frontend";
+import { generateListOfMealIds, getData } from "@/helpers/frontend";
 import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
 import { now, getLocalTimeZone } from "@internationalized/date";
@@ -28,6 +23,9 @@ import {
 } from "@/helpers/order";
 import { CircleX } from "lucide-react";
 import { useOrgContext } from "@/components/context/OrgContext";
+import { CreateOrderModal } from "@/components/Modals/CreateOrderModal";
+import { getCategories, getProducts } from "@/helpers/request";
+
 export default function OrdersPage() {
   const { user } = useUser();
   const { currentOrg } = useOrgContext();
@@ -66,6 +64,7 @@ export default function OrdersPage() {
     new Set(["All"])
   );
   const [hasCompositeProducts, setHasCompositeProducts] = useState(false);
+  const [createOrderModalOpen, setCreateOrderModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -185,7 +184,9 @@ export default function OrdersPage() {
           }),
         };
       })
-      .filter((order) => order.line_items.length > 0);
+      .filter(
+        (order) => selectedKeys.has("All") || order.line_items.length > 0
+      );
   };
 
   const handleSearch = useCallback((term: string) => {
@@ -307,7 +308,6 @@ export default function OrdersPage() {
       selectedStatusKeys,
       selectedComponent
     );
-    console.log("Filtered Orders: ", filtered);
     setFilteredOrders(filtered);
   }, [
     selectedMenuKeys,
@@ -355,11 +355,13 @@ export default function OrdersPage() {
     selectedStatusKeys: Set<string>,
     selectedComponent: Set<string>
   ) => {
+    console.log("Orders: ", orders);
     let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
     filtered = filterOrdersByCategory(filtered, selectedMenuKeys);
     filtered = filterOrdersByDate(filtered, deliveryDate);
     filtered = filterOrdersByComponent(filtered, selectedComponent);
     filtered = filterBySearch(filtered, searchTerm);
+    console.log("Filtered Orders: ", filtered);
     return filtered;
   };
 
@@ -395,7 +397,9 @@ export default function OrdersPage() {
           );
         }),
       }))
-      .filter((order) => order.line_items.length > 0);
+      .filter(
+        (order) => selectedKeys.has("All") || order.line_items.length > 0
+      );
   };
 
   const filterOrdersByStatus = (orders: any[], selectedKeys: Set<string>) => {
@@ -773,6 +777,26 @@ export default function OrdersPage() {
       );
     };
 
+    const modals = () => {
+      return (
+        <CreateOrderModal
+          open={createOrderModalOpen}
+          onClose={() => setCreateOrderModalOpen(false)}
+          onCreate={(order) => handleCreateOrder(order)}
+          products={products}
+        />
+      );
+    };
+
+    const handleCreateOrder = async (order: any) => {
+      //console.log(parseAbsoluteToLocal(order.date_created));
+      const new_endDate = now(getLocalTimeZone()).add({ hours: 1 });
+      console.log("New End Date: ", new_endDate);
+      console.log("Order Create Time: ", order.date_created);
+      setEndDate(new_endDate);
+      await getOrders();
+    };
+
     return (
       <div
         style={{
@@ -784,6 +808,7 @@ export default function OrdersPage() {
           width: "100%", // Make sure the parent container takes full width
         }}
       >
+        {modals()}
         {renderOrderSummary()}
         {renderSearchBar()}
         <div
@@ -795,6 +820,10 @@ export default function OrdersPage() {
             width: "100%",
           }}
         >
+          <StyledButton
+            onClick={() => setCreateOrderModalOpen(true)}
+            text="Create Order"
+          />
           <div style={{ textAlign: "center" }}>
             <h3 style={{ marginBottom: "10px" }}>Delivery Date:</h3>
             {renderDeliveryDateInputs()}
@@ -881,14 +910,14 @@ export default function OrdersPage() {
               label="Start Date"
               value={startDate}
               onChange={(e) => setStartDate(e)}
-              maxValue={endDate.copy().subtract({ days: 1 })}
+              maxValue={endDate?.copy().subtract({ days: 1 })}
               showMonthAndYearPickers
             />
             <DatePicker
               label="End Date"
               value={endDate}
               onChange={(e) => setEndDate(e)}
-              minValue={startDate.copy().add({ days: 1 })}
+              minValue={startDate?.copy().add({ days: 1 })}
               showMonthAndYearPickers
             />
           </div>

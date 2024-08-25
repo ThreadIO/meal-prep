@@ -7,11 +7,11 @@ import ProductCard from "@/components/Product/ProductCard";
 import { MealModal } from "@/components/Modals/MealModal";
 import Dropdown from "@/components/Dropdown";
 import FilterDropdown from "@/components/FilterDropdown";
-import { getCategories, getProducts } from "@/helpers/frontend";
 import { StockStatusOptions } from "@/helpers/utils";
 import { LayoutGrid, Table as TableIcon } from "lucide-react";
 import ProductTable from "@/components/Product/ProductTable";
 import Searchbar from "@/components/Searchbar";
+import { getProducts, getCategories } from "@/helpers/request";
 
 const Meals = () => {
   const { loading, isLoggedIn, user } = useUser();
