@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fetch from "node-fetch";
-import { format } from "date-fns";
+import { removeTimezoneInfo } from "@/helpers/date";
+
 import { getUser } from "@/controller/user.controller";
 import { decryptField } from "@/helpers/encrypt";
 
@@ -61,15 +62,14 @@ export async function getAll(
     while (nextPageExists && page < startPage + pageCount) {
       // Construct the full URL with query parameters for pagination
       let url = `${endpoint}&page=${page}`;
+
       if (startDate && endDate) {
-        const formattedStartDate = format(
-          new Date(startDate),
-          "yyyy-MM-dd'T'HH:mm:ss"
-        );
-        const formattedEndDate = format(
-          new Date(endDate),
-          "yyyy-MM-dd'T'HH:mm:ss"
-        );
+        // Convert to UTC strings for the API
+        const formattedStartDate = removeTimezoneInfo(startDate);
+        const formattedEndDate = removeTimezoneInfo(endDate);
+
+        console.log("Zoned End Date: ", formattedEndDate);
+
         url += `&after=${formattedStartDate}&before=${formattedEndDate}`;
       }
 
@@ -146,26 +146,41 @@ export async function get(userid: string, url: string) {
 }
 
 export async function post(userid: string, url: string, body: any) {
-  console.log("Inside post woocommerce helper function");
-  console.log("Body: ", body);
-  // Retrieve user data
-  const user_response = await (await getUser(userid)).json();
-  const user = user_response.data;
+  try {
+    console.log("Inside post woocommerce helper function");
+    console.log("Body: ", body);
+    // Retrieve user data
+    const user_response = await (await getUser(userid)).json();
+    const user = user_response.data;
 
-  // Extract necessary data from user settings
-  const company_url = user.settings.url;
-  const headers = getHeaders(
-    user.settings.client_key,
-    user.settings.client_secret
-  );
-  const endpoint = `${company_url}${url}`;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: headers,
-    body: JSON.stringify(body),
-  });
-  const data = await response.json();
-  return NextResponse.json({ success: true, data: data }, { status: 200 });
+    // Extract necessary data from user settings
+    const company_url = user.settings.url;
+    const headers = getHeaders(
+      user.settings.client_key,
+      user.settings.client_secret
+    );
+    const endpoint = `${company_url}${url}`;
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      return NextResponse.json({ success: true, data: data }, { status: 200 });
+    } else {
+      return NextResponse.json(
+        { success: false, message: "An error occurred", data: data },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return NextResponse.json(
+      { success: false, message: "An error occurred", data: error },
+      { status: 500 }
+    );
+  }
 }
 
 export async function put(userid: string, url: string, body: any) {

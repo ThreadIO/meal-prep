@@ -42,7 +42,9 @@ export const filterOrdersByDate = (
 };
 
 export const getDeliveryDate = (order: any) => {
-  return extractDeliveryDate(order.meta_data) || threadDeliveryDate(order);
+  return (
+    extractDeliveryDate(order.meta_data) || threadDeliveryDate(order) || null
+  );
 };
 
 const extractDeliveryDate = (metaData: any[]): Date | null => {
@@ -122,3 +124,19 @@ const threadDeliveryDate = (order: any): Date | null => {
 
   return nextDeliveryDate;
 };
+
+export function removeTimezoneInfo(dateTimeString: string): string {
+  // This regex matches the pattern: any characters, followed by a hyphen or plus,
+  // followed by exactly 5 characters (representing the offset),
+  // then an opening square bracket, any characters, and a closing square bracket
+  const regex = /^(.+)[-+]\d{2}:\d{2}\[.*\]$/;
+
+  const match = dateTimeString.match(regex);
+
+  if (match) {
+    return match[1];
+  }
+
+  // If the pattern doesn't match, return the original string
+  return dateTimeString;
+}
