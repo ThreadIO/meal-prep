@@ -68,7 +68,7 @@ const Settings = () => {
 
   useEffect(() => {
     if (!sessionKey) {
-      fetchSession("", org.rainforest.merchantid, setSessionKey);
+      fetchSession("", org.rainforest?.merchantid, setSessionKey);
     }
   }, [sessionKey]);
 
@@ -213,7 +213,7 @@ const Settings = () => {
       if (!onboardingSessionKey) {
         fetchSession(
           "merchant-onboarding",
-          org.rainforest.merchantid,
+          org.rainforest?.merchantid,
           setOnboardingSessionKey
         );
       } else {
@@ -221,8 +221,8 @@ const Settings = () => {
           <>
             <RainforestOnboarding
               sessionKey={onboardingSessionKey || ""}
-              merchantId={org.rainforest.merchantid}
-              merchantApplicationId={org.rainforest.merchant_application_id}
+              merchantId={org.rainforest?.merchantid}
+              merchantApplicationId={org.rainforest?.merchant_application_id}
               onSubmitted={() => {
                 setIsOnboarding(false);
                 queryClient.invalidateQueries(["org", currentOrg]);
