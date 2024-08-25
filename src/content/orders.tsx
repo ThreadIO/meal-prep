@@ -28,8 +28,7 @@ import { getCategories, getProducts } from "@/helpers/request";
 
 export default function OrdersPage() {
   const { user } = useUser();
-  const { currentOrg } = useOrgContext();
-  const [org, setOrg] = useState<any>({});
+  const { org, isLoading: orgLoading } = useOrgContext();
 
   const [endDate, setEndDate] = useState(now(getLocalTimeZone())); // Default to today's date
   const [startDate, setStartDate] = useState(
@@ -42,7 +41,6 @@ export default function OrdersPage() {
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [mealsLoading, setMealsLoading] = useState<boolean>(false);
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
-  const [orgLoading, setOrgLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
@@ -71,12 +69,6 @@ export default function OrdersPage() {
       fetchCategories();
     }
   }, [user]);
-
-  useEffect(() => {
-    if (currentOrg && !orgLoading) {
-      getOrg(currentOrg);
-    }
-  }, [currentOrg]);
 
   const calculateTotalMeals = (orders: any) => {
     return orders.reduce((total: any, order: any) => {
@@ -254,25 +246,6 @@ export default function OrdersPage() {
     } finally {
       setProductsLoading(false);
     }
-  };
-
-  const getOrg = async (orgid: string) => {
-    const url = `/api/org/propelauth/${orgid}`;
-    const method = "GET";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    getData(
-      "org",
-      url,
-      method,
-      headers,
-      (org) => {
-        setOrg(org);
-      },
-      setError,
-      setOrgLoading
-    );
   };
 
   const getMeals = async (orders: any) => {
