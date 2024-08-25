@@ -37,11 +37,9 @@ export default function OrdersPage() {
   ); // Default to a week ago
   const [orders, setOrders] = useState<any[]>([]);
   const [meals, setMeals] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [mealsLoading, setMealsLoading] = useState<boolean>(false);
-  const [productsLoading, setProductsLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
     new Set(["All"])
   );
@@ -67,6 +65,22 @@ export default function OrdersPage() {
     ["categories", user?.userId],
     () => getCategories(user),
     {
+      onError: (error: any) => {
+        console.error("Error fetching categories: ", error.message);
+        setError(`Error fetching categories: ${error.message}`);
+      },
+      enabled: !!user?.userId,
+    }
+  );
+
+  const { data: products = [], isLoading: productsLoading } = useQuery(
+    ["products", user?.userId],
+    () => getProducts(user?.userId ?? ""),
+    {
+      onError: (error: any) => {
+        console.error("Error fetching products: ", error.message);
+        setError(`Error fetching products: ${error.message}`);
+      },
       enabled: !!user?.userId,
     }
   );
@@ -209,26 +223,12 @@ export default function OrdersPage() {
       body,
       () => {
         setShowOrders(true);
-        fetchProducts();
       },
       (data) => {
         getMeals(data);
       },
       transformOrdersData
     );
-  };
-
-  const fetchProducts = async () => {
-    setProductsLoading(true);
-    try {
-      const productsData = await getProducts(user?.userId || "");
-      setProducts(productsData);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setError("Failed to fetch products");
-    } finally {
-      setProductsLoading(false);
-    }
   };
 
   const getMeals = async (orders: any) => {
@@ -342,7 +342,7 @@ export default function OrdersPage() {
             return true;
           }
           const associatedProduct = products.find(
-            (product) => product.id === item.product_id
+            (product: any) => product.id === item.product_id
           );
           const itemCategories =
             associatedProduct?.categories?.map(
@@ -672,7 +672,13 @@ export default function OrdersPage() {
   };
 
   const renderOrdersContent = () => {
-    if ((ordersLoading && showOrders) || categoriesLoading || mealsLoading) {
+    if (
+      (ordersLoading && showOrders) ||
+      categoriesLoading ||
+      mealsLoading ||
+      orgLoading ||
+      productsLoading
+    ) {
       return renderLoading();
     } else if (showOrders) {
       return renderOrders();
@@ -698,6 +704,8 @@ export default function OrdersPage() {
             <Spinner label="Loading Categories" />
           ) : mealsLoading ? (
             <Spinner label="Loading Meals" />
+          ) : productsLoading ? (
+            <Spinner label="Loading Products" />
           ) : orgLoading ? (
             <Spinner label="Loading Organization" />
           ) : null}
