@@ -11,6 +11,8 @@ import { useOrgContext } from "@/components/context/OrgContext";
 import Onboarding from "@/components/Onboarding";
 import Script from "next/script";
 
+const betaMode = false;
+
 const MainPage = () => {
   const { loading, isLoggedIn } = useUser();
   const { org, isLoading: orgLoading } = useOrgContext();
@@ -28,10 +30,11 @@ const MainPage = () => {
   }
 
   if (
-    !org ||
-    Object.keys(org).length === 0 ||
-    !org.rainforest ||
-    !org.rainforest.merchantid
+    (!org ||
+      Object.keys(org).length === 0 ||
+      !org.rainforest ||
+      !org.rainforest.merchantid) &&
+    betaMode
   ) {
     return (
       <>
