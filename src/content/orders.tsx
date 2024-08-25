@@ -25,6 +25,7 @@ import { CircleX } from "lucide-react";
 import { useOrgContext } from "@/components/context/OrgContext";
 import { CreateOrderModal } from "@/components/Modals/CreateOrderModal";
 import { getCategories, getProducts } from "@/helpers/request";
+import { useQuery } from "react-query";
 
 export default function OrdersPage() {
   const { user } = useUser();
@@ -41,8 +42,6 @@ export default function OrdersPage() {
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [mealsLoading, setMealsLoading] = useState<boolean>(false);
   const [productsLoading, setProductsLoading] = useState<boolean>(false);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
     new Set(["All"])
   );
@@ -64,11 +63,13 @@ export default function OrdersPage() {
   const [hasCompositeProducts, setHasCompositeProducts] = useState(false);
   const [createOrderModalOpen, setCreateOrderModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchCategories();
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery(
+    ["categories", user?.userId],
+    () => getCategories(user),
+    {
+      enabled: !!user?.userId,
     }
-  }, [user]);
+  );
 
   const calculateTotalMeals = (orders: any) => {
     return orders.reduce((total: any, order: any) => {
@@ -215,24 +216,6 @@ export default function OrdersPage() {
       },
       transformOrdersData
     );
-  };
-
-  // New function to fetch categories
-  const fetchCategories = async () => {
-    if (categories.length == 0) {
-      setCategoriesLoading(true);
-      try {
-        const categoriesData = await getCategories(user);
-        setCategories(categoriesData);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        setError("Failed to fetch categories");
-      } finally {
-        setCategoriesLoading(false);
-      }
-    } else {
-      console.log("Categories already fetched");
-    }
   };
 
   const fetchProducts = async () => {
