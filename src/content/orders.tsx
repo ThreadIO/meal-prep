@@ -243,43 +243,16 @@ export default function OrdersPage() {
     setSearchTerm(term);
   }, []);
 
-  // const getOrders = async () => {
-  //   const url = "/api/woocommerce/getorders";
-  //   const method = "POST";
-  //   const headers = {
-  //     "Content-Type": "application/json",
-  //   };
-
-  //   const body = {
-  //     userid: user?.userId,
-  //     startDate: startDate.toString(),
-  //     endDate: endDate.toString(),
-  //   };
-  //   getData(
-  //     "orders",
-  //     url,
-  //     method,
-  //     headers,
-  //     (data) => handleSuccessfulFetch(data),
-  //     setError,
-  //     setOrdersLoading,
-  //     body,
-  //     () => {
-  //       setShowOrders(true);
-  //     },
-  //     () => {},
-  //     transformOrdersData
-  //   );
-  // };
-
   useEffect(() => {
-    const filtered = getFilteredOrders(
-      orders,
-      selectedMenuKeys,
-      selectedStatusKeys,
-      selectedComponent
-    );
-    setFilteredOrders(filtered);
+    if (orders) {
+      const filtered = getFilteredOrders(
+        orders,
+        selectedMenuKeys,
+        selectedStatusKeys,
+        selectedComponent
+      );
+      setFilteredOrders(filtered);
+    }
   }, [
     selectedMenuKeys,
     selectedStatusKeys,
@@ -320,13 +293,11 @@ export default function OrdersPage() {
     selectedStatusKeys: Set<string>,
     selectedComponent: Set<string>
   ) => {
-    console.log("Orders: ", orders);
     let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
     filtered = filterOrdersByCategory(filtered, selectedMenuKeys);
     filtered = filterOrdersByDate(filtered, deliveryDate);
     filtered = filterOrdersByComponent(filtered, selectedComponent);
     filtered = filterBySearch(filtered, searchTerm);
-    console.log("Filtered Orders: ", filtered);
     return filtered;
   };
 
