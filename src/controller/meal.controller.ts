@@ -185,24 +185,24 @@ export async function patchMeal(mealid: string, url: string, body: any = {}) {
 
 export async function getAllMeals(mealids: string[], url: string) {
   try {
-    const meals = await Meal.find({ mealid: { $in: mealids }, url: url })
-      .populate({
-        path: "nutrition_facts.ingredients.ingredient",
-        model: "Ingredient",
-      })
-      .populate({
-        path: "options.ingredients.ingredient",
-        model: "Ingredient",
-      })
-      .populate({
+    console.log("Get All Meals in MongoDb...");
+
+    const query =
+      mealids.length > 0 ? { mealid: { $in: mealids }, url } : { url };
+
+    const populateOptions = [
+      { path: "nutrition_facts.ingredients.ingredient", model: "Ingredient" },
+      { path: "options.ingredients.ingredient", model: "Ingredient" },
+      {
         path: "custom_options.options.ingredients.ingredient",
         model: "Ingredient",
-      });
-
+      },
+    ];
+    const meals = await Meal.find(query).populate(populateOptions);
     return NextResponse.json({ success: true, data: meals });
   } catch (error) {
     console.log("Error in Get Meal: ", error);
-    return NextResponse.json({ success: false, error: error }, { status: 400 });
+    return NextResponse.json({ success: false, error }, { status: 400 });
   }
 }
 

@@ -5,17 +5,22 @@ import Script from "next/script";
 import { useNavigationContext } from "@/components/context/NavigationContext";
 
 const scriptMap: { [key: string]: string } = {
-  settings: "https://static.rainforestpay.com/sandbox.payment.js",
-  paymentReport: "https://static.rainforestpay.com/sandbox.merchant.js",
-  depositReport: "https://static.rainforestpay.com/sandbox.merchant.js",
-  checkout: "https://static.rainforestpay.com/sandbox.merchant.js",
+  settings:
+    process.env.NEXT_PUBLIC_RAINFOREST_JAVASCRIPT_BUNDLE_URL + "payment.js",
+  paymentReport:
+    process.env.NEXT_PUBLIC_RAINFOREST_JAVASCRIPT_BUNDLE_URL + "merchant.js",
+  depositReport:
+    process.env.NEXT_PUBLIC_RAINFOREST_JAVASCRIPT_BUNDLE_URL + "merchant.js",
+  checkout:
+    process.env.NEXT_PUBLIC_RAINFOREST_JAVASCRIPT_BUNDLE_URL + "merchant.js",
+  onboarding:
+    process.env.NEXT_PUBLIC_RAINFOREST_JAVASCRIPT_BUNDLE_URL + "merchant.js",
   // Add more mappings as needed
 };
 
 const ScriptLoader: React.FC = () => {
   const { currentPage } = useNavigationContext();
   const [scriptSrc, setScriptSrc] = useState<string | null>(null);
-
   useEffect(() => {
     setScriptSrc(scriptMap[currentPage] || null);
   }, [currentPage]);

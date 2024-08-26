@@ -259,7 +259,7 @@ export async function postProductAddOns(productid: string, body: any) {
   return data;
 }
 
-export async function getAllMeals(mealids: string[], userid: string) {
+export async function getAllMeals(userid: string, mealids?: string[]) {
   const { success, data, error } = await (
     await fetch(`/api/getmeals`, {
       method: "POST",
@@ -267,8 +267,8 @@ export async function getAllMeals(mealids: string[], userid: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        mealids: mealids,
         userid: userid,
+        mealids: mealids || [],
       }),
     })
   ).json();
@@ -417,3 +417,59 @@ export async function getAllIngredients(): Promise<any[]> {
   const data = await response.json();
   return data.data;
 }
+
+export const createOrder = async (userId: string, order: any) => {
+  const response = await fetch("/api/woocommerce/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid: userId, ...order }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Failed to create order: ${JSON.stringify(data)}`);
+  }
+  return data;
+};
+
+export const getProducts = async (userId: string) => {
+  const response = await fetch("/api/woocommerce/getproducts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid: userId }),
+  });
+  const products = (await response.json()).data;
+  if (!response.ok)
+    throw new Error(`Failed to fetch products: ${JSON.stringify(products)}`);
+  return products;
+};
+
+export const getCategories = async (user: any) => {
+  const url = "/api/woocommerce/getproducts/getcategories";
+  const method = "POST";
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  const body = { userid: user?.userId };
+  const response = await fetch(url, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = (await response.json()).data;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch categories: ${JSON.stringify(data)}`);
+  }
+  return data;
+};
+
+export const getOrders = async (body: any) => {
+  const response = await fetch("/api/woocommerce/getorders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const orders = (await response.json()).data;
+  if (!response.ok)
+    throw new Error(`Failed to fetch orders: ${JSON.stringify(orders)}`);
+  return orders;
+};

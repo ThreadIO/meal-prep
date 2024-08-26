@@ -65,16 +65,14 @@ const DropdownComponent = (props: DropdownProps) => {
 
   const renderDropdownTrigger = () => {
     return (
-      // <button>
-      //   {selectedValue}
-      //   {renderPagination()}
-      // </button>
       <Button
         variant="bordered"
         className="capitalize min-h-[40px]"
         color={color}
       >
-        {decodeHtmlEntities(selectedValue)}
+        {selectedValue && selectedValue !== "default"
+          ? decodeHtmlEntities(selectedValue)
+          : "Select"}
         {renderPagination()}
       </Button>
     );
@@ -112,7 +110,7 @@ const DropdownComponent = (props: DropdownProps) => {
       >
         {paginatedItems.map((item: any) => (
           <DropdownItem key={item.name}>
-            {item.name.replace(/&amp;/g, "&")}
+            {item.name?.replace(/&amp;/g, "&")}
           </DropdownItem>
         ))}
       </DropdownMenu>

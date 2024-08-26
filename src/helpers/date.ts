@@ -42,7 +42,9 @@ export const filterOrdersByDate = (
 };
 
 export const getDeliveryDate = (order: any) => {
-  return extractDeliveryDate(order.meta_data) || threadDeliveryDate(order);
+  return (
+    extractDeliveryDate(order.meta_data) || threadDeliveryDate(order) || null
+  );
 };
 
 const extractDeliveryDate = (metaData: any[]): Date | null => {

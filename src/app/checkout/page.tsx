@@ -7,13 +7,14 @@ import { useUser } from "@propelauth/nextjs/client";
 import { Spinner } from "@nextui-org/react";
 import { SignupAndLoginButtons } from "@/components/SignupAndLoginButtons";
 import RainforestPayment from "@/components/Payment/RainforestPayment";
+import { useOrgContext } from "@/components/context/OrgContext";
 
 export default function Checkout() {
   const { loading, isLoggedIn } = useUser();
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [payinConfigId, setPayinConfigId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
+  const { org } = useOrgContext();
   useEffect(() => {
     console.log("Checkout Page: use effect launched");
     const fetchSession = async () => {
@@ -80,7 +81,7 @@ export default function Checkout() {
       return <div> Error: {error} </div>;
     }
     // If we are checking out
-    else if (sessionKey && payinConfigId) {
+    else if (sessionKey && payinConfigId && org) {
       return (
         <div style={{ display: "flex", height: "100vh" }}>
           <Sidebar />
@@ -90,7 +91,8 @@ export default function Checkout() {
             <RainforestPayment
               sessionKey={sessionKey}
               payinConfigId={payinConfigId}
-            ></RainforestPayment>
+              org={org}
+            />
           </div>
         </div>
       );

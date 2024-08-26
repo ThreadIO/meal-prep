@@ -21,5 +21,10 @@ declare namespace JSX {
       "session-key": string;
       "data-filters": string; // JSON w/ merchantId
     };
+    "rainforest-merchant-onboarding": {
+      "session-key": string;
+      "merchant-id": string;
+      "merchant-application-id": string;
+    };
   }
 }

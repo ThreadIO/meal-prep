@@ -9,29 +9,39 @@ import {
   Image,
   Button,
 } from "@nextui-org/react";
-import { useEffect, useState } from "react";
-import { createOrg } from "@/helpers/request";
-import { getData } from "@/helpers/frontend";
-import { patchOrg } from "@/helpers/request";
+import { useState, useEffect } from "react";
+import { createOrg, patchOrg } from "@/helpers/request";
 import RainforestPayment from "@/components/Payment/RainforestPayment";
 import SubscriptionManager from "@/components/SubscriptionManager";
 import SubscriptionModal from "@/components/Modals/SubscriptionModal";
+import { useQueryClient } from "react-query";
+import ApplicationStatusCard from "@/components/Settings/EnhancedApplicationStatusCard";
+import RainforestOnboarding from "@/components/Rainforest/RainforestOnboarding";
 
 const Settings = () => {
-  const { loading, isLoggedIn, user } = useUser();
-  const { currentOrg } = useOrgContext();
+  const { loading: authLoading, user } = useUser();
+  const {
+    org,
+    isLoading: orgLoading,
+    error: orgError,
+    currentOrg,
+  } = useOrgContext();
   const [selectedService, setSelectedService] = useState("woocommerce");
-  const [org, setOrg] = useState<any>({});
-  const [error, setError] = useState<string>("");
-  const [orgLoading, setOrgLoading] = useState<boolean>(false);
   const [sessionKey, setSessionKey] = useState<string | null>(null);
+  const [onboardingSessionKey, setOnboardingSessionKey] = useState<
+    string | null
+  >(null);
   const [payinConfigId, setPayinConfigId] = useState<string | null>(null);
+  const [merchant, setMerchant] = useState<any>(null);
   const [amount] = useState<string>("100.00");
   const [subscriptions, setSubscriptions] = useState([]);
   const [isCreatingPayinConfig, setIsCreatingPayinConfig] =
     useState<boolean>(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const validOptions = ["woocommerce"];
   const isInvalid = !validOptions.includes(selectedService);
@@ -40,96 +50,74 @@ const Settings = () => {
   const isOwner = pa_Org?.isRole("Owner");
 
   useEffect(() => {
-    if (isLoggedIn && !loading && !orgLoading && currentOrg) {
-      fetchOrgData(currentOrg);
+    if (org) {
+      setSelectedService(org.service || "woocommerce");
+      setSubscriptions(org.subscriptions || []);
+      fetchMerchant();
     }
-  }, [currentOrg, isLoggedIn, loading]);
-
-  const fetchOrgData = async (orgId: string) => {
-    const url = `/api/org/propelauth/${orgId}`;
-    const method = "GET";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    getData(
-      "org",
-      url,
-      method,
-      headers,
-      (data) => {
-        setOrg(data || {});
-        setSubscriptions(data.subscriptions || []);
-      },
-      setError,
-      setOrgLoading
-    );
-  };
+  }, [org]);
 
   useEffect(() => {
-    console.log("Checkout Page: use effect launched");
-    const fetchSession = async () => {
-      try {
-        const response = await fetch("api/rainforest/session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            // TODO fix this for the future
-            sessionType: "",
-            merchantId: "",
-          }),
-        });
-        const result = await response.json();
-        console.log("Got session key for payment: ", result);
+    if (
+      merchant &&
+      merchant.latest_merchant_application.status === "NEEDS_INFORMATION"
+    ) {
+      setIsOnboarding(true);
+    }
+  }, [merchant]);
 
-        const sessionKey = result.response.data.session_key;
-        setSessionKey(sessionKey);
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Unknown error occurred for grabbing session key"
-        );
-      }
-    };
-
+  useEffect(() => {
     if (!sessionKey) {
-      fetchSession();
+      fetchSession("", org.rainforest?.merchantid, setSessionKey);
     }
   }, [sessionKey]);
 
-  function getPropelAuthOrg(orgId?: string) {
-    if (!orgId) {
-      return null;
-    }
-    return user?.getOrg(orgId);
-  }
+  const fetchMerchant = async () => {
+    const response = await fetch("/api/rainforest/get-merchants", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: org.name }),
+    });
+    const data = await response.json();
+    setMerchant(data.data[0]);
+  };
 
-  const getOrg = async (orgId: string) => {
-    const url = `/api/org/propelauth/${orgId}`;
-    const method = "GET";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    getData("org", url, method, headers, setOrg, setError, setOrgLoading);
+  const fetchSession = async (
+    sessionType: string,
+    merchantId: string,
+    // eslint-disable-next-line no-unused-vars
+    onSuccess: (data: any) => void
+  ) => {
+    try {
+      const response = await fetch("api/rainforest/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionType: sessionType,
+          merchantId: merchantId,
+        }),
+      });
+      const result = await response.json();
+      onSuccess(result.response.data.session_key);
+    } catch (error) {
+      console.error("Error fetching session key:", error);
+    }
   };
 
   const handleSave = async () => {
-    setOrgLoading(true);
-    console.log("Org: ", org);
     if (org && Object.keys(org).length > 0) {
       await patchOrg(org.orgid, { service: selectedService });
     } else {
       const body = {
         orgid: currentOrg,
-        name: getPropelAuthOrg(currentOrg)?.orgName,
+        name: pa_Org?.orgName,
         service: selectedService,
       };
       await createOrg(body);
     }
-    getOrg(currentOrg);
-    setOrgLoading(false);
+    queryClient.invalidateQueries(["org", currentOrg]);
   };
 
   const createPayinConfig = async (amountInCents: number) => {
@@ -145,17 +133,9 @@ const Settings = () => {
         }),
       });
       const result = await response.json();
-
-      console.log("Got the payin config: ", result);
-
-      const payinConfigId = result.response.data.payin_config_id;
-      setPayinConfigId(payinConfigId);
+      setPayinConfigId(result.response.data.payin_config_id);
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unknown error occurred for grabbing payin config"
-      );
+      console.error("Error creating payin config:", error);
     } finally {
       setIsCreatingPayinConfig(false);
     }
@@ -172,7 +152,7 @@ const Settings = () => {
   };
 
   const handleSubscriptionUpdate = () => {
-    fetchOrgData(currentOrg);
+    queryClient.invalidateQueries(["org", currentOrg]);
   };
 
   const renderPaymentBox = () => {
@@ -182,7 +162,7 @@ const Settings = () => {
           sessionKey={sessionKey}
           payinConfigId={payinConfigId}
           org={org}
-        ></RainforestPayment>
+        />
       );
     } else if (isCreatingPayinConfig) {
       return <Spinner label="Loading Payment Settings" />;
@@ -191,7 +171,6 @@ const Settings = () => {
 
   const renderPaymentSettings = () => {
     if (org && Object.keys(org).length > 0 && isOwner) {
-      // Check if the owner for now, under a "beta flag"
       return (
         <>
           <div className="mb-4">
@@ -201,6 +180,7 @@ const Settings = () => {
             </div>
           </div>
           <div className="mb-4">{renderPaymentBox()}</div>
+          <ApplicationStatusCard org={org} merchant={merchant} />
         </>
       );
     }
@@ -209,15 +189,13 @@ const Settings = () => {
   const renderSubscriptionCards = () => {
     if (subscriptions.length === 0) {
       return (
-        <>
-          <Button
-            color="primary"
-            onClick={handleCreatePayinConfig}
-            isLoading={isCreatingPayinConfig}
-          >
-            Pay $100.00
-          </Button>
-        </>
+        <Button
+          color="primary"
+          onClick={handleCreatePayinConfig}
+          isLoading={isCreatingPayinConfig}
+        >
+          Pay $100.00
+        </Button>
       );
     }
 
@@ -230,61 +208,84 @@ const Settings = () => {
     ));
   };
 
-  const renderSettingPage = () => {
-    if (orgLoading) {
-      return (
-        <div className="flex justify-center items-center h-screen">
-          <Spinner label="Loading Settings" />
-        </div>
-      );
-    } else {
-      return (
-        <Card className="p-6 m-4">
-          <h2 className="text-2xl font-bold mb-4">Store Settings</h2>
-          <div className="mb-4">
-            <p>
-              <strong>Name:</strong>{" "}
-              {org?.name || getPropelAuthOrg(currentOrg)?.orgName || "No Name"}
-            </p>
-          </div>
-          {error && (
-            <div className="mb-4 text-red-500">
-              <p>{error}</p>
-            </div>
-          )}
-          <div className="mb-4">
-            <h3 className="text-xl font-semibold mb-2">
-              What service are you using?
-            </h3>
-            <RadioGroup
-              value={selectedService}
-              onValueChange={setSelectedService}
-              orientation="horizontal"
-              isInvalid={isInvalid}
-              color="success"
-            >
-              <Radio value="woocommerce">
-                <div className="flex items-center">
-                  <Image
-                    alt="Woocommerce Icon"
-                    src="https://upload.wikimedia.org/wikipedia/commons/2/2a/WooCommerce_logo.svg"
-                    width={30}
-                  />
-                </div>
-              </Radio>
-            </RadioGroup>
-          </div>
-          {renderPaymentSettings()}
-          <Button color="primary" onClick={handleSave} isLoading={orgLoading}>
-            Save Settings
-          </Button>
-        </Card>
-      );
+  const renderOnboarding = () => {
+    if (isOnboarding) {
+      if (!onboardingSessionKey) {
+        fetchSession(
+          "merchant-onboarding",
+          org.rainforest?.merchantid,
+          setOnboardingSessionKey
+        );
+      } else {
+        return (
+          <>
+            <RainforestOnboarding
+              sessionKey={onboardingSessionKey || ""}
+              merchantId={org.rainforest?.merchantid}
+              merchantApplicationId={org.rainforest?.merchant_application_id}
+              onSubmitted={() => {
+                setIsOnboarding(false);
+                queryClient.invalidateQueries(["org", currentOrg]);
+                fetchMerchant();
+              }}
+            />
+          </>
+        );
+      }
     }
   };
+
+  if (authLoading || orgLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spinner label="Loading Settings" />
+      </div>
+    );
+  }
+
+  if (orgError) {
+    return <div>Error: {orgError.message}</div>;
+  }
+
   return (
-    <>
-      {renderSettingPage()}
+    <Card className="p-6 m-4">
+      <h2 className="text-2xl font-bold mb-4">Store Settings</h2>
+      <div className="mb-4">
+        <p>
+          <strong>Name:</strong> {org?.name || pa_Org?.orgName || "No Name"}
+        </p>
+      </div>
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold mb-2">
+          What service are you using?
+        </h3>
+        <RadioGroup
+          value={selectedService}
+          onValueChange={setSelectedService}
+          orientation="horizontal"
+          isInvalid={isInvalid}
+          color="success"
+        >
+          <Radio value="woocommerce">
+            <div className="flex items-center">
+              <Image
+                alt="Woocommerce Icon"
+                src="https://upload.wikimedia.org/wikipedia/commons/2/2a/WooCommerce_logo.svg"
+                width={30}
+              />
+            </div>
+          </Radio>
+        </RadioGroup>
+      </div>
+      {renderPaymentSettings()}
+      {renderOnboarding()}
+      <Button
+        color="primary"
+        onClick={handleSave}
+        isLoading={authLoading || orgLoading}
+      >
+        Save Settings
+      </Button>
       {selectedSubscription && (
         <SubscriptionModal
           isOpen={isSubscriptionModalOpen}
@@ -293,7 +294,7 @@ const Settings = () => {
           onUpdate={handleSubscriptionUpdate}
         />
       )}
-    </>
+    </Card>
   );
 };
 
