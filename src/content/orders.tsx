@@ -37,6 +37,8 @@ import {
   filterBySearch,
   filterOrdersByComponent,
 } from "@/helpers/filters";
+import { renderDateInputs } from "@/content/orders/dateinputs";
+import { StyledButton } from "@/components/StyledButton";
 
 export default function OrdersPage() {
   const { user } = useUser();
@@ -267,12 +269,15 @@ export default function OrdersPage() {
 
   const renderStatusFilterDropdown = () => {
     return (
-      <FilterDropdown
-        selectedKeys={selectedStatusKeys}
-        setSelectedKeys={setSelectedStatusKeys}
-        options={statusOptions}
-        preSelectedOptions={["processing", "completed"]}
-      />
+      <div style={{ textAlign: "center" }}>
+        <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
+        <FilterDropdown
+          selectedKeys={selectedStatusKeys}
+          setSelectedKeys={setSelectedStatusKeys}
+          options={statusOptions}
+          preSelectedOptions={["processing", "completed"]}
+        />
+      </div>
     );
   };
 
@@ -376,21 +381,24 @@ export default function OrdersPage() {
 
   const renderDeliveryDateInputs = () => {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <DatePicker
-          label="Delivery Date"
-          value={deliveryDate}
-          onChange={(e) => setDeliveryDate(e)}
-          startContent={clearDateButton(() => {
-            setDeliveryDate(null);
-          })}
-        />
+      <div style={{ textAlign: "center" }}>
+        <h3 style={{ marginBottom: "10px" }}>Delivery Date:</h3>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <DatePicker
+            label="Delivery Date"
+            value={deliveryDate}
+            onChange={(e) => setDeliveryDate(e)}
+            startContent={clearDateButton(() => {
+              setDeliveryDate(null);
+            })}
+          />
+        </div>
       </div>
     );
   };
@@ -442,30 +450,6 @@ export default function OrdersPage() {
   const downloadCsv = (data: string, fileName: string) => {
     const blob = new Blob([data], { type: "text/csv;charset=utf-8;" });
     saveAs(blob, fileName);
-  };
-
-  // Reusable Button component with consistent styling
-  const StyledButton = ({
-    onClick,
-    text,
-  }: {
-    onClick: () => void;
-    text: string;
-  }) => {
-    return (
-      <Button
-        style={{
-          marginRight: "10px",
-          padding: "5px 10px",
-          borderRadius: "5px",
-        }}
-        size="sm"
-        onClick={onClick}
-        color="primary"
-      >
-        {text}
-      </Button>
-    );
   };
 
   // Render buttons with StyledButton component
@@ -547,7 +531,14 @@ export default function OrdersPage() {
     } else if (showOrders) {
       return renderOrders();
     } else {
-      return renderDateInputs();
+      return renderDateInputs(
+        startDate,
+        setStartDate,
+        endDate,
+        setEndDate,
+        triggerFetchOrders,
+        error
+      );
     }
   };
 
@@ -579,10 +570,6 @@ export default function OrdersPage() {
   };
 
   const renderOrders = () => {
-    // State variable to toggle between line items and meal quantities
-    // Assuming showLineItems and filteredOrders are defined elsewhere
-    // Function to calculate the sum of quantities for each meal
-
     // Function to render individual order details with line items
     const renderLineItems = () => {
       return (
@@ -657,16 +644,10 @@ export default function OrdersPage() {
             onClick={() => setCreateOrderModalOpen(true)}
             text="Create Order"
           />
-          <div style={{ textAlign: "center" }}>
-            <h3 style={{ marginBottom: "10px" }}>Delivery Date:</h3>
-            {renderDeliveryDateInputs()}
-          </div>
+          {renderDeliveryDateInputs()}
           {renderCategoryFilterDropdown()}
           {renderComponentFilterDropdown()}
-          <div style={{ textAlign: "center" }}>
-            <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
-            {renderStatusFilterDropdown()}
-          </div>
+          {renderStatusFilterDropdown()}
           <StyledButton onClick={() => clear()} text="Clear Orders" />
         </div>
         <div
@@ -701,78 +682,6 @@ export default function OrdersPage() {
           }}
         >
           {renderAllButtons()}
-        </div>
-      </div>
-    );
-  };
-
-  const renderDateInputs = () => {
-    const renderError = () => {
-      return (
-        <div style={{ textAlign: "center" }}>
-          <p style={{ color: "red" }}>{error}</p>
-        </div>
-      );
-    };
-
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          {renderError()}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "10px",
-            }}
-          >
-            <DatePicker
-              label="Start Date"
-              value={startDate}
-              onChange={(e) => setStartDate(e)}
-              maxValue={endDate?.copy().subtract({ days: 1 })}
-              showMonthAndYearPickers
-            />
-            <DatePicker
-              label="End Date"
-              value={endDate}
-              onChange={(e) => setEndDate(e)}
-              minValue={startDate?.copy().add({ days: 1 })}
-              showMonthAndYearPickers
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "10px",
-            }}
-          >
-            <Button
-              style={{
-                marginRight: "10px",
-                padding: "5px 10px",
-                borderRadius: "5px",
-              }}
-              onClick={() => triggerFetchOrders()}
-              color="primary"
-            >
-              Get Orders
-            </Button>
-          </div>
         </div>
       </div>
     );
