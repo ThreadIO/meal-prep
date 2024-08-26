@@ -60,12 +60,20 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     }[],
   });
 
+  const uniqueProducts = useMemo(() => {
+    const seen = new Set();
+    return products.filter((product) => {
+      if (seen.has(product.id)) {
+        return false;
+      }
+      seen.add(product.id);
+      return true;
+    });
+  }, [products]);
+
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
-
-  // Memoize the products array to prevent unnecessary re-renders
-  const memoizedProducts = useMemo(() => products, [products]);
 
   const handleInputChange = useCallback(
     (section: "billing" | "shipping", field: string, value: string) => {
@@ -102,10 +110,10 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
   const handleProductSelect = useCallback(
     (productId: number) => {
-      const product = memoizedProducts.find((p) => p.id === productId);
+      const product = uniqueProducts.find((p) => p.id === productId);
       setSelectedProduct(product || null);
     },
-    [memoizedProducts]
+    [uniqueProducts]
   );
 
   const handleAddLineItem = useCallback(() => {
@@ -214,7 +222,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       {orderData.line_items.map((item, index) => (
         <div key={index} className="flex justify-between items-center mb-2">
           <span>
-            {products.find((p) => p.id === item.product_id)?.name} (
+            {uniqueProducts.find((p) => p.id === item.product_id)?.name} (
             {item.quantity})
           </span>
           <Button
@@ -232,7 +240,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           placeholder="Start typing..."
           onSelectionChange={(id) => handleProductSelect(Number(id))}
         >
-          {products.map((product) => (
+          {uniqueProducts.map((product) => (
             <AutocompleteItem key={product.id} value={product.id.toString()}>
               {product.name}
             </AutocompleteItem>
