@@ -73,33 +73,30 @@ export const filterOrdersByComponent = (
   selectedKeys: Set<string>
 ) => {
   return orders
-    .map((order) => {
-      const includedProducts = new Set();
-      return {
-        ...order,
-        line_items: order.line_items.filter((item: any) => {
-          if (selectedKeys.has("All")) {
-            return true;
+    .map((order) => ({
+      ...order,
+      line_items: order.line_items.filter((item: any) => {
+        if (selectedKeys.has("All")) {
+          return true;
+        }
+        if (item.composite_parent) {
+          const compositeItemKey = item.meta_data.find(
+            (meta: any) => meta.key === "_composite_item"
+          )?.value;
+          const compositeData = item.meta_data.find(
+            (meta: any) => meta.key === "_composite_data"
+          )?.value;
+          if (
+            compositeItemKey &&
+            compositeData &&
+            compositeData[compositeItemKey]
+          ) {
+            const component = compositeData[compositeItemKey];
+            return selectedKeys.has(component.title);
           }
-          if (item.composite_parent) {
-            const compositeData = item.meta_data.find(
-              (meta: any) => meta.key === "_composite_data"
-            );
-            if (compositeData && compositeData.value) {
-              const matchedComponent = Object.values(compositeData.value).find(
-                (component: any) =>
-                  component.product_id === item.product_id &&
-                  selectedKeys.has(component.title)
-              );
-              if (matchedComponent && !includedProducts.has(item.product_id)) {
-                includedProducts.add(item.product_id);
-                return true;
-              }
-            }
-          }
-          return false;
-        }),
-      };
-    })
-    .filter((order) => selectedKeys.has("All") || order.line_items.length > 0);
+        }
+        return false;
+      }),
+    }))
+    .filter((order) => order.line_items.length > 0);
 };

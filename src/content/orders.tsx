@@ -193,11 +193,13 @@ export default function OrdersPage() {
 
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
+    console.log("Orders: ", orders);
     let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
     filtered = filterOrdersByCategory(filtered, selectedMenuKeys, products);
     filtered = filterOrdersByDate(filtered, deliveryDate);
     filtered = filterOrdersByComponent(filtered, selectedComponent);
     filtered = filterBySearch(filtered, searchTerm);
+    console.log("Filtered Orders: ", filtered);
     return filtered;
   }, [
     orders,
@@ -242,7 +244,7 @@ export default function OrdersPage() {
           options={compositeComponents.map((component) => ({
             name: component,
           }))}
-          selectionMode="single"
+          selectionMode="multiple"
         />
       </div>
     );
