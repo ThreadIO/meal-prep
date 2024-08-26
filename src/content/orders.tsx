@@ -6,7 +6,8 @@ import React from "react";
 import { saveAs } from "file-saver";
 import { demoFlag, not_products } from "@/helpers/utils";
 import { generateListOfMealIds } from "@/helpers/frontend";
-import { filterOrdersByDate } from "@/helpers/date";
+import { filterOrdersByDateRange } from "@/helpers/date"; // Update this import
+// import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import FilterDropdown from "@/components/FilterDropdown";
@@ -59,7 +60,10 @@ export default function OrdersPage() {
   const [showCosts, setShowCosts] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
   const [error, setError] = useState<string>("");
-  const [deliveryDate, setDeliveryDate] = useState<any>();
+
+  const [deliveryStartDate, setDeliveryStartDate] = useState<any>(null);
+  const [deliveryEndDate, setDeliveryEndDate] = useState<any>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
 
   const [compositeComponents, setCompositeComponents] = useState<any[]>([]);
@@ -198,7 +202,11 @@ export default function OrdersPage() {
     console.log("Orders: ", orders);
     let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
     filtered = filterOrdersByCategory(filtered, selectedMenuKeys, products);
-    filtered = filterOrdersByDate(filtered, deliveryDate);
+    filtered = filterOrdersByDateRange(
+      filtered,
+      deliveryStartDate,
+      deliveryEndDate
+    );
     filtered = filterOrdersByComponent(filtered, selectedComponent);
     filtered = filterBySearch(filtered, searchTerm);
     console.log("Filtered Orders: ", filtered);
@@ -208,7 +216,8 @@ export default function OrdersPage() {
     products,
     selectedStatusKeys,
     selectedMenuKeys,
-    deliveryDate,
+    deliveryStartDate,
+    deliveryEndDate,
     selectedComponent,
     searchTerm,
   ]);
@@ -382,21 +391,29 @@ export default function OrdersPage() {
   const renderDeliveryDateInputs = () => {
     return (
       <div style={{ textAlign: "center" }}>
-        <h3 style={{ marginBottom: "10px" }}>Delivery Date:</h3>
+        <h3 style={{ marginBottom: "10px" }}>Delivery Date Range:</h3>
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
           }}
         >
           <DatePicker
-            label="Delivery Date"
-            value={deliveryDate}
-            onChange={(e) => setDeliveryDate(e)}
-            startContent={clearDateButton(() => {
-              setDeliveryDate(null);
-            })}
+            label="Start Date"
+            value={deliveryStartDate}
+            onChange={(date) => setDeliveryStartDate(date)}
+            maxValue={deliveryEndDate}
+            showMonthAndYearPickers
+            startContent={clearDateButton(() => setDeliveryStartDate(null))}
+          />
+          <DatePicker
+            label="End Date"
+            value={deliveryEndDate}
+            onChange={(date) => setDeliveryEndDate(date)}
+            minValue={deliveryStartDate}
+            showMonthAndYearPickers
+            startContent={clearDateButton(() => setDeliveryEndDate(null))}
           />
         </div>
       </div>
