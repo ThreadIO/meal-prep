@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   Modal,
   ModalContent,
@@ -9,7 +9,8 @@ import {
   Spinner,
   Input,
   Checkbox,
-  //   Dropdown,
+  Autocomplete,
+  AutocompleteItem,
 } from "@nextui-org/react";
 import { useUser } from "@propelauth/nextjs/client";
 import { createOrder } from "@/helpers/request";
@@ -23,7 +24,7 @@ interface CreateOrderModalProps {
 }
 
 export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
-  //   products,
+  products,
   open,
   onClose,
   onCreate,
@@ -38,7 +39,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       city: "",
       state: "",
       postcode: "",
-      country: "",
+      country: "US",
       email: "",
       phone: "",
     },
@@ -50,44 +51,54 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       city: "",
       state: "",
       postcode: "",
-      country: "",
+      country: "US",
     },
-    line_items: [] as any[],
-    // payment_method: "bacs",
-    // payment_method_title: "Direct Bank Transfer",
-    // set_paid: false,
-    // shipping_lines: [
-    //   { method_id: "flat_rate", method_title: "Flat Rate", total: "10.00" },
-    // ],
+    line_items: [] as {
+      product_id: number;
+      quantity: number;
+      variation_id?: number;
+    }[],
   });
 
+  const uniqueProducts = useMemo(() => {
+    const seen = new Set();
+    return products.filter((product) => {
+      if (seen.has(product.id)) {
+        return false;
+      }
+      seen.add(product.id);
+      return true;
+    });
+  }, [products]);
+
   const [sameAsShipping, setSameAsShipping] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [quantity, setQuantity] = useState(1);
 
-  const handleInputChange = (
-    section: "billing" | "shipping",
-    field: string,
-    value: string
-  ) => {
-    setOrderData((prevData) => ({
-      ...prevData,
-      [section]: {
-        ...prevData[section],
-        [field]: value,
-      },
-    }));
-
-    if (sameAsShipping && section === "billing") {
+  const handleInputChange = useCallback(
+    (section: "billing" | "shipping", field: string, value: string) => {
       setOrderData((prevData) => ({
         ...prevData,
-        shipping: {
-          ...prevData.shipping,
+        [section]: {
+          ...prevData[section],
           [field]: value,
         },
       }));
-    }
-  };
 
-  const handleSameAsShippingChange = (checked: boolean) => {
+      if (sameAsShipping && section === "billing") {
+        setOrderData((prevData) => ({
+          ...prevData,
+          shipping: {
+            ...prevData.shipping,
+            [field]: value,
+          },
+        }));
+      }
+    },
+    [sameAsShipping]
+  );
+
+  const handleSameAsShippingChange = useCallback((checked: boolean) => {
     setSameAsShipping(checked);
     if (checked) {
       setOrderData((prevData) => ({
@@ -95,44 +106,48 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
         shipping: { ...prevData.billing },
       }));
     }
-  };
+  }, []);
 
-  //   const handleAddLineItem = (productId: string, quantity: number) => {
-  //     const product = products.find((p) => p.id === productId);
-  //     if (product) {
-  //       setOrderData((prevData) => ({
-  //         ...prevData,
-  //         line_items: [
-  //           ...prevData.line_items,
-  //           {
-  //             product_id: productId,
-  //             quantity: quantity,
-  //             name: product.name,
-  //             price: product.price,
-  //           },
-  //         ],
-  //       }));
-  //     }
-  //   };
+  const handleProductSelect = useCallback(
+    (productId: number) => {
+      const product = uniqueProducts.find((p) => p.id === productId);
+      setSelectedProduct(product || null);
+    },
+    [uniqueProducts]
+  );
 
-  const handleRemoveLineItem = (index: number) => {
+  const handleAddLineItem = useCallback(() => {
+    if (selectedProduct && quantity > 0) {
+      setOrderData((prevData) => ({
+        ...prevData,
+        line_items: [
+          ...prevData.line_items,
+          { product_id: selectedProduct.id, quantity },
+        ],
+      }));
+      setSelectedProduct(null);
+      setQuantity(1);
+    }
+  }, [selectedProduct, quantity]);
+
+  const handleRemoveLineItem = useCallback((index: number) => {
     setOrderData((prevData) => ({
       ...prevData,
       line_items: prevData.line_items.filter((_, i) => i !== index),
     }));
-  };
+  }, []);
 
-  const handleCreate = async () => {
+  const handleCreate = useCallback(async () => {
     if (user) {
       const orderDataToSubmit = { ...orderData };
       if (!orderDataToSubmit.billing.email) {
         delete (orderDataToSubmit.billing as any).email;
       }
-      const request = await createOrder(user.userId, orderData);
+      const request = await createOrder(user.userId, orderDataToSubmit);
       onCreate(request.data);
       onClose();
     }
-  };
+  }, [user, orderData, onCreate, onClose]);
 
   const renderAddressFields = (section: "billing" | "shipping") => (
     <div className="grid grid-cols-2 gap-4">
@@ -182,6 +197,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       {section === "billing" && (
         <>
           <Input
+            type="email"
             label="Email"
             value={orderData.billing.email}
             onChange={(e) =>
@@ -206,7 +222,8 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       {orderData.line_items.map((item, index) => (
         <div key={index} className="flex justify-between items-center mb-2">
           <span>
-            {item.name} (x{item.quantity})
+            {uniqueProducts.find((p) => p.id === item.product_id)?.name} (
+            {item.quantity})
           </span>
           <Button
             color="danger"
@@ -217,17 +234,33 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           </Button>
         </div>
       ))}
-      {/* <Dropdown>
-        <Dropdown.Trigger>
-          <Button>Add Product</Button>
-        </Dropdown.Trigger>
-        <Dropdown.Menu
-          items={products}
-          onAction={(key) => handleAddLineItem(key as string, 1)}
+      <div className="flex items-center gap-2 mt-4">
+        <Autocomplete
+          label="Select Product"
+          placeholder="Start typing..."
+          onSelectionChange={(id) => handleProductSelect(Number(id))}
         >
-          {(item) => <Dropdown.Item key={item.id}>{item.name}</Dropdown.Item>}
-        </Dropdown.Menu>
-      </Dropdown> */}
+          {uniqueProducts.map((product) => (
+            <AutocompleteItem key={product.id} value={product.id.toString()}>
+              {product.name}
+            </AutocompleteItem>
+          ))}
+        </Autocomplete>
+        <Input
+          type="number"
+          label="Quantity"
+          value={quantity.toString()}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          min={1}
+        />
+        <Button
+          color="primary"
+          onPress={handleAddLineItem}
+          disabled={!selectedProduct}
+        >
+          Add Item
+        </Button>
+      </div>
     </div>
   );
 

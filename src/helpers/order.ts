@@ -291,19 +291,21 @@ function findCustomOption(
 
 export function deliveryList(
   orders: DeliveryOrder[],
-  areaZipcodeMap: AreaZipcode[]
+  areaZipcodeMap?: AreaZipcode[]
 ) {
   // Group orders by area
   const ordersByArea: { [area: string]: DeliveryOrder[] } = {};
 
   orders.forEach((order) => {
     const zipcode = order.shipping.postcode;
-    let area = areaZipcodeMap.find((areaZip) =>
-      areaZip.zipcodes.includes(zipcode)
-    )?.area;
+    let area: string;
 
-    // If no matching area is found, use the zipcode as the area
-    if (!area) {
+    if (areaZipcodeMap) {
+      const matchingArea = areaZipcodeMap.find((areaZip) =>
+        areaZip.zipcodes.includes(zipcode)
+      );
+      area = matchingArea ? matchingArea.area : `Unassigned (${zipcode})`;
+    } else {
       area = `Unassigned (${zipcode})`;
     }
 
@@ -313,7 +315,7 @@ export function deliveryList(
     ordersByArea[area].push(order);
   });
 
-  // Prepare CSV data
+  // The rest of the function remains the same
   const csvData = [
     [
       "Area",
@@ -325,7 +327,6 @@ export function deliveryList(
     ],
   ];
 
-  // Sort areas alphabetically, but put "Unassigned" areas at the end
   const sortedAreas = Object.keys(ordersByArea).sort((a, b) => {
     if (a.startsWith("Unassigned") && !b.startsWith("Unassigned")) return 1;
     if (!a.startsWith("Unassigned") && b.startsWith("Unassigned")) return -1;
@@ -335,14 +336,13 @@ export function deliveryList(
   sortedAreas.forEach((area) => {
     let areaOrders = ordersByArea[area];
 
-    // Sort orders within each area by zipcode numerically
     areaOrders.sort((a, b) => {
       const zipA = parseInt(a.shipping.postcode, 10);
       const zipB = parseInt(b.shipping.postcode, 10);
       return zipA - zipB;
     });
 
-    csvData.push([area]); // Add area as a separate row
+    csvData.push([area]);
     areaOrders.forEach((order) => {
       const { shipping, billing, customer_note, date_created } = order;
       const name = `${shipping.first_name} ${shipping.last_name}`;
@@ -352,18 +352,10 @@ export function deliveryList(
         friendlyDate(getDeliveryDate(order)) ||
         new Date(date_created).toLocaleDateString();
 
-      csvData.push([
-        "", // Leave area blank for order rows
-        name,
-        address,
-        phone,
-        deliveryDate,
-        customer_note,
-      ]);
+      csvData.push(["", name, address, phone, deliveryDate, customer_note]);
     });
   });
 
-  // Generate and save CSV file
   const csv = Papa.unparse(csvData);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   saveAs(blob, "delivery_list.csv");

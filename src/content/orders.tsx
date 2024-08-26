@@ -1,11 +1,11 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
 import { Button, Spinner, DatePicker, Card, CardBody } from "@nextui-org/react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import React from "react";
 import { saveAs } from "file-saver";
 import { demoFlag, not_products } from "@/helpers/utils";
-import { generateListOfMealIds, getData } from "@/helpers/frontend";
+import { generateListOfMealIds } from "@/helpers/frontend";
 import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
 import { now, getLocalTimeZone } from "@internationalized/date";
@@ -24,27 +24,28 @@ import {
 import { CircleX } from "lucide-react";
 import { useOrgContext } from "@/components/context/OrgContext";
 import { CreateOrderModal } from "@/components/Modals/CreateOrderModal";
-import { getCategories, getProducts } from "@/helpers/request";
+import {
+  getAllMeals,
+  getCategories,
+  getProducts,
+  getOrders,
+} from "@/helpers/request";
+import { useQuery, useQueryClient } from "react-query";
+import {
+  filterOrdersByStatus,
+  filterOrdersByCategory,
+  filterBySearch,
+  filterOrdersByComponent,
+} from "@/helpers/filters";
 
 export default function OrdersPage() {
   const { user } = useUser();
-  const { currentOrg } = useOrgContext();
-  const [org, setOrg] = useState<any>({});
-
+  const { org, isLoading: orgLoading } = useOrgContext();
+  const queryClient = useQueryClient();
   const [endDate, setEndDate] = useState(now(getLocalTimeZone())); // Default to today's date
   const [startDate, setStartDate] = useState(
     now(getLocalTimeZone()).subtract({ weeks: 1 })
   ); // Default to a week ago
-  const [orders, setOrders] = useState<any[]>([]);
-  const [meals, setMeals] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
-  const [mealsLoading, setMealsLoading] = useState<boolean>(false);
-  const [productsLoading, setProductsLoading] = useState<boolean>(false);
-  const [orgLoading, setOrgLoading] = useState<boolean>(false);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
     new Set(["All"])
   );
@@ -66,17 +67,71 @@ export default function OrdersPage() {
   const [hasCompositeProducts, setHasCompositeProducts] = useState(false);
   const [createOrderModalOpen, setCreateOrderModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchCategories();
-    }
-  }, [user]);
+  const queryKey = ["orders", user?.userId, startDate, endDate];
 
-  useEffect(() => {
-    if (currentOrg && !orgLoading) {
-      getOrg(currentOrg);
+  const triggerFetchOrders = () => {
+    setShowOrders(true);
+    refetchOrders();
+  };
+
+  const {
+    data: orders = [],
+    isLoading: ordersLoading,
+    refetch: refetchOrders,
+  } = useQuery(
+    ["orders", user?.userId, startDate, endDate],
+    async () => {
+      const ordersData = await getOrders({
+        userid: user?.userId,
+        startDate: startDate.toString(),
+        endDate: endDate.toString(),
+      });
+      return transformOrdersData(ordersData);
+    },
+    {
+      onError: (error: any) => {
+        console.error("Error fetching orders: ", error.message);
+        setError(`Error fetching orders: ${error.message}`);
+      },
+      enabled: !!user?.userId && showOrders,
     }
-  }, [currentOrg]);
+  );
+
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery(
+    ["categories", user?.userId],
+    () => getCategories(user),
+    {
+      onError: (error: any) => {
+        console.error("Error fetching categories: ", error.message);
+        setError(`Error fetching categories: ${error.message}`);
+      },
+      enabled: !!user?.userId,
+    }
+  );
+
+  const { data: meals = [], isLoading: mealsLoading } = useQuery(
+    ["meals", user?.userId],
+    () => getAllMeals(user?.userId ?? "", generateListOfMealIds(orders)),
+    {
+      onError: (error: any) => {
+        console.error("Error fetching meals: ", error.message);
+        setError(`Error fetching meals: ${error.message}`);
+      },
+      enabled: !!user?.userId,
+    }
+  );
+
+  const { data: products = [], isLoading: productsLoading } = useQuery(
+    ["products", user?.userId],
+    () => getProducts(user?.userId ?? ""),
+    {
+      onError: (error: any) => {
+        console.error("Error fetching products: ", error.message);
+        setError(`Error fetching products: ${error.message}`);
+      },
+      enabled: !!user?.userId,
+    }
+  );
 
   const calculateTotalMeals = (orders: any) => {
     return orders.reduce((total: any, order: any) => {
@@ -135,6 +190,25 @@ export default function OrdersPage() {
       </Button>
     );
   };
+
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
+    filtered = filterOrdersByCategory(filtered, selectedMenuKeys, products);
+    filtered = filterOrdersByDate(filtered, deliveryDate);
+    filtered = filterOrdersByComponent(filtered, selectedComponent);
+    filtered = filterBySearch(filtered, searchTerm);
+    return filtered;
+  }, [
+    orders,
+    products,
+    selectedStatusKeys,
+    selectedMenuKeys,
+    deliveryDate,
+    selectedComponent,
+    searchTerm,
+  ]);
+
   useEffect(() => {
     if (orders.length > 0) {
       const hasComposite = checkForCompositeProducts(orders);
@@ -146,270 +220,15 @@ export default function OrdersPage() {
     }
   }, [orders]);
 
-  const filterOrdersByComponent = (
-    orders: any[],
-    selectedKeys: Set<string>
-  ) => {
-    return orders
-      .map((order) => {
-        const includedProducts = new Set();
-        return {
-          ...order,
-          line_items: order.line_items.filter((item: any) => {
-            if (selectedKeys.has("All")) {
-              return true;
-            }
-            if (item.composite_parent) {
-              const compositeData = item.meta_data.find(
-                (meta: any) => meta.key === "_composite_data"
-              );
-              if (compositeData && compositeData.value) {
-                const matchedComponent = Object.values(
-                  compositeData.value
-                ).find(
-                  (component: any) =>
-                    component.product_id === item.product_id &&
-                    selectedKeys.has(component.title)
-                );
-                if (
-                  matchedComponent &&
-                  !includedProducts.has(item.product_id)
-                ) {
-                  includedProducts.add(item.product_id);
-                  return true;
-                }
-              }
-            }
-            return false;
-          }),
-        };
-      })
-      .filter(
-        (order) => selectedKeys.has("All") || order.line_items.length > 0
-      );
-  };
-
   const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);
   }, []);
-
-  const getOrders = async () => {
-    const url = "/api/woocommerce/getorders";
-    const method = "POST";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-
-    const body = {
-      userid: user?.userId,
-      startDate: startDate.toString(),
-      endDate: endDate.toString(),
-    };
-    getData(
-      "orders",
-      url,
-      method,
-      headers,
-      (data) => handleSuccessfulFetch(data),
-      setError,
-      setOrdersLoading,
-      body,
-      () => {
-        setShowOrders(true);
-        fetchProducts();
-      },
-      (data) => {
-        getMeals(data);
-      },
-      transformOrdersData
-    );
-  };
-
-  // New function to fetch categories
-  const fetchCategories = async () => {
-    if (categories.length == 0) {
-      setCategoriesLoading(true);
-      try {
-        const categoriesData = await getCategories(user);
-        setCategories(categoriesData);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        setError("Failed to fetch categories");
-      } finally {
-        setCategoriesLoading(false);
-      }
-    } else {
-      console.log("Categories already fetched");
-    }
-  };
-
-  const fetchProducts = async () => {
-    setProductsLoading(true);
-    try {
-      const productsData = await getProducts(user?.userId || "");
-      setProducts(productsData);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setError("Failed to fetch products");
-    } finally {
-      setProductsLoading(false);
-    }
-  };
-
-  const getOrg = async (orgid: string) => {
-    const url = `/api/org/propelauth/${orgid}`;
-    const method = "GET";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    getData(
-      "org",
-      url,
-      method,
-      headers,
-      (org) => {
-        setOrg(org);
-      },
-      setError,
-      setOrgLoading
-    );
-  };
-
-  const getMeals = async (orders: any) => {
-    const url = "/api/getmeals";
-    const method = "POST";
-    const headers = {
-      "Content-Type": "application/json",
-    };
-    const mealids = generateListOfMealIds(orders);
-    console.log("Meal Ids: ", mealids);
-    const body = {
-      mealids: generateListOfMealIds(orders),
-      userid: user?.userId,
-    };
-    getData(
-      "meals",
-      url,
-      method,
-      headers,
-      (data) => {
-        setMeals(data);
-      },
-      setError,
-      setMealsLoading,
-      body
-    );
-  };
-
-  useEffect(() => {
-    const filtered = getFilteredOrders(
-      orders,
-      selectedMenuKeys,
-      selectedStatusKeys,
-      selectedComponent
-    );
-    setFilteredOrders(filtered);
-  }, [
-    selectedMenuKeys,
-    selectedStatusKeys,
-    orders,
-    deliveryDate,
-    searchTerm,
-    selectedComponent,
-  ]);
-
-  const nameSearch = (orders: any[], searchTerm: string) => {
-    // Extract the name search terms (after "name:")
-    const nameSearchTerms = searchTerm
-      .slice(5)
-      .split(",")
-      .map((term: string) => term.trim().toLowerCase());
-
-    // Filter orders based on the full name derived from first_name and last_name
-    const filteredOrders = orders.filter((order) => {
-      const fullName =
-        `${order.billing.first_name} ${order.billing.last_name}`.toLowerCase();
-      // Check if any of the search terms match the full name
-      return nameSearchTerms.some((term) => fullName.includes(term));
-    });
-
-    return filteredOrders;
-  };
-
-  const handleSuccessfulFetch = (data: any) => {
-    setOrders(data);
-    setFilteredOrders(data);
-    console.log("Orders: ", data);
-  };
 
   const handleDownloadDeliveryList = () => {
     // hardcoding
     const areaZipcodeMap = org.zipcodeMap;
     console.log("Area Zipcode Map: ", areaZipcodeMap);
     deliveryList(filteredOrders, areaZipcodeMap);
-  };
-
-  const getFilteredOrders = (
-    orders: any[],
-    selectedMenuKeys: Set<string>,
-    selectedStatusKeys: Set<string>,
-    selectedComponent: Set<string>
-  ) => {
-    console.log("Orders: ", orders);
-    let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
-    filtered = filterOrdersByCategory(filtered, selectedMenuKeys);
-    filtered = filterOrdersByDate(filtered, deliveryDate);
-    filtered = filterOrdersByComponent(filtered, selectedComponent);
-    filtered = filterBySearch(filtered, searchTerm);
-    console.log("Filtered Orders: ", filtered);
-    return filtered;
-  };
-
-  const filterBySearch = (orders: any[], searchTerm: string) => {
-    if (searchTerm.toLowerCase().startsWith("name:")) {
-      return nameSearch(orders, searchTerm);
-    } else {
-      // Regular filter based on id field (unchanged)
-      const filteredOrders = orders.filter((order) =>
-        order.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      return filteredOrders;
-    }
-  };
-
-  const filterOrdersByCategory = (orders: any[], selectedKeys: Set<string>) => {
-    return orders
-      .map((order) => ({
-        ...order,
-        line_items: order.line_items.filter((item: any) => {
-          if (selectedKeys.has("All")) {
-            return true;
-          }
-          const associatedProduct = products.find(
-            (product) => product.id === item.product_id
-          );
-          const itemCategories =
-            associatedProduct?.categories?.map(
-              (category: any) => category.name
-            ) || [];
-          return Array.from(selectedKeys).every((selectedCategory: any) =>
-            itemCategories.includes(selectedCategory)
-          );
-        }),
-      }))
-      .filter(
-        (order) => selectedKeys.has("All") || order.line_items.length > 0
-      );
-  };
-
-  const filterOrdersByStatus = (orders: any[], selectedKeys: Set<string>) => {
-    // Check if "All" is in the selectedKeys
-    if (selectedKeys.has("All")) {
-      return orders;
-    }
-
-    // Filter the orders where the status is one of the selected keys
-    return orders.filter((order) => selectedKeys.has(order.status));
   };
 
   const renderComponentFilterDropdown = () => {
@@ -473,10 +292,9 @@ export default function OrdersPage() {
   const clear = async () => {
     clearOrders();
   };
-  const clearOrders = async () => {
-    setOrders([]);
-    setOrdersLoading(false);
-    setMealsLoading(false);
+
+  const clearOrders = () => {
+    queryClient.setQueryData(queryKey, []);
     setShowOrders(false);
   };
 
@@ -716,7 +534,13 @@ export default function OrdersPage() {
   };
 
   const renderOrdersContent = () => {
-    if ((ordersLoading && showOrders) || categoriesLoading || mealsLoading) {
+    if (
+      (ordersLoading && showOrders) ||
+      categoriesLoading ||
+      mealsLoading ||
+      orgLoading ||
+      productsLoading
+    ) {
       return renderLoading();
     } else if (showOrders) {
       return renderOrders();
@@ -742,6 +566,8 @@ export default function OrdersPage() {
             <Spinner label="Loading Categories" />
           ) : mealsLoading ? (
             <Spinner label="Loading Meals" />
+          ) : productsLoading ? (
+            <Spinner label="Loading Products" />
           ) : orgLoading ? (
             <Spinner label="Loading Organization" />
           ) : null}
@@ -758,7 +584,12 @@ export default function OrdersPage() {
     // Function to render individual order details with line items
     const renderLineItems = () => {
       return (
-        <OrderTable orders={filteredOrders} onUpdate={() => getOrders()} />
+        <OrderTable
+          orders={filteredOrders}
+          onUpdate={() =>
+            queryClient.invalidateQueries(["orders", user?.userId])
+          }
+        />
       );
     };
 
@@ -794,7 +625,7 @@ export default function OrdersPage() {
       console.log("New End Date: ", new_endDate);
       console.log("Order Create Time: ", order.date_created);
       setEndDate(new_endDate);
-      await getOrders();
+      queryClient.invalidateQueries(["orders", user?.userId]);
     };
 
     return (
@@ -934,7 +765,7 @@ export default function OrdersPage() {
                 padding: "5px 10px",
                 borderRadius: "5px",
               }}
-              onClick={() => getOrders()}
+              onClick={() => triggerFetchOrders()}
               color="primary"
             >
               Get Orders
