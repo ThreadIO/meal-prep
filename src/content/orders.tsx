@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import React from "react";
 import { saveAs } from "file-saver";
 import { demoFlag, not_products } from "@/helpers/utils";
-import { generateListOfMealIds, getData } from "@/helpers/frontend";
+import { generateListOfMealIds } from "@/helpers/frontend";
 import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
 import { now, getLocalTimeZone } from "@internationalized/date";
@@ -24,20 +24,23 @@ import {
 import { CircleX } from "lucide-react";
 import { useOrgContext } from "@/components/context/OrgContext";
 import { CreateOrderModal } from "@/components/Modals/CreateOrderModal";
-import { getAllMeals, getCategories, getProducts } from "@/helpers/request";
-import { useQuery } from "react-query";
+import {
+  getAllMeals,
+  getCategories,
+  getProducts,
+  getOrders,
+} from "@/helpers/request";
+import { useQuery, useQueryClient } from "react-query";
 
 export default function OrdersPage() {
   const { user } = useUser();
   const { org, isLoading: orgLoading } = useOrgContext();
-
+  const queryClient = useQueryClient();
   const [endDate, setEndDate] = useState(now(getLocalTimeZone())); // Default to today's date
   const [startDate, setStartDate] = useState(
     now(getLocalTimeZone()).subtract({ weeks: 1 })
   ); // Default to a week ago
-  const [orders, setOrders] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [selectedMenuKeys, setSelectedMenuKeys] = useState<any>(
     new Set(["All"])
   );
@@ -58,6 +61,36 @@ export default function OrdersPage() {
   );
   const [hasCompositeProducts, setHasCompositeProducts] = useState(false);
   const [createOrderModalOpen, setCreateOrderModalOpen] = useState(false);
+
+  const queryKey = ["orders", user?.userId, startDate, endDate];
+
+  const triggerFetchOrders = () => {
+    setShowOrders(true);
+    refetchOrders();
+  };
+
+  const {
+    data: orders = [],
+    isLoading: ordersLoading,
+    refetch: refetchOrders,
+  } = useQuery(
+    ["orders", user?.userId, startDate, endDate],
+    async () => {
+      const ordersData = await getOrders({
+        userid: user?.userId,
+        startDate: startDate.toString(),
+        endDate: endDate.toString(),
+      });
+      return transformOrdersData(ordersData);
+    },
+    {
+      onError: (error: any) => {
+        console.error("Error fetching orders: ", error.message);
+        setError(`Error fetching orders: ${error.message}`);
+      },
+      enabled: !!user?.userId && showOrders,
+    }
+  );
 
   const { data: categories = [], isLoading: categoriesLoading } = useQuery(
     ["categories", user?.userId],
@@ -210,34 +243,34 @@ export default function OrdersPage() {
     setSearchTerm(term);
   }, []);
 
-  const getOrders = async () => {
-    const url = "/api/woocommerce/getorders";
-    const method = "POST";
-    const headers = {
-      "Content-Type": "application/json",
-    };
+  // const getOrders = async () => {
+  //   const url = "/api/woocommerce/getorders";
+  //   const method = "POST";
+  //   const headers = {
+  //     "Content-Type": "application/json",
+  //   };
 
-    const body = {
-      userid: user?.userId,
-      startDate: startDate.toString(),
-      endDate: endDate.toString(),
-    };
-    getData(
-      "orders",
-      url,
-      method,
-      headers,
-      (data) => handleSuccessfulFetch(data),
-      setError,
-      setOrdersLoading,
-      body,
-      () => {
-        setShowOrders(true);
-      },
-      () => {},
-      transformOrdersData
-    );
-  };
+  //   const body = {
+  //     userid: user?.userId,
+  //     startDate: startDate.toString(),
+  //     endDate: endDate.toString(),
+  //   };
+  //   getData(
+  //     "orders",
+  //     url,
+  //     method,
+  //     headers,
+  //     (data) => handleSuccessfulFetch(data),
+  //     setError,
+  //     setOrdersLoading,
+  //     body,
+  //     () => {
+  //       setShowOrders(true);
+  //     },
+  //     () => {},
+  //     transformOrdersData
+  //   );
+  // };
 
   useEffect(() => {
     const filtered = getFilteredOrders(
@@ -272,12 +305,6 @@ export default function OrdersPage() {
     });
 
     return filteredOrders;
-  };
-
-  const handleSuccessfulFetch = (data: any) => {
-    setOrders(data);
-    setFilteredOrders(data);
-    console.log("Orders: ", data);
   };
 
   const handleDownloadDeliveryList = () => {
@@ -411,9 +438,9 @@ export default function OrdersPage() {
   const clear = async () => {
     clearOrders();
   };
-  const clearOrders = async () => {
-    setOrders([]);
-    setOrdersLoading(false);
+
+  const clearOrders = () => {
+    queryClient.setQueryData(queryKey, []);
     setShowOrders(false);
   };
 
@@ -703,7 +730,12 @@ export default function OrdersPage() {
     // Function to render individual order details with line items
     const renderLineItems = () => {
       return (
-        <OrderTable orders={filteredOrders} onUpdate={() => getOrders()} />
+        <OrderTable
+          orders={filteredOrders}
+          onUpdate={() =>
+            queryClient.invalidateQueries(["orders", user?.userId])
+          }
+        />
       );
     };
 
@@ -739,7 +771,7 @@ export default function OrdersPage() {
       console.log("New End Date: ", new_endDate);
       console.log("Order Create Time: ", order.date_created);
       setEndDate(new_endDate);
-      await getOrders();
+      queryClient.invalidateQueries(["orders", user?.userId]);
     };
 
     return (
@@ -879,7 +911,7 @@ export default function OrdersPage() {
                 padding: "5px 10px",
                 borderRadius: "5px",
               }}
-              onClick={() => getOrders()}
+              onClick={() => triggerFetchOrders()}
               color="primary"
             >
               Get Orders
