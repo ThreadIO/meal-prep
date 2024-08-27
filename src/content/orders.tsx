@@ -1,6 +1,12 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
-import { Button, Spinner, DatePicker, Card, CardBody } from "@nextui-org/react";
+import {
+  Button,
+  Spinner,
+  Card,
+  CardBody,
+  DateRangePicker,
+} from "@nextui-org/react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import React from "react";
 import { saveAs } from "file-saver";
@@ -73,11 +79,20 @@ export default function OrdersPage() {
   const [hasCompositeProducts, setHasCompositeProducts] = useState(false);
   const [createOrderModalOpen, setCreateOrderModalOpen] = useState(false);
 
+  const [mode, setMode] = useState("delivery");
+  const [loading, setLoading] = useState(false);
+
   const queryKey = ["orders", user?.userId, startDate, endDate];
 
-  const triggerFetchOrders = () => {
+  const triggerFetchOrders = async (mode: string) => {
+    if (mode === "delivery") {
+      setStartDate(deliveryStartDate.copy().subtract({ weeks: 2 }));
+      setEndDate(deliveryEndDate.copy().add({ weeks: 2 }));
+    }
+    setLoading(true);
+    await refetchOrders();
     setShowOrders(true);
-    refetchOrders();
+    setLoading(false);
   };
 
   const {
@@ -399,21 +414,22 @@ export default function OrdersPage() {
             gap: "10px",
           }}
         >
-          <DatePicker
-            label="Start Date"
-            value={deliveryStartDate}
-            onChange={(date) => setDeliveryStartDate(date)}
-            maxValue={deliveryEndDate}
+          <DateRangePicker
+            label="Delivery Date Range"
+            value={{
+              start: deliveryStartDate,
+              end: deliveryEndDate,
+            }}
+            onChange={({ start, end }) => {
+              setDeliveryStartDate(start);
+              setDeliveryEndDate(end);
+            }}
+            granularity="day"
             showMonthAndYearPickers
-            startContent={clearDateButton(() => setDeliveryStartDate(null))}
-          />
-          <DatePicker
-            label="End Date"
-            value={deliveryEndDate}
-            onChange={(date) => setDeliveryEndDate(date)}
-            minValue={deliveryStartDate}
-            showMonthAndYearPickers
-            startContent={clearDateButton(() => setDeliveryEndDate(null))}
+            startContent={clearDateButton(() => {
+              setDeliveryStartDate(null);
+              setDeliveryEndDate(null);
+            })}
           />
         </div>
       </div>
@@ -542,7 +558,8 @@ export default function OrdersPage() {
       categoriesLoading ||
       mealsLoading ||
       orgLoading ||
-      productsLoading
+      productsLoading ||
+      loading
     ) {
       return renderLoading();
     } else if (showOrders) {
@@ -554,7 +571,13 @@ export default function OrdersPage() {
         endDate,
         setEndDate,
         triggerFetchOrders,
-        error
+        error,
+        mode,
+        setMode,
+        deliveryStartDate,
+        setDeliveryStartDate,
+        deliveryEndDate,
+        setDeliveryEndDate
       );
     }
   };
@@ -570,7 +593,7 @@ export default function OrdersPage() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          {ordersLoading ? (
+          {ordersLoading || loading ? (
             <Spinner label="Loading Orders" />
           ) : categoriesLoading ? (
             <Spinner label="Loading Categories" />

@@ -1,4 +1,4 @@
-import { Button, DatePicker } from "@nextui-org/react";
+import { Button, DateRangePicker, RadioGroup, Radio } from "@nextui-org/react";
 
 export const renderDateInputs = (
   startDate: any,
@@ -7,8 +7,18 @@ export const renderDateInputs = (
   endDate: any,
   // eslint-disable-next-line no-unused-vars
   setEndDate: (e_date: any) => void,
-  triggerFetchOrders: () => void,
-  error: string
+  // eslint-disable-next-line no-unused-vars
+  triggerFetchOrders: (mode: string) => void,
+  error: string,
+  mode: string,
+  // eslint-disable-next-line no-unused-vars
+  setMode: (mode: string) => void,
+  startDeliveryDate: any,
+  // eslint-disable-next-line no-unused-vars
+  setStartDeliveryDate: (s_d_date: any) => void,
+  endDeliveryDate: any,
+  // eslint-disable-next-line no-unused-vars
+  setEndDeliveryDate: (e_d_date: any) => void
 ) => {
   const renderError = () => {
     return (
@@ -16,6 +26,77 @@ export const renderDateInputs = (
         <p style={{ color: "red" }}>{error}</p>
       </div>
     );
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  const modeSwitch = (mode: string, setMode: (mode: string) => void) => (
+    <RadioGroup
+      value={mode}
+      onChange={(e) => {
+        setMode(e.target.value);
+      }}
+    >
+      <Radio value="delivery">Delivery Date</Radio>
+      <Radio value="order">Order Date</Radio>
+    </RadioGroup>
+  );
+
+  const dateInputs = (
+    startDate: any,
+    endDate: any,
+    // eslint-disable-next-line no-unused-vars
+    setStartDate: (s_date: any) => void,
+    // eslint-disable-next-line no-unused-vars
+    setEndDate: (e_date: any) => void
+  ) => {
+    if (mode === "order") {
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "10px",
+          }}
+        >
+          <DateRangePicker
+            label="Order Date Range"
+            value={{
+              start: startDate,
+              end: endDate,
+            }}
+            onChange={({ start, end }) => {
+              setStartDate(start);
+              setEndDate(end);
+            }}
+            showMonthAndYearPickers
+          />
+        </div>
+      );
+    } else {
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "10px",
+          }}
+        >
+          <DateRangePicker
+            label="Delivery Date Range"
+            value={{
+              start: startDeliveryDate,
+              end: endDeliveryDate,
+            }}
+            onChange={({ start, end }) => {
+              setStartDeliveryDate(start);
+              setEndDeliveryDate(end);
+            }}
+            granularity="minute"
+            showMonthAndYearPickers
+          />
+        </div>
+      );
+    }
   };
 
   return (
@@ -35,28 +116,8 @@ export const renderDateInputs = (
         }}
       >
         {renderError()}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "10px",
-          }}
-        >
-          <DatePicker
-            label="Start Date"
-            value={startDate}
-            onChange={(e) => setStartDate(e)}
-            maxValue={endDate?.copy().subtract({ days: 1 })}
-            showMonthAndYearPickers
-          />
-          <DatePicker
-            label="End Date"
-            value={endDate}
-            onChange={(e) => setEndDate(e)}
-            minValue={startDate?.copy().add({ days: 1 })}
-            showMonthAndYearPickers
-          />
-        </div>
+        {modeSwitch(mode, setMode)}
+        {dateInputs(startDate, endDate, setStartDate, setEndDate)}
         <div
           style={{
             display: "flex",
@@ -70,7 +131,7 @@ export const renderDateInputs = (
               padding: "5px 10px",
               borderRadius: "5px",
             }}
-            onClick={() => triggerFetchOrders()}
+            onClick={() => triggerFetchOrders(mode)}
             color="primary"
           >
             Get Orders
