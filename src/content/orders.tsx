@@ -1,12 +1,19 @@
 "use client";
 import { useUser } from "@propelauth/nextjs/client";
-import { Button, Spinner, DatePicker, Card, CardBody } from "@nextui-org/react";
+import {
+  Button,
+  Spinner,
+  Card,
+  CardBody,
+  DateRangePicker,
+} from "@nextui-org/react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import React from "react";
 import { saveAs } from "file-saver";
 import { demoFlag, not_products } from "@/helpers/utils";
 import { generateListOfMealIds } from "@/helpers/frontend";
-import { filterOrdersByDate } from "@/helpers/date";
+import { filterOrdersByDateRange } from "@/helpers/date"; // Update this import
+// import { filterOrdersByDate } from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import FilterDropdown from "@/components/FilterDropdown";
@@ -20,6 +27,7 @@ import {
   prepareOrderedMeals,
   generateIngredientsReport,
   deliveryList,
+  downloadNameTags,
 } from "@/helpers/order";
 import { CircleX } from "lucide-react";
 import { useOrgContext } from "@/components/context/OrgContext";
@@ -37,6 +45,8 @@ import {
   filterBySearch,
   filterOrdersByComponent,
 } from "@/helpers/filters";
+import { renderDateInputs } from "@/content/orders/dateinputs";
+import { StyledButton } from "@/components/StyledButton";
 
 export default function OrdersPage() {
   const { user } = useUser();
@@ -57,7 +67,10 @@ export default function OrdersPage() {
   const [showCosts, setShowCosts] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
   const [error, setError] = useState<string>("");
-  const [deliveryDate, setDeliveryDate] = useState<any>();
+
+  const [deliveryStartDate, setDeliveryStartDate] = useState<any>(null);
+  const [deliveryEndDate, setDeliveryEndDate] = useState<any>(null);
+
   const [searchTerm, setSearchTerm] = useState("");
 
   const [compositeComponents, setCompositeComponents] = useState<any[]>([]);
@@ -67,11 +80,20 @@ export default function OrdersPage() {
   const [hasCompositeProducts, setHasCompositeProducts] = useState(false);
   const [createOrderModalOpen, setCreateOrderModalOpen] = useState(false);
 
+  const [mode, setMode] = useState("delivery");
+  const [loading, setLoading] = useState(false);
+
   const queryKey = ["orders", user?.userId, startDate, endDate];
 
-  const triggerFetchOrders = () => {
+  const triggerFetchOrders = async (mode: string) => {
+    if (mode === "delivery") {
+      setStartDate(deliveryStartDate.copy().subtract({ weeks: 2 }));
+      setEndDate(deliveryEndDate.copy().add({ weeks: 2 }));
+    }
+    setLoading(true);
+    await refetchOrders();
     setShowOrders(true);
-    refetchOrders();
+    setLoading(false);
   };
 
   const {
@@ -196,7 +218,11 @@ export default function OrdersPage() {
     console.log("Orders: ", orders);
     let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
     filtered = filterOrdersByCategory(filtered, selectedMenuKeys, products);
-    filtered = filterOrdersByDate(filtered, deliveryDate);
+    filtered = filterOrdersByDateRange(
+      filtered,
+      deliveryStartDate,
+      deliveryEndDate
+    );
     filtered = filterOrdersByComponent(filtered, selectedComponent);
     filtered = filterBySearch(filtered, searchTerm);
     console.log("Filtered Orders: ", filtered);
@@ -206,7 +232,8 @@ export default function OrdersPage() {
     products,
     selectedStatusKeys,
     selectedMenuKeys,
-    deliveryDate,
+    deliveryStartDate,
+    deliveryEndDate,
     selectedComponent,
     searchTerm,
   ]);
@@ -267,12 +294,15 @@ export default function OrdersPage() {
 
   const renderStatusFilterDropdown = () => {
     return (
-      <FilterDropdown
-        selectedKeys={selectedStatusKeys}
-        setSelectedKeys={setSelectedStatusKeys}
-        options={statusOptions}
-        preSelectedOptions={["processing", "completed"]}
-      />
+      <div style={{ textAlign: "center" }}>
+        <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
+        <FilterDropdown
+          selectedKeys={selectedStatusKeys}
+          setSelectedKeys={setSelectedStatusKeys}
+          options={statusOptions}
+          preSelectedOptions={["processing", "completed"]}
+        />
+      </div>
     );
   };
 
@@ -376,21 +406,33 @@ export default function OrdersPage() {
 
   const renderDeliveryDateInputs = () => {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <DatePicker
-          label="Delivery Date"
-          value={deliveryDate}
-          onChange={(e) => setDeliveryDate(e)}
-          startContent={clearDateButton(() => {
-            setDeliveryDate(null);
-          })}
-        />
+      <div style={{ textAlign: "center" }}>
+        <h3 style={{ marginBottom: "10px" }}>Delivery Date Range:</h3>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "10px",
+          }}
+        >
+          <DateRangePicker
+            label="Delivery Date Range"
+            value={{
+              start: deliveryStartDate,
+              end: deliveryEndDate,
+            }}
+            onChange={({ start, end }) => {
+              setDeliveryStartDate(start);
+              setDeliveryEndDate(end);
+            }}
+            granularity="day"
+            showMonthAndYearPickers
+            startContent={clearDateButton(() => {
+              setDeliveryStartDate(null);
+              setDeliveryEndDate(null);
+            })}
+          />
+        </div>
       </div>
     );
   };
@@ -444,30 +486,6 @@ export default function OrdersPage() {
     saveAs(blob, fileName);
   };
 
-  // Reusable Button component with consistent styling
-  const StyledButton = ({
-    onClick,
-    text,
-  }: {
-    onClick: () => void;
-    text: string;
-  }) => {
-    return (
-      <Button
-        style={{
-          marginRight: "10px",
-          padding: "5px 10px",
-          borderRadius: "5px",
-        }}
-        size="sm"
-        onClick={onClick}
-        color="primary"
-      >
-        {text}
-      </Button>
-    );
-  };
-
   // Render buttons with StyledButton component
   const renderButtons = () => {
     return (
@@ -508,6 +526,12 @@ export default function OrdersPage() {
           }}
           text="Download Delivery List"
         />
+        <StyledButton
+          onClick={() => {
+            downloadNameTags(filteredOrders);
+          }}
+          text="Download Name Tags with Address"
+        />
         {renderCsvDownloadButtons()}
       </div>
     );
@@ -541,13 +565,27 @@ export default function OrdersPage() {
       categoriesLoading ||
       mealsLoading ||
       orgLoading ||
-      productsLoading
+      productsLoading ||
+      loading
     ) {
       return renderLoading();
     } else if (showOrders) {
       return renderOrders();
     } else {
-      return renderDateInputs();
+      return renderDateInputs(
+        startDate,
+        setStartDate,
+        endDate,
+        setEndDate,
+        triggerFetchOrders,
+        error,
+        mode,
+        setMode,
+        deliveryStartDate,
+        setDeliveryStartDate,
+        deliveryEndDate,
+        setDeliveryEndDate
+      );
     }
   };
 
@@ -562,7 +600,7 @@ export default function OrdersPage() {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          {ordersLoading ? (
+          {ordersLoading || loading ? (
             <Spinner label="Loading Orders" />
           ) : categoriesLoading ? (
             <Spinner label="Loading Categories" />
@@ -579,10 +617,6 @@ export default function OrdersPage() {
   };
 
   const renderOrders = () => {
-    // State variable to toggle between line items and meal quantities
-    // Assuming showLineItems and filteredOrders are defined elsewhere
-    // Function to calculate the sum of quantities for each meal
-
     // Function to render individual order details with line items
     const renderLineItems = () => {
       return (
@@ -657,16 +691,10 @@ export default function OrdersPage() {
             onClick={() => setCreateOrderModalOpen(true)}
             text="Create Order"
           />
-          <div style={{ textAlign: "center" }}>
-            <h3 style={{ marginBottom: "10px" }}>Delivery Date:</h3>
-            {renderDeliveryDateInputs()}
-          </div>
+          {renderDeliveryDateInputs()}
           {renderCategoryFilterDropdown()}
           {renderComponentFilterDropdown()}
-          <div style={{ textAlign: "center" }}>
-            <h3 style={{ marginBottom: "10px" }}>Select Status:</h3>
-            {renderStatusFilterDropdown()}
-          </div>
+          {renderStatusFilterDropdown()}
           <StyledButton onClick={() => clear()} text="Clear Orders" />
         </div>
         <div
@@ -701,78 +729,6 @@ export default function OrdersPage() {
           }}
         >
           {renderAllButtons()}
-        </div>
-      </div>
-    );
-  };
-
-  const renderDateInputs = () => {
-    const renderError = () => {
-      return (
-        <div style={{ textAlign: "center" }}>
-          <p style={{ color: "red" }}>{error}</p>
-        </div>
-      );
-    };
-
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          {renderError()}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "10px",
-            }}
-          >
-            <DatePicker
-              label="Start Date"
-              value={startDate}
-              onChange={(e) => setStartDate(e)}
-              maxValue={endDate?.copy().subtract({ days: 1 })}
-              showMonthAndYearPickers
-            />
-            <DatePicker
-              label="End Date"
-              value={endDate}
-              onChange={(e) => setEndDate(e)}
-              minValue={startDate?.copy().add({ days: 1 })}
-              showMonthAndYearPickers
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "10px",
-            }}
-          >
-            <Button
-              style={{
-                marginRight: "10px",
-                padding: "5px 10px",
-                borderRadius: "5px",
-              }}
-              onClick={() => triggerFetchOrders()}
-              color="primary"
-            >
-              Get Orders
-            </Button>
-          </div>
         </div>
       </div>
     );

@@ -1,4 +1,5 @@
 import { CalendarDate, parseDate, isSameDay } from "@internationalized/date";
+
 export const friendlyDate = (
   date: Date | null,
   includeMinutes: boolean = false
@@ -19,6 +20,38 @@ export const friendlyDate = (
         month: "2-digit",
         day: "2-digit",
       });
+};
+
+export const filterOrdersByDateRange = (
+  orders: any,
+  startDate: CalendarDate | null,
+  endDate: CalendarDate | null
+) => {
+  if (!startDate && !endDate) return orders;
+
+  return orders.filter((order: any) => {
+    const deliveryDate = getDeliveryDate(order);
+    if (!deliveryDate) return false;
+
+    // Get the local date string in YYYY-MM-DD format
+    const localDateString = deliveryDate.toLocaleDateString("en-CA");
+
+    // Parse the local date string
+    const parsedDeliveryDate = parseDate(localDateString);
+
+    if (startDate && endDate) {
+      return (
+        parsedDeliveryDate.compare(startDate) >= 0 &&
+        parsedDeliveryDate.compare(endDate) <= 0
+      );
+    } else if (startDate) {
+      return parsedDeliveryDate.compare(startDate) >= 0;
+    } else if (endDate) {
+      return parsedDeliveryDate.compare(endDate) <= 0;
+    }
+
+    return true;
+  });
 };
 
 export const filterOrdersByDate = (

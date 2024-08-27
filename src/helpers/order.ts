@@ -360,3 +360,46 @@ export function deliveryList(
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   saveAs(blob, "delivery_list.csv");
 }
+
+// Updated function to generate and download name tags with address
+export const downloadNameTags = (orders: any[]) => {
+  // Sort orders alphabetically by customer name
+  const sortedOrders = [...orders].sort((a, b) =>
+    a.billing.first_name.localeCompare(b.billing.first_name)
+  );
+
+  // Prepare data for CSV
+  const csvData = sortedOrders
+    .map((order) => {
+      const customerName = `${order.billing.first_name} ${order.billing.last_name}`;
+      const orderQuantity = order.line_items.reduce(
+        (total: number, item: any) => {
+          // Ignore items containing "meal pack" in the name
+          if (!item.name.toLowerCase().includes("meal pack")) {
+            return total + item.quantity;
+          }
+          return total;
+        },
+        0
+      );
+      const address = `${order.billing.address_1}, ${order.billing.city}, ${order.billing.state} ${order.billing.postcode}`;
+
+      return {
+        "Customer Name": customerName,
+        "Order Quantity": orderQuantity,
+        Address: address,
+      };
+    })
+    .filter((data) => data["Order Quantity"] > 0); // Remove entries with zero quantity after filtering
+
+  // Generate CSV content
+  const csv = Papa.unparse(csvData, {
+    quotes: true, // Use quotes around all fields
+    quoteChar: '"',
+    escapeChar: '"',
+  });
+
+  // Create and download the CSV file
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  saveAs(blob, "name_tags_with_address.csv");
+};

@@ -68,8 +68,6 @@ export async function getAll(
         const formattedStartDate = removeTimezoneInfo(startDate);
         const formattedEndDate = removeTimezoneInfo(endDate);
 
-        console.log("Zoned End Date: ", formattedEndDate);
-
         url += `&after=${formattedStartDate}&before=${formattedEndDate}`;
       }
 
