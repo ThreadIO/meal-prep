@@ -27,6 +27,7 @@ import {
   prepareOrderedMeals,
   generateIngredientsReport,
   deliveryList,
+  downloadNameTags,
 } from "@/helpers/order";
 import { CircleX } from "lucide-react";
 import { useOrgContext } from "@/components/context/OrgContext";
@@ -524,6 +525,12 @@ export default function OrdersPage() {
             handleDownloadDeliveryList();
           }}
           text="Download Delivery List"
+        />
+        <StyledButton
+          onClick={() => {
+            downloadNameTags(filteredOrders);
+          }}
+          text="Download Name Tags with Address"
         />
         {renderCsvDownloadButtons()}
       </div>
