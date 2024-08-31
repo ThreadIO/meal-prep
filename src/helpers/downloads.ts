@@ -211,15 +211,17 @@ export const generateFullCsvData = (orders: any[], meals: any = []) => {
     "Delivery Date",
     "All Sizes",
     "Meal Option",
+    "Shipping Address", // New column added
   ];
 
   const csvData = [csvHeader];
 
   orders.forEach((order) => {
     const deliveryDate = getDeliveryDate(order);
+    const shippingAddress = getFormattedShippingAddress(order);
     order.line_items.forEach((item: any) => {
       for (let i = 0; i < item.quantity; i++) {
-        const rowData =
+        let rowData =
           meals.length === 0
             ? processOrderItemWithoutMeal(
                 item,
@@ -232,6 +234,7 @@ export const generateFullCsvData = (orders: any[], meals: any = []) => {
                 deliveryDate || new Date(),
                 meals
               );
+        rowData.push(shippingAddress); // Add shipping address to the row
         csvData.push(rowData);
       }
     });
@@ -246,4 +249,17 @@ export const generateFullCsvData = (orders: any[], meals: any = []) => {
         .join(",")
     )
     .join("\n");
+};
+
+// New function to get formatted shipping address
+const getFormattedShippingAddress = (order: any) => {
+  console.log("order", order);
+  const shippingAddress = order.shipping || {};
+  if (shippingAddress.address_1 && !shippingAddress.address_2) {
+    // If only address_1 is set, it's likely a BHA order with team level
+    return `${shippingAddress.address_1}`;
+  } else {
+    // For non-BHA orders, return the full address
+    return `${shippingAddress.address_1 || ""} ${shippingAddress.address_2 || ""}, ${shippingAddress.city || ""}, ${shippingAddress.state || ""} ${shippingAddress.postcode || ""}, ${shippingAddress.country || ""}`.trim();
+  }
 };
