@@ -94,9 +94,11 @@ export default function OrdersPage() {
     if (mode === "delivery") {
       setDeliveryDateRange({
         start: deliveryDateRange.start
-          ? deliveryDateRange.start.copy().subtract({ weeks: 2 })
-          : null,
-        end: deliveryDateRange.end ? deliveryDateRange.end : null,
+          ? setStartDate(deliveryDateRange.start.copy().subtract({ weeks: 2 }))
+          : setStartDate(now(getLocalTimeZone()).subtract({ weeks: 1 })),
+        end: deliveryDateRange.end
+          ? setEndDate(deliveryDateRange.end)
+          : setEndDate(now(getLocalTimeZone())),
       });
     }
     setDeliveryStartDate(deliveryDateRange.start);
