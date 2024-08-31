@@ -382,7 +382,7 @@ export const downloadNameTags = (orders: any[]) => {
         },
         0
       );
-      const address = `${order.billing.address_1}, ${order.billing.city}, ${order.billing.state} ${order.billing.postcode}`;
+      const address = `${order.shipping.address_1}, ${order.shipping.city}, ${order.shipping.state} ${order.shipping.postcode}`;
 
       return {
         "Customer Name": customerName,
