@@ -68,6 +68,11 @@ export default function OrdersPage() {
   const [showOrders, setShowOrders] = useState(false);
   const [error, setError] = useState<string>("");
 
+  const [deliveryDateRange, setDeliveryDateRange] = useState<any>({
+    start: null,
+    end: null,
+  });
+
   const [deliveryStartDate, setDeliveryStartDate] = useState<any>(null);
   const [deliveryEndDate, setDeliveryEndDate] = useState<any>(null);
 
@@ -87,9 +92,15 @@ export default function OrdersPage() {
 
   const triggerFetchOrders = async (mode: string) => {
     if (mode === "delivery") {
-      setStartDate(deliveryStartDate.copy().subtract({ weeks: 2 }));
-      setEndDate(deliveryEndDate.copy().add({ weeks: 2 }));
+      setDeliveryDateRange({
+        start: deliveryDateRange.start
+          ? deliveryDateRange.start.copy().subtract({ weeks: 2 })
+          : null,
+        end: deliveryDateRange.end ? deliveryDateRange.end : null,
+      });
     }
+    setDeliveryStartDate(deliveryDateRange.start);
+    setDeliveryEndDate(deliveryDateRange.end);
     setLoading(true);
     await refetchOrders();
     setShowOrders(true);
@@ -215,7 +226,6 @@ export default function OrdersPage() {
 
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
-    console.log("Orders: ", orders);
     let filtered = filterOrdersByStatus(orders, selectedStatusKeys);
     filtered = filterOrdersByCategory(filtered, selectedMenuKeys, products);
     filtered = filterOrdersByDateRange(
@@ -225,7 +235,6 @@ export default function OrdersPage() {
     );
     filtered = filterOrdersByComponent(filtered, selectedComponent);
     filtered = filterBySearch(filtered, searchTerm);
-    console.log("Filtered Orders: ", filtered);
     return filtered;
   }, [
     orders,
@@ -560,6 +569,7 @@ export default function OrdersPage() {
   };
 
   const renderOrdersContent = () => {
+    console.log("Delivery Date Range: ", deliveryDateRange);
     if (
       (ordersLoading && showOrders) ||
       categoriesLoading ||
@@ -584,7 +594,9 @@ export default function OrdersPage() {
         deliveryStartDate,
         setDeliveryStartDate,
         deliveryEndDate,
-        setDeliveryEndDate
+        setDeliveryEndDate,
+        deliveryDateRange,
+        setDeliveryDateRange
       );
     }
   };

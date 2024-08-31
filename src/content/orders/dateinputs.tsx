@@ -18,7 +18,10 @@ export const renderDateInputs = (
   setStartDeliveryDate: (s_d_date: any) => void,
   endDeliveryDate: any,
   // eslint-disable-next-line no-unused-vars
-  setEndDeliveryDate: (e_d_date: any) => void
+  setEndDeliveryDate: (e_d_date: any) => void,
+  deliveryDateRange: any,
+  // eslint-disable-next-line no-unused-vars
+  setDeliveryDateRange: (d_date: any) => void
 ) => {
   const renderError = () => {
     return (
@@ -83,14 +86,8 @@ export const renderDateInputs = (
         >
           <DateRangePicker
             label="Delivery Date Range"
-            value={{
-              start: startDeliveryDate,
-              end: endDeliveryDate,
-            }}
-            onChange={({ start, end }) => {
-              setStartDeliveryDate(start);
-              setEndDeliveryDate(end);
-            }}
+            value={deliveryDateRange}
+            onChange={setDeliveryDateRange}
             granularity="minute"
             showMonthAndYearPickers
           />
