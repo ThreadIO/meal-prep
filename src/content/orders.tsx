@@ -12,8 +12,10 @@ import React from "react";
 import { saveAs } from "file-saver";
 import { demoFlag, not_products } from "@/helpers/utils";
 import { generateListOfMealIds } from "@/helpers/frontend";
-import { filterOrdersByDateRange } from "@/helpers/date"; // Update this import
-// import { filterOrdersByDate } from "@/helpers/date";
+import {
+  filterOrdersByDateRange,
+  convertCalendarToZonedDateTime,
+} from "@/helpers/date";
 import { generateFullCsvData } from "@/helpers/downloads";
 import { now, getLocalTimeZone } from "@internationalized/date";
 import FilterDropdown from "@/components/FilterDropdown";
@@ -92,12 +94,15 @@ export default function OrdersPage() {
 
   const triggerFetchOrders = async (mode: string) => {
     if (mode === "delivery") {
+      const start = convertCalendarToZonedDateTime(deliveryDateRange.start);
+      const end = convertCalendarToZonedDateTime(deliveryDateRange.end, 23, 59);
+      console.log("Start Date: ", start.copy().subtract({ weeks: 2 }));
       setDeliveryDateRange({
         start: deliveryDateRange.start
-          ? setStartDate(deliveryDateRange.start.copy().subtract({ weeks: 2 }))
+          ? setStartDate(start.copy().subtract({ weeks: 2 }))
           : setStartDate(now(getLocalTimeZone()).subtract({ weeks: 1 })),
         end: deliveryDateRange.end
-          ? setEndDate(deliveryDateRange.end)
+          ? setEndDate(end)
           : setEndDate(now(getLocalTimeZone())),
       });
     }
@@ -571,7 +576,6 @@ export default function OrdersPage() {
   };
 
   const renderOrdersContent = () => {
-    console.log("Delivery Date Range: ", deliveryDateRange);
     if (
       (ordersLoading && showOrders) ||
       categoriesLoading ||

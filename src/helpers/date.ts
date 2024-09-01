@@ -1,4 +1,11 @@
-import { CalendarDate, parseDate, isSameDay } from "@internationalized/date";
+import {
+  CalendarDate,
+  ZonedDateTime,
+  parseDate,
+  isSameDay,
+  getLocalTimeZone,
+  fromDate,
+} from "@internationalized/date";
 
 export const friendlyDate = (
   date: Date | null,
@@ -172,4 +179,16 @@ export function removeTimezoneInfo(dateTimeString: string): string {
 
   // If the pattern doesn't match, return the original string
   return dateTimeString;
+}
+
+export function convertCalendarToZonedDateTime(
+  calendarDate: CalendarDate,
+  hour?: number,
+  minute?: number
+): ZonedDateTime {
+  const localTimeZone = getLocalTimeZone();
+  const date = calendarDate.toDate(localTimeZone);
+  const zonedDate = fromDate(date, localTimeZone);
+  const zonedDateTime = zonedDate.set({ hour: hour, minute: minute });
+  return zonedDateTime;
 }

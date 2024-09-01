@@ -88,7 +88,7 @@ export const renderDateInputs = (
             label="Delivery Date Range"
             value={deliveryDateRange}
             onChange={setDeliveryDateRange}
-            granularity="minute"
+            granularity="day"
             showMonthAndYearPickers
           />
         </div>
