@@ -363,6 +363,7 @@ export const MealModal = (props: MealModalProps) => {
                   )
                 }
                 items={ingredients}
+                style={{ minWidth: "150px", flex: 1.5 }}
               />
               <Input
                 label={isCountBased ? "Count" : "Quantity"}

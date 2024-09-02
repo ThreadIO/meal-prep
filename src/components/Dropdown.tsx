@@ -9,6 +9,7 @@ import {
 } from "@nextui-org/react";
 import { useMemo, useState } from "react";
 import { decodeHtmlEntities } from "@/helpers/frontend";
+import React from "react";
 
 interface DropdownProps {
   // eslint-disable-next-line no-unused-vars
@@ -35,6 +36,7 @@ interface DropdownProps {
     | "warning"
     | "danger"
     | undefined;
+  style?: React.CSSProperties;
 }
 
 const ITEMS_PER_PAGE = 12;
@@ -50,6 +52,7 @@ const DropdownComponent = (props: DropdownProps) => {
     disallowEmptySelection,
     selectedKeys = "default",
     color = "default",
+    style = {},
   } = props;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -69,6 +72,7 @@ const DropdownComponent = (props: DropdownProps) => {
         variant="bordered"
         className="capitalize min-h-[40px]"
         color={color}
+        style={style}
       >
         {selectedValue && selectedValue !== "default"
           ? decodeHtmlEntities(selectedValue)
