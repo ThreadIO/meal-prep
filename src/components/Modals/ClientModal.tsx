@@ -39,6 +39,8 @@ export const ClientModal = (props: ClientModalProps) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [fileName, setFileName] = useState<string>("");
 
+  const [filter, setFilter] = useState<"all" | "yes" | "no">("all");
+
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -76,6 +78,11 @@ export const ClientModal = (props: ClientModalProps) => {
     setFileName("");
   };
 
+  const filteredClients = clients.filter((client) => {
+    if (filter === "all") return true;
+    return filter === "yes" ? client.ordered : !client.ordered;
+  });
+
   return (
     <Modal isOpen={open} onOpenChange={onClose} size="full">
       <ModalContent>
@@ -91,38 +98,56 @@ export const ClientModal = (props: ClientModalProps) => {
           />
           {fileName && <p>File uploaded: {fileName}</p>}
           {clients.length > 0 && (
-            <p className="mb-4">{clients.length} client(s) parsed from CSV</p>
-          )}
-
-          {clients.length > 0 && (
-            <div className="max-h-[50vh] overflow-y-auto">
-              <Table aria-label="Clients table" isStriped>
-                <TableHeader>
-                  <TableColumn>Client Name</TableColumn>
-                  <TableColumn>Allergies</TableColumn>
-                  <TableColumn>Ordered</TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {clients.map((client, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{client.clientName}</TableCell>
-                      <TableCell>{client.allergies}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded ${
-                            client.ordered
-                              ? "bg-green-500 text-white"
-                              : "bg-red-500 text-white"
-                          }`}
-                        >
-                          {client.ordered ? "Yes" : "No"}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <>
+              <div className="mb-4 flex gap-2">
+                <Button
+                  onPress={() => setFilter("all")}
+                  color={filter === "all" ? "primary" : "default"}
+                >
+                  All
+                </Button>
+                <Button
+                  onPress={() => setFilter("yes")}
+                  color={filter === "yes" ? "primary" : "default"}
+                >
+                  Ordered (Yes)
+                </Button>
+                <Button
+                  onPress={() => setFilter("no")}
+                  color={filter === "no" ? "primary" : "default"}
+                >
+                  Not Ordered (No)
+                </Button>
+              </div>
+              <div className="max-h-[50vh] overflow-y-auto">
+                <Table aria-label="Clients table" isStriped>
+                  <TableHeader>
+                    <TableColumn>Client Name</TableColumn>
+                    <TableColumn>Allergies</TableColumn>
+                    <TableColumn>Ordered</TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredClients.map((client, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{client.clientName}</TableCell>
+                        <TableCell>{client.allergies}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 rounded ${
+                              client.ordered
+                                ? "bg-green-500 text-white"
+                                : "bg-red-500 text-white"
+                            }`}
+                          >
+                            {client.ordered ? "Yes" : "No"}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </div>
         <ModalFooter>
