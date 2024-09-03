@@ -46,6 +46,7 @@ export const ClientModal = (props: ClientModalProps) => {
       Papa.parse(file, {
         complete: (results) => {
           const parsedClients = results.data
+            .slice(1) // Skip the first row (header)
             .filter((row: any) => row[0] && row[1])
             .map((row: any) => {
               const lastName = row[0].trim();
