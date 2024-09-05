@@ -49,6 +49,7 @@ import {
 } from "@/helpers/filters";
 import { renderDateInputs } from "@/content/orders/dateinputs";
 import { StyledButton } from "@/components/StyledButton";
+import { ClientModal } from "@/components/Modals/ClientModal";
 
 export default function OrdersPage() {
   const { user } = useUser();
@@ -89,6 +90,7 @@ export default function OrdersPage() {
 
   const [mode, setMode] = useState("delivery");
   const [loading, setLoading] = useState(false);
+  const [clientModalOpen, setClientModalOpen] = useState(false);
 
   const queryKey = ["orders", user?.userId, startDate, endDate];
 
@@ -273,6 +275,11 @@ export default function OrdersPage() {
     const areaZipcodeMap = org.zipcodeMap;
     console.log("Area Zipcode Map: ", areaZipcodeMap);
     deliveryList(filteredOrders, areaZipcodeMap);
+  };
+
+  const handleClientListUpload = () => {
+    // hardcoding
+    setClientModalOpen(true);
   };
 
   const renderComponentFilterDropdown = () => {
@@ -547,6 +554,12 @@ export default function OrdersPage() {
           }}
           text="Download Name Tags with Address"
         />
+        <StyledButton
+          onClick={() => {
+            handleClientListUpload();
+          }}
+          text="Check Client List"
+        />
         {renderCsvDownloadButtons()}
       </div>
     );
@@ -663,12 +676,19 @@ export default function OrdersPage() {
 
     const modals = () => {
       return (
-        <CreateOrderModal
-          open={createOrderModalOpen}
-          onClose={() => setCreateOrderModalOpen(false)}
-          onCreate={(order) => handleCreateOrder(order)}
-          products={products}
-        />
+        <>
+          <CreateOrderModal
+            open={createOrderModalOpen}
+            onClose={() => setCreateOrderModalOpen(false)}
+            onCreate={(order) => handleCreateOrder(order)}
+            products={products}
+          />
+          <ClientModal
+            open={clientModalOpen}
+            onClose={() => setClientModalOpen(false)}
+            orders={filteredOrders}
+          />
+        </>
       );
     };
 
