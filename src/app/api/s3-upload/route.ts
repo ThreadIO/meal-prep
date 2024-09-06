@@ -11,6 +11,7 @@ const s3Client = new S3Client({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("Uploading image to s3 bucket");
     const formData = await request.formData();
     const image = formData.get("image") as File;
 
@@ -18,19 +19,21 @@ export async function POST(request: NextRequest) {
     if (!image) {
       return NextResponse.json({ error: "Image is required" }, { status: 400 });
     }
-
     const buffer = Buffer.from(await image.arrayBuffer());
-    const imageName = await uploadImageToS3(buffer, image.name);
-
-    return NextResponse.json({ success: true, imageName });
+    const data = await uploadImageToS3(buffer, image.name);
+    return NextResponse.json({ success: true, data: data });
   } catch (error) {
-    return NextResponse.json({ error: "Error uploading file." });
+    console.log("Error: ", error);
+    return NextResponse.json({
+      success: false,
+      error: "Error uploading file.",
+    });
   }
 }
 
 async function uploadImageToS3(image: Buffer, imageName: String) {
   const imageBuffer = image;
-  console.log(imageName);
+  console.log("In upload s3 helper function");
 
   // TODO: Remove this code. It was for testing
   // const command = new ListBucketsCommand({});
@@ -46,10 +49,11 @@ async function uploadImageToS3(image: Buffer, imageName: String) {
   //   } catch (err) {
   //     console.error(err);
   //   }
-
+  const bucket = "threadwcimages";
+  const key = `${imageName}`;
   const params = {
-    Bucket: "testwcimages", // TODO: should be process.env.AWS_S3_BUCKET_NAME
-    Key: `${imageName}-${Date.now()}`,
+    Bucket: bucket, // TODO: should be process.env.AWS_S3_BUCKET_NAME
+    Key: key,
     Body: imageBuffer,
     ContentType: "image/jpg",
   };
@@ -58,5 +62,8 @@ async function uploadImageToS3(image: Buffer, imageName: String) {
 
   await s3Client.send(command);
 
-  return imageName;
+  return {
+    imageName: imageName,
+    url: `https://${bucket}.s3.amazonaws.com/${key}`,
+  };
 }

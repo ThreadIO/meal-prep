@@ -52,7 +52,6 @@ export const MealModal = (props: MealModalProps) => {
   const [mealPrice, setMealPrice] = useState("");
   const [mealName, setMealName] = useState("");
   const [uploadedImage, setUploadedImage] = useState<any>(null);
-  const [newProductImage, setNewProductImage] = useState<any>(null);
   const [selectedStockStatus, setSelectedStockStatus] = useState<any>(
     new Set()
   );
@@ -171,7 +170,7 @@ export const MealModal = (props: MealModalProps) => {
     async (formData: any) => {
       const user = await getUser(userId);
       const url = friendlyUrl(user.settings.url);
-
+      console.log("Form Data: ", formData);
       if (mode === "patch" && meal) {
         const existing_meal = await getMeal(meal.id, url);
         if (!existing_meal) {
@@ -733,17 +732,19 @@ export const MealModal = (props: MealModalProps) => {
       try {
         const response = await fetch("/api/s3-upload", {
           method: "POST",
-          body: "formData",
+          body: formData,
         });
 
-        const data = await response.json();
-        console.log(data.status);
-
+        const { status, data } = await response.json();
+        console.log("Status: ", status);
+        console.log("Data: ", data);
         imageUrl = data.url;
+        console.log("Url: ", imageUrl);
         // Create a new image object for the image array appended to the product
-        setNewProductImage({ src: imageUrl });
+        return { src: imageUrl };
       } catch (error) {
         console.error("Error uploading image:", error);
+        return null;
       }
     }
   }
@@ -783,8 +784,14 @@ export const MealModal = (props: MealModalProps) => {
     );
 
     // Upload Image
-    await uploadImageToS3(uploadedImage);
-
+    const newProductImage = await uploadImageToS3(uploadedImage);
+    const image =
+      mealImage && Object.keys(mealImage).length > 0
+        ? mealImage.src
+        : newProductImage && Object.keys(newProductImage).length > 0
+          ? newProductImage.src
+          : "Error fetching image";
+    console.log("Image: ", image);
     const selectedStockStatusString =
       Array.from(selectedStockStatus).join(", ");
     console.log("Custom Options: ", customOptions);
@@ -812,9 +819,10 @@ export const MealModal = (props: MealModalProps) => {
           ingredients: saveIngredients(option.ingredients || []),
         })),
       })),
-      image: mealImage ? mealImage.src : newProductImage ? newProductImage : "",
+      image: image,
       mealid: meal && mode === "patch" ? meal.id : undefined,
     };
+    console.log("Form Data: ", formData);
     saveMutation.mutate(formData);
   };
   const renderContent = () => {

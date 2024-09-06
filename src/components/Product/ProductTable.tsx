@@ -46,6 +46,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
   const [product, setProduct] = useState<any>({});
   const [threadMeal, setThreadMeal] = useState<any>();
   const [loading, setLoading] = useState(false);
+  const [updateKey, setUpdateKey] = useState(0);
 
   // Memoize the deduplication of products
   const uniqueProducts = useMemo(() => {
@@ -57,7 +58,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
       seen.add(product.id);
       return true;
     });
-  }, [products]);
+  }, [products, updateKey]); // Add updateKey to the dependency array
 
   const handleCloseProductModal = useCallback(() => {
     setProduct({});
@@ -74,17 +75,22 @@ const ProductTable: React.FC<ProductTableProps> = ({
     setOpenDelete(false);
   }, []);
 
+  const handleUpdate = useCallback(() => {
+    onUpdate();
+    setUpdateKey((prev) => prev + 1); // Increment the updateKey
+  }, [onUpdate]);
+
   const handleDelete = useCallback(
     async (product: any) => {
       setLoading(true);
       console.log("Product: ", product);
       await threadConnector(product, userId, deleteMeal);
       await deleteProduct(product.id, { userid: userId });
-      onUpdate();
+      handleUpdate(); // Use handleUpdate instead of onUpdate
       setLoading(false);
       setOpenDelete(false);
     },
-    [userId, onUpdate]
+    [userId, handleUpdate] // Update dependency
   );
 
   const handleOpenDelete = useCallback((item: any) => {

@@ -1,14 +1,14 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@propelauth/nextjs/client";
-import { Button, Spinner, Tooltip } from "@nextui-org/react";
+import { Button, Spinner } from "@nextui-org/react"; // Tooltip
 import { useQuery, useQueryClient } from "react-query";
-import ProductCard from "@/components/Product/ProductCard";
+// import ProductCard from "@/components/Product/ProductCard";
 import { MealModal } from "@/components/Modals/MealModal";
 import Dropdown from "@/components/Dropdown";
 import FilterDropdown from "@/components/FilterDropdown";
 import { StockStatusOptions } from "@/helpers/utils";
-import { LayoutGrid, Table as TableIcon } from "lucide-react";
+// import { LayoutGrid, Table as TableIcon } from "lucide-react";
 import ProductTable from "@/components/Product/ProductTable";
 import Searchbar from "@/components/Searchbar";
 import { getProducts, getCategories } from "@/helpers/request";
@@ -24,7 +24,7 @@ const Meals = () => {
     new Set(["All"])
   );
   const [openProduct, setOpenProduct] = useState(false);
-  const [layout, setLayout] = useState<"grid" | "table">("table");
+  // const [layout, setLayout] = useState<"grid" | "table">("table");
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const {
@@ -161,51 +161,51 @@ const Meals = () => {
     </div>
   );
 
-  const renderLayoutButtons = () => {
-    if (layout === "grid") {
-      return (
-        <div className="mt-10 flex justify-center space-x-4">
-          <Tooltip content="Table Layout">
-            <Button
-              color="primary"
-              isIconOnly
-              onPress={() => setLayout("table")}
-            >
-              <TableIcon />
-            </Button>
-          </Tooltip>
-        </div>
-      );
-    } else {
-      return (
-        <div className="mt-10 flex justify-center space-x-4">
-          <Tooltip content="Grid Layout">
-            <Button
-              color="primary"
-              isIconOnly
-              onPress={() => setLayout("grid")}
-            >
-              <LayoutGrid />
-            </Button>
-          </Tooltip>
-        </div>
-      );
-    }
-  };
+  // const renderLayoutButtons = () => {
+  //   if (layout === "grid") {
+  //     return (
+  //       <div className="mt-10 flex justify-center space-x-4">
+  //         <Tooltip content="Table Layout">
+  //           <Button
+  //             color="primary"
+  //             isIconOnly
+  //             onPress={() => setLayout("table")}
+  //           >
+  //             <TableIcon />
+  //           </Button>
+  //         </Tooltip>
+  //       </div>
+  //     );
+  //   } else {
+  //     return (
+  //       <div className="mt-10 flex justify-center space-x-4">
+  //         <Tooltip content="Grid Layout">
+  //           <Button
+  //             color="primary"
+  //             isIconOnly
+  //             onPress={() => setLayout("grid")}
+  //           >
+  //             <LayoutGrid />
+  //           </Button>
+  //         </Tooltip>
+  //       </div>
+  //     );
+  //   }
+  // };
 
-  const renderProductCards = (products: any[]) => {
-    return products.map((product: any) => (
-      <ProductCard
-        key={product.id}
-        product={product}
-        onUpdate={() =>
-          queryClient.invalidateQueries(["products", user?.userId])
-        }
-        userId={user!.userId}
-        categories={categories}
-      />
-    ));
-  };
+  // const renderProductCards = (products: any[]) => {
+  //   return products.map((product: any) => (
+  //     <ProductCard
+  //       key={product.id}
+  //       product={product}
+  //       onUpdate={() =>
+  //         queryClient.invalidateQueries(["products", user?.userId])
+  //       }
+  //       userId={user!.userId}
+  //       categories={categories}
+  //     />
+  //   ));
+  // };
 
   const getFilteredProducts = () => {
     if (!Array.isArray(products)) {
@@ -246,25 +246,24 @@ const Meals = () => {
   };
 
   const renderProducts = (filteredProducts: any[]) => {
-    console.log("Products to render: ", filteredProducts);
-    if (layout === "grid") {
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
-          {renderProductCards(filteredProducts)}
-        </div>
-      );
-    } else {
-      return (
-        <ProductTable
-          products={filteredProducts}
-          onUpdate={() =>
-            queryClient.invalidateQueries(["products", user?.userId])
-          }
-          userId={user!.userId}
-          categories={categories}
-        />
-      );
-    }
+    // if (layout === "grid") {
+    //   return (
+    //     <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-[1040px] mx-auto mt-5">
+    //       {renderProductCards(filteredProducts)}
+    //     </div>
+    //   );
+    // } else {
+    return (
+      <ProductTable
+        products={filteredProducts}
+        onUpdate={() =>
+          queryClient.invalidateQueries(["products", user?.userId])
+        }
+        userId={user!.userId}
+        categories={categories}
+      />
+    );
+    // }
   };
 
   const renderSearchBar = () => {
@@ -279,8 +278,6 @@ const Meals = () => {
   };
 
   const renderProductContent = () => {
-    console.log("Products: ", products);
-    console.log("Filtered Products: ", filteredProducts);
     return (
       <div>
         <div className="text-center mt-5 flex justify-center space-x-4">
@@ -296,7 +293,7 @@ const Meals = () => {
             {renderStockStatusDropdown()}
           </div>
         </div>
-        <div>{renderLayoutButtons()}</div>
+        {/* <div>{renderLayoutButtons()}</div> */}
         {renderProducts(filteredProducts)}
       </div>
     );

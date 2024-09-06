@@ -32,7 +32,6 @@ export async function createMeal(mealid: string, body: any) {
         error: "Meal already exists...!",
       });
     }
-    console.log("Meal details: ", body);
     const newMeal = {
       mealid: mealid,
       url: body.url,
@@ -56,6 +55,7 @@ export async function createMeal(mealid: string, body: any) {
         })),
       })),
     };
+    console.log("Meal details: ", newMeal);
     const meal = await Meal.create(newMeal);
     return NextResponse.json({ success: true, data: meal });
   } catch (error) {
