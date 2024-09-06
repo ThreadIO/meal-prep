@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { Tooltip } from "@nextui-org/react";
 
 interface ImageUploaderProps {
   // eslint-disable-next-line no-unused-vars
@@ -27,8 +28,13 @@ const ImageUploader = (props: ImageUploaderProps) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const selectedImage = e.target.files[0];
-      setImage(selectedImage);
-      props.onImageSelect(selectedImage);
+      if (selectedImage.type === "image/jpeg") {
+        setImage(selectedImage);
+        props.onImageSelect(selectedImage);
+      } else {
+        alert("Please select a JPG file.");
+        e.target.value = ""; // Reset the input
+      }
     }
   };
 
@@ -59,9 +65,10 @@ const ImageUploader = (props: ImageUploaderProps) => {
   // }
 
   return (
-    // <form onSubmit={handleSubmit}>
     <div>
-      <input type="file" onChange={handleFileChange} />
+      <Tooltip content="Only JPG files are allowed" placement="top">
+        <input type="file" onChange={handleFileChange} accept=".jpg,.jpeg" />
+      </Tooltip>
       {imagePreview && (
         <div>
           <Image

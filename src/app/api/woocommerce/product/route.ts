@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
     meta_data,
     stock_status,
   } = requestData;
-
   // Use the helper function to filter and process meta_data
   const filteredMetaData = filterProductAddons(meta_data, product_addons);
   console.log("filteredMetaData: ", filteredMetaData);

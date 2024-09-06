@@ -35,7 +35,9 @@ export const createMealOnWoocommerce = async (
 ) => {
   const categories = convertTagsToCategories(meal.tags, fullCategories); // Need to convert tags to categories
   const status = convertStatusToStockStatus(meal.status); // Need to convert status to stock_status
-
+  console.log("Creating product on Woocommerce");
+  console.log("Meal: ", meal);
+  console.log("Image: ", image);
   const body = {
     userid: meal.userid,
     name: meal.name,
@@ -44,7 +46,12 @@ export const createMealOnWoocommerce = async (
     description: meal.description,
     categories: categories,
     stock_status: status,
-    images: image ? [image] : [],
+    images:
+      Object.keys(image || {}).length > 0
+        ? [image]
+        : meal.image
+          ? [{ src: meal.image }]
+          : [],
   };
   const product = await createProduct(body);
   const sizeAddOns = convertOptionsToProductAddOns(meal.options);
@@ -67,6 +74,8 @@ export const updateMealOnWoocommerce = async (
   // Will need to work this out -> Maybe will need to make api calls here
   const categories = convertTagsToCategories(meal.tags, fullCategories); // Need to convert tags to categories
   const status = convertStatusToStockStatus(meal.status); // Need to convert status to stock_status
+  console.log("Updating product on Woocommerce");
+  console.log("Meal: ", meal);
   const body = {
     userid: meal.userid,
     name: meal.name,
@@ -76,7 +85,12 @@ export const updateMealOnWoocommerce = async (
     short_description: meal.short_description,
     categories: categories,
     stock_status: status,
-    images: image ? [image] : [],
+    images:
+      Object.keys(image || {}).length > 0
+        ? [image]
+        : meal.image
+          ? [{ src: meal.image }]
+          : [],
   };
   const product = await patchProduct(meal.mealid, body);
   const sizeAddOns = convertOptionsToProductAddOns(meal.options);
