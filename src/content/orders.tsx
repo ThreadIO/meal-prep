@@ -98,30 +98,33 @@ export default function OrdersPage() {
     console.log("trigger fetch orders");
     if (mode === "delivery") {
       const today = now(getLocalTimeZone());
-      const todayEnd = today.set({ hour: 23, minute: 59, second: 59 });
-      const weekPrior = today
-        .subtract({ weeks: 1 })
-        .set({ hour: 0, minute: 0, second: 0 });
+      const weekAgo = today.subtract({ weeks: 1 });
 
-      let start = convertCalendarToZonedDateTime(deliveryDateRange.start);
-      let end = convertCalendarToZonedDateTime(deliveryDateRange.end, 23, 59);
+      const start = convertCalendarToZonedDateTime(deliveryDateRange.start);
+      const end = convertCalendarToZonedDateTime(deliveryDateRange.end, 23, 59);
 
-      // If end date is in the future, set it to today at 11:59 PM
-      if (end > todayEnd) {
-        end = todayEnd;
+      const newStartDate = deliveryDateRange.start
+        ? start.copy().subtract({ weeks: 1 })
+        : now(getLocalTimeZone()).subtract({ weeks: 1 });
+
+      const newEndDate = deliveryDateRange.end ? end : now(getLocalTimeZone());
+
+      if (newStartDate > weekAgo) {
+        setStartDate(weekAgo);
+      } else {
+        setStartDate(newStartDate);
       }
-
-      // If start date is in the future, set it to one week prior to today at 12:00 AM
-      if (start > today) {
-        start = weekPrior;
+      if (newEndDate > today) {
+        setEndDate(today);
+      } else {
+        setEndDate(newEndDate);
       }
 
       setDeliveryDateRange({
-        start: setStartDate(start),
-        end: setEndDate(end),
+        start: deliveryDateRange.start,
+        end: deliveryDateRange.end,
       });
     }
-
     setDeliveryStartDate(deliveryDateRange.start);
     setDeliveryEndDate(deliveryDateRange.end);
     setLoading(true);
