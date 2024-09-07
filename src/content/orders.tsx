@@ -100,7 +100,7 @@ export default function OrdersPage() {
       const end = convertCalendarToZonedDateTime(deliveryDateRange.end, 23, 59);
       setDeliveryDateRange({
         start: deliveryDateRange.start
-          ? setStartDate(start.copy().subtract({ weeks: 2 }))
+          ? setStartDate(start.copy().subtract({ days: 10 }))
           : setStartDate(now(getLocalTimeZone()).subtract({ weeks: 1 })),
         end: deliveryDateRange.end
           ? setEndDate(end)
