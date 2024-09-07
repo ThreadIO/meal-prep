@@ -95,22 +95,39 @@ export default function OrdersPage() {
   const queryKey = ["orders", user?.userId, startDate, endDate];
 
   const triggerFetchOrders = async (mode: string) => {
+    console.log("trigger fetch orders");
     if (mode === "delivery") {
-      const start = convertCalendarToZonedDateTime(deliveryDateRange.start);
-      const end = convertCalendarToZonedDateTime(deliveryDateRange.end, 23, 59);
+      const today = now(getLocalTimeZone());
+      const todayEnd = today.set({ hour: 23, minute: 59, second: 59 });
+      const weekPrior = today
+        .subtract({ weeks: 1 })
+        .set({ hour: 0, minute: 0, second: 0 });
+
+      let start = convertCalendarToZonedDateTime(deliveryDateRange.start);
+      let end = convertCalendarToZonedDateTime(deliveryDateRange.end, 23, 59);
+
+      // If end date is in the future, set it to today at 11:59 PM
+      if (end > todayEnd) {
+        end = todayEnd;
+      }
+
+      // If start date is in the future, set it to one week prior to today at 12:00 AM
+      if (start > today) {
+        start = weekPrior;
+      }
+
       setDeliveryDateRange({
-        start: deliveryDateRange.start
-          ? setStartDate(start.copy().subtract({ days: 10 }))
-          : setStartDate(now(getLocalTimeZone()).subtract({ weeks: 1 })),
-        end: deliveryDateRange.end
-          ? setEndDate(end)
-          : setEndDate(now(getLocalTimeZone())),
+        start: setStartDate(start),
+        end: setEndDate(end),
       });
     }
+
     setDeliveryStartDate(deliveryDateRange.start);
     setDeliveryEndDate(deliveryDateRange.end);
     setLoading(true);
+    console.log("refetching orders");
     await refetchOrders();
+    console.log("refetched orders");
     setShowOrders(true);
     setLoading(false);
   };
