@@ -95,6 +95,7 @@ export default function OrdersPage() {
   const queryKey = ["orders", user?.userId, startDate, endDate];
 
   const triggerFetchOrders = async (mode: string) => {
+    // Ideally this should be just a 2 week band, but need to restructure to code so that it can handle large date ranges
     console.log("trigger fetch orders");
     if (mode === "delivery") {
       const today = now(getLocalTimeZone());
