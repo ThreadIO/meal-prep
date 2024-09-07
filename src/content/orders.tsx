@@ -95,22 +95,43 @@ export default function OrdersPage() {
   const queryKey = ["orders", user?.userId, startDate, endDate];
 
   const triggerFetchOrders = async (mode: string) => {
+    // Ideally this should be just a 2 week band, but need to restructure to code so that it can handle large date ranges
+    console.log("trigger fetch orders");
     if (mode === "delivery") {
+      const today = now(getLocalTimeZone());
+      const weekAgo = today.subtract({ weeks: 1 });
+
       const start = convertCalendarToZonedDateTime(deliveryDateRange.start);
       const end = convertCalendarToZonedDateTime(deliveryDateRange.end, 23, 59);
+
+      const newStartDate = deliveryDateRange.start
+        ? start.copy().subtract({ weeks: 1 })
+        : now(getLocalTimeZone()).subtract({ weeks: 1 });
+
+      const newEndDate = deliveryDateRange.end ? end : now(getLocalTimeZone());
+
+      if (newStartDate > weekAgo) {
+        setStartDate(weekAgo);
+      } else {
+        setStartDate(newStartDate);
+      }
+      if (newEndDate > today) {
+        setEndDate(today);
+      } else {
+        setEndDate(newEndDate);
+      }
+
       setDeliveryDateRange({
-        start: deliveryDateRange.start
-          ? setStartDate(start.copy().subtract({ weeks: 2 }))
-          : setStartDate(now(getLocalTimeZone()).subtract({ weeks: 1 })),
-        end: deliveryDateRange.end
-          ? setEndDate(end)
-          : setEndDate(now(getLocalTimeZone())),
+        start: deliveryDateRange.start,
+        end: deliveryDateRange.end,
       });
     }
     setDeliveryStartDate(deliveryDateRange.start);
     setDeliveryEndDate(deliveryDateRange.end);
     setLoading(true);
+    console.log("refetching orders");
     await refetchOrders();
+    console.log("refetched orders");
     setShowOrders(true);
     setLoading(false);
   };
