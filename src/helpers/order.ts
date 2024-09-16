@@ -150,7 +150,8 @@ export function prepareOrderedMeals(filteredOrders: Order[]): OrderedMeal[] {
 
 export function generateIngredientsReport(
   meals: Meal[],
-  orderedMeals: OrderedMeal[]
+  orderedMeals: OrderedMeal[],
+  fileName?: string
 ) {
   const ingredientTotals: Record<
     string,
@@ -248,7 +249,7 @@ export function generateIngredientsReport(
 
   const csv = Papa.unparse(csvData);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  saveAs(blob, "ingredients_report.csv");
+  saveAs(blob, fileName);
 }
 
 function processIngredients(
@@ -291,7 +292,8 @@ function findCustomOption(
 
 export function deliveryList(
   orders: DeliveryOrder[],
-  areaZipcodeMap?: AreaZipcode[]
+  areaZipcodeMap?: AreaZipcode[],
+  fileName?: string
 ) {
   // Group orders by area
   const ordersByArea: { [area: string]: DeliveryOrder[] } = {};
@@ -358,11 +360,11 @@ export function deliveryList(
 
   const csv = Papa.unparse(csvData);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  saveAs(blob, "delivery_list.csv");
+  saveAs(blob, fileName);
 }
 
 // Updated function to generate and download name tags with address
-export const downloadNameTags = (orders: any[]) => {
+export const downloadNameTags = (orders: any[], fileName?: string) => {
   // Sort orders alphabetically by customer name
   const sortedOrders = [...orders].sort((a, b) =>
     a.billing.first_name.localeCompare(b.billing.first_name)
@@ -401,5 +403,5 @@ export const downloadNameTags = (orders: any[]) => {
 
   // Create and download the CSV file
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  saveAs(blob, "name_tags_with_address.csv");
+  saveAs(blob, fileName);
 };

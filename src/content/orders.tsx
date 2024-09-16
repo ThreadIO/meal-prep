@@ -295,7 +295,11 @@ export default function OrdersPage() {
     // hardcoding
     const areaZipcodeMap = org.zipcodeMap;
     console.log("Area Zipcode Map: ", areaZipcodeMap);
-    deliveryList(filteredOrders, areaZipcodeMap);
+    deliveryList(
+      filteredOrders,
+      areaZipcodeMap,
+      generateDescriptiveFilename("delivery_list_")
+    );
   };
 
   const handleClientListUpload = () => {
@@ -444,7 +448,7 @@ export default function OrdersPage() {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
 
     // Save the CSV file
-    saveAs(blob, `orders-${startDate}-${endDate}.csv`);
+    saveAs(blob, generateDescriptiveFilename("orders_"));
   };
 
   const renderDeliveryDateInputs = () => {
@@ -529,6 +533,28 @@ export default function OrdersPage() {
     saveAs(blob, fileName);
   };
 
+  // New function to generate a descriptive filename
+  const generateDescriptiveFilename = (descriptors: string) => {
+    const dateRange = `${startDate.toString()}_to_${endDate.toString()}`;
+    const statusFilter = Array.from(selectedStatusKeys).join("-");
+    const menuFilter = Array.from(selectedMenuKeys).join("-");
+    const componentFilter = Array.from(selectedComponent).join("-");
+
+    let filename = `${dateRange}`;
+
+    // Add delivery date range if it's set
+    if (deliveryStartDate && deliveryEndDate) {
+      filename += `_delivery_${deliveryStartDate.toString()}_to_${deliveryEndDate.toString()}`;
+    }
+
+    if (statusFilter !== "All") filename += `_status_${statusFilter}`;
+    if (menuFilter !== "All") filename += `_menu_${menuFilter}`;
+    if (componentFilter !== "All") filename += `_component_${componentFilter}`;
+    if (searchTerm) filename += `_search_${searchTerm.replace(/\s+/g, "-")}`;
+
+    return `${descriptors}${filename}.csv`;
+  };
+
   // Render buttons with StyledButton component
   const renderButtons = () => {
     return (
@@ -554,7 +580,8 @@ export default function OrdersPage() {
           onClick={() =>
             generateIngredientsReport(
               meals,
-              prepareOrderedMeals(filteredOrders)
+              prepareOrderedMeals(filteredOrders),
+              generateDescriptiveFilename("ingredients_report_")
             )
           }
           text="Download Ingredients Report"
@@ -571,7 +598,10 @@ export default function OrdersPage() {
         />
         <StyledButton
           onClick={() => {
-            downloadNameTags(filteredOrders);
+            downloadNameTags(
+              filteredOrders,
+              generateDescriptiveFilename("name_tags_")
+            );
           }}
           text="Download Name Tags with Address"
         />
@@ -594,7 +624,7 @@ export default function OrdersPage() {
           onClick={() =>
             downloadCsv(
               generateFilteredCsvData(filteredOrders, meals),
-              `orders-${startDate}-${endDate}-filtered.csv`
+              generateDescriptiveFilename("labels_")
             )
           }
           text="Download Labels Manifest"
