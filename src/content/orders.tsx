@@ -99,9 +99,15 @@ export default function OrdersPage() {
     console.log("trigger fetch orders");
     if (mode === "delivery") {
       const today = now(getLocalTimeZone());
-      const weekAgo = today.subtract({ weeks: 1 });
+      const weekAgo = today
+        .subtract({ weeks: 1 })
+        .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 
-      const start = convertCalendarToZonedDateTime(deliveryDateRange.start);
+      const start = convertCalendarToZonedDateTime(
+        deliveryDateRange.start,
+        0,
+        0
+      );
       const end = convertCalendarToZonedDateTime(deliveryDateRange.end, 23, 59);
 
       const newStartDate = deliveryDateRange.start
@@ -121,6 +127,8 @@ export default function OrdersPage() {
         setEndDate(newEndDate);
       }
 
+      console.log("Start Date: ", startDate);
+      console.log("End Date: ", endDate);
       setDeliveryDateRange({
         start: deliveryDateRange.start,
         end: deliveryDateRange.end,
@@ -132,6 +140,7 @@ export default function OrdersPage() {
     console.log("refetching orders");
     await refetchOrders();
     console.log("refetched orders");
+
     setShowOrders(true);
     setLoading(false);
   };
