@@ -140,6 +140,7 @@ export default function OrdersPage() {
     console.log("refetching orders");
     await refetchOrders();
     console.log("refetched orders");
+
     setShowOrders(true);
     setLoading(false);
   };

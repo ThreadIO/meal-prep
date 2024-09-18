@@ -462,13 +462,76 @@ export const getCategories = async (user: any) => {
   return data;
 };
 
-export const getOrders = async (body: any) => {
+export const getOrders = async (
+  body: any,
+  maxRetries = 3,
+  initialDelay = 1000
+) => {
+  let allOrders: any[] = [];
+  let currentPage = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    let retries = 0;
+    let delay = initialDelay;
+
+    while (retries < maxRetries) {
+      try {
+        console.log(`Fetching page ${currentPage} of orders...`);
+        const response = await fetch("/api/woocommerce/getorders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...body, page: currentPage }),
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Server responded with ${response.status}: ${response.statusText}`
+          );
+        }
+        const result = await response.json();
+        const { data, pagination } = result;
+        allOrders = allOrders.concat(data);
+
+        currentPage++;
+        hasMore = pagination.hasMore;
+
+        // Break out of the retry loop if successful
+        break;
+      } catch (error) {
+        retries++;
+        console.error(
+          `Attempt ${retries} for page ${currentPage} failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        );
+
+        if (retries >= maxRetries) {
+          throw new Error(
+            `Max retries reached for page ${currentPage}. Last error: ${error instanceof Error ? error.message : "Unknown error"}`
+          );
+        }
+
+        console.log(`Retrying in ${delay}ms...`);
+        await sleep(delay);
+        delay *= 2;
+      }
+    }
+  }
+
+  console.log(`Fetching complete. Total orders fetched: ${allOrders.length}`);
+  return allOrders;
+};
+
+export const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+export const getOldOrders = async (body: any) => {
   const response = await fetch("/api/woocommerce/getorders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const orders = (await response.json()).data;
+  console.log("Orders: ", orders);
   if (!response.ok)
     throw new Error(`Failed to fetch orders: ${JSON.stringify(orders)}`);
   return orders;

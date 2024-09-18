@@ -17,6 +17,98 @@ function getHeaders(client_key: string, client_secret: string) {
   };
 }
 
+export async function getAllByPagination(
+  userid: string,
+  object: string,
+  {
+    startDate,
+    endDate,
+    startPage = 1,
+    pageCount = 1,
+  }: {
+    startDate?: string;
+    endDate?: string;
+    startPage?: number;
+    pageCount?: number;
+  } = {}
+) {
+  try {
+    console.log("Inside getAll woocommerce helper function");
+    console.log("Object: ", object);
+    console.log("Start Date: ", startDate);
+    console.log("End Date: ", endDate);
+    console.log("Start Page: ", startPage);
+    console.log("Page Count: ", pageCount);
+
+    const user_response = await (await getUser(userid)).json();
+    const user = user_response.data;
+
+    const company_url = user.settings.url;
+    const endpoint = `${company_url}/wp-json/wc/v3/${object}?per_page=100`;
+
+    const headers = getHeaders(
+      user.settings.client_key,
+      user.settings.client_secret
+    );
+
+    let allData: any[] = [];
+    let page = startPage;
+    let totalPages = 0;
+
+    while (page < startPage + pageCount) {
+      let url = `${endpoint}&page=${page}`;
+
+      if (startDate && endDate) {
+        const formattedStartDate = removeTimezoneInfo(startDate);
+        const formattedEndDate = removeTimezoneInfo(endDate);
+        url += `&after=${formattedStartDate}&before=${formattedEndDate}`;
+      }
+
+      console.log("URL: ", url);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: headers,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          allData = allData.concat(data);
+          totalPages = parseInt(response.headers.get("x-wp-totalpages") || "0");
+          page++;
+        } else {
+          throw new Error(`Failed to fetch data: ${response.statusText}`);
+        }
+      } catch (fetchError: unknown) {
+        if (fetchError instanceof Error && fetchError.name === "AbortError") {
+          throw new Error("Request timed out after 30 seconds");
+        }
+        throw fetchError;
+      }
+    }
+
+    return {
+      data: allData,
+      pagination: {
+        currentPage: startPage,
+        pageCount: pageCount,
+        totalPages: totalPages,
+        hasMore: page < totalPages,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+}
+
 export async function getAll(
   userid: string,
   object: string,
