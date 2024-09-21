@@ -465,11 +465,14 @@ export const getCategories = async (user: any) => {
 export const getOrders = async (
   body: any,
   maxRetries = 3,
-  initialDelay = 1000
+  initialDelay = 3000
 ) => {
   let allOrders: any[] = [];
   let currentPage = 1;
   let hasMore = true;
+
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
 
   while (hasMore) {
     let retries = 0;
@@ -485,6 +488,9 @@ export const getOrders = async (
         });
 
         if (!response.ok) {
+          if (response.status === 504) {
+            throw new Error("Gateway Timeout");
+          }
           throw new Error(
             `Server responded with ${response.status}: ${response.statusText}`
           );
@@ -510,11 +516,21 @@ export const getOrders = async (
           );
         }
 
+        // Add jitter to the delay
+        const jitter = Math.random() * 1000;
+        delay = Math.min(delay * 2 + jitter, 60000); // Cap at 60 seconds
+
+        if (error instanceof Error && error.message === "Gateway Timeout") {
+          delay = Math.max(delay, 10000); // Minimum 10-second delay for 504 errors
+        }
+
         console.log(`Retrying in ${delay}ms...`);
         await sleep(delay);
-        delay *= 2;
       }
     }
+
+    // Add a small delay between successful requests to avoid rate limiting
+    await sleep(1000);
   }
 
   console.log(`Fetching complete. Total orders fetched: ${allOrders.length}`);
