@@ -211,6 +211,8 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
     );
   };
 
+  const testMode = false;
+
   return (
     <Modal isOpen={open} onOpenChange={onClose} size="full">
       <ModalContent>
@@ -277,29 +279,31 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
               </div>
             </>
           )}
-          <div className="mt-8 border-t pt-4">
-            <h3 className="text-lg font-semibold mb-2">
-              Manual Name Matching Test
-            </h3>
-            <div className="flex gap-2 mb-2">
-              <Input
-                placeholder="CSV Name (e.g., Alex Lin Lundberg)"
-                value={testName}
-                onChange={(e) => setTestName(e.target.value)}
-              />
-              <Input
-                placeholder="Order Name (e.g., Alexander Lundberg)"
-                value={testOrderName}
-                onChange={(e) => setTestOrderName(e.target.value)}
-              />
-              <Button onClick={testNameMatching}>Test Match</Button>
+          {testMode && ( // Add this condition
+            <div className="mt-8 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-2">
+                Manual Name Matching Test
+              </h3>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="CSV Name (e.g., Alex Lin Lundberg)"
+                  value={testName}
+                  onChange={(e) => setTestName(e.target.value)}
+                />
+                <Input
+                  placeholder="Order Name (e.g., Alexander Lundberg)"
+                  value={testOrderName}
+                  onChange={(e) => setTestOrderName(e.target.value)}
+                />
+                <Button onClick={testNameMatching}>Test Match</Button>
+              </div>
+              {testResult && (
+                <pre className="bg-gray-100 p-2 rounded whitespace-pre-wrap">
+                  {testResult}
+                </pre>
+              )}
             </div>
-            {testResult && (
-              <pre className="bg-gray-100 p-2 rounded whitespace-pre-wrap">
-                {testResult}
-              </pre>
-            )}
-          </div>
+          )}
         </div>
         <ModalFooter>
           <Button
