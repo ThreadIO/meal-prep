@@ -1,3 +1,4 @@
+import React, { useState, ChangeEvent } from "react";
 import {
   Input,
   Modal,
@@ -12,7 +13,6 @@ import {
   TableRow,
   TableCell,
 } from "@nextui-org/react";
-import { useState, ChangeEvent } from "react";
 import Papa from "papaparse";
 
 interface Order {
@@ -25,7 +25,7 @@ interface Order {
 interface ClientModalProps {
   open: boolean;
   onClose: () => void;
-  orders: Order[]; // New prop for the list of orders
+  orders: Order[];
 }
 
 interface Client {
@@ -34,12 +34,119 @@ interface Client {
   ordered: boolean;
 }
 
-export const ClientModal = (props: ClientModalProps) => {
+const getNicknames = (name: string): string[] => {
+  const lowerName = name.toLowerCase();
+  const commonNicknames: { [key: string]: string[] } = {
+    alexander: ["alex", "alec", "sandy"],
+    william: ["will", "bill", "billy"],
+    elizabeth: ["liz", "beth", "betsy", "eliza"],
+    catherine: ["cathy", "kate", "kathy"],
+    christopher: ["chris", "topher"],
+    nicholas: ["nick", "nicky"],
+    patricia: ["pat", "patty", "tricia"],
+    margaret: ["maggie", "meg", "peggy"],
+    jonathan: ["jon", "jonny"],
+    theodore: ["ted", "teddy"],
+    elijah: ["eli"],
+  };
+
+  // Create a reverse mapping
+  const reverseNicknames: { [key: string]: string } = {};
+  Object.entries(commonNicknames).forEach(([fullName, nicknames]) => {
+    nicknames.forEach((nickname) => {
+      reverseNicknames[nickname] = fullName;
+    });
+  });
+
+  // Function to get all related names
+  const getRelatedNames = (inputName: string): string[] => {
+    if (commonNicknames[inputName]) {
+      return [inputName, ...commonNicknames[inputName]];
+    } else if (reverseNicknames[inputName]) {
+      const fullName = reverseNicknames[inputName];
+      return [
+        inputName,
+        fullName,
+        ...commonNicknames[fullName].filter((n) => n !== inputName),
+      ];
+    }
+    return [inputName];
+  };
+
+  const relatedNames = getRelatedNames(lowerName);
+
+  // Include capitalized versions
+  const capitalizedNames = relatedNames.map(
+    (n) => n.charAt(0).toUpperCase() + n.slice(1)
+  );
+
+  return Array.from(new Set([name, ...relatedNames, ...capitalizedNames]));
+};
+
+const getNameVariations = (name: string): string[] => {
+  const parts = name.split(" ");
+  let variations: string[] = [name];
+
+  // Get all variations of the first name (including nicknames)
+  const firstNameVariations = getNicknames(parts[0]);
+
+  // Generate full name variations
+  firstNameVariations.forEach((firstNameVar) => {
+    // Full name with each first name variation
+    variations.push([firstNameVar, ...parts.slice(1)].join(" "));
+
+    // Name without middle name(s) for each first name variation
+    if (parts.length > 2) {
+      variations.push(`${firstNameVar} ${parts[parts.length - 1]}`);
+    }
+
+    // Variations with initials for middle names
+    if (parts.length > 2) {
+      const middleInitials = parts
+        .slice(1, -1)
+        .map((part) => part[0])
+        .join(" ");
+      variations.push(
+        `${firstNameVar} ${middleInitials} ${parts[parts.length - 1]}`
+      );
+      variations.push(`${firstNameVar} ${parts[parts.length - 1]}`);
+    }
+  });
+
+  // Generate variations with initials for first name
+  const firstInitial = parts[0][0];
+  variations.push([firstInitial, ...parts.slice(1)].join(" "));
+  if (parts.length > 2) {
+    variations.push(`${firstInitial} ${parts[parts.length - 1]}`);
+  }
+
+  // Reversed variations
+  variations.push(parts.reverse().join(" "));
+  variations.push(`${parts[0]} ${parts[parts.length - 1]}`);
+
+  // Remove duplicates and normalize
+  const uniqueVariations = new Set(variations.map(normalizeName));
+  return Array.from(uniqueVariations);
+};
+
+const normalizeName = (name: string): string => {
+  return name
+    .toLowerCase()
+    .replace(/[^\w\s]/gi, "")
+    .split(" ")
+    .filter((part) => part.length > 1)
+    .join(" ")
+    .trim();
+};
+
+export const ClientModal: React.FC<ClientModalProps> = (props) => {
   const { open, onClose, orders } = props;
   const [clients, setClients] = useState<Client[]>([]);
   const [fileName, setFileName] = useState<string>("");
-
   const [filter, setFilter] = useState<"all" | "yes" | "no">("all");
+  const [testName, setTestName] = useState<string>("");
+  const [testOrderName, setTestOrderName] = useState<string>("");
+  const [testResult, setTestResult] = useState<string>("");
 
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -53,15 +160,21 @@ export const ClientModal = (props: ClientModalProps) => {
             .map((row: any) => {
               const lastName = row[0].trim();
               const firstName = row[1].trim();
-              const hasOrdered = orders.some(
-                (order) =>
-                  order.billing.first_name.trim().toLowerCase() ===
-                    firstName.toLowerCase() &&
-                  order.billing.last_name.trim().toLowerCase() ===
-                    lastName.toLowerCase()
-              );
+              const fullName = `${firstName} ${lastName}`;
+              const nameVariations = getNameVariations(fullName);
+
+              const hasOrdered = orders.some((order) => {
+                const orderFullName = `${order.billing.first_name} ${order.billing.last_name}`;
+                const normalizedOrderName = normalizeName(orderFullName);
+
+                // Check variations
+                return nameVariations.some(
+                  (variation) => normalizedOrderName === variation
+                );
+              });
+
               return {
-                clientName: `${firstName} ${lastName}`,
+                clientName: fullName,
                 allergies: row[2] || "",
                 ordered: hasOrdered,
               };
@@ -82,6 +195,23 @@ export const ClientModal = (props: ClientModalProps) => {
     if (filter === "all") return true;
     return filter === "yes" ? client.ordered : !client.ordered;
   });
+
+  const testNameMatching = () => {
+    const csvNameVariations = getNameVariations(testName);
+    const normalizedOrderName = normalizeName(testOrderName);
+
+    const matchFound = csvNameVariations.some(
+      (variation) => variation === normalizedOrderName
+    );
+
+    setTestResult(
+      matchFound
+        ? `Match found!\nVariations tested: ${csvNameVariations.join(", ")}`
+        : `No match found\nVariations tested: ${csvNameVariations.join(", ")}`
+    );
+  };
+
+  const testMode = false;
 
   return (
     <Modal isOpen={open} onOpenChange={onClose} size="full">
@@ -148,6 +278,31 @@ export const ClientModal = (props: ClientModalProps) => {
                 </Table>
               </div>
             </>
+          )}
+          {testMode && ( // Add this condition
+            <div className="mt-8 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-2">
+                Manual Name Matching Test
+              </h3>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  placeholder="CSV Name (e.g., Alex Lin Lundberg)"
+                  value={testName}
+                  onChange={(e) => setTestName(e.target.value)}
+                />
+                <Input
+                  placeholder="Order Name (e.g., Alexander Lundberg)"
+                  value={testOrderName}
+                  onChange={(e) => setTestOrderName(e.target.value)}
+                />
+                <Button onClick={testNameMatching}>Test Match</Button>
+              </div>
+              {testResult && (
+                <pre className="bg-gray-100 p-2 rounded whitespace-pre-wrap">
+                  {testResult}
+                </pre>
+              )}
+            </div>
           )}
         </div>
         <ModalFooter>

@@ -1,6 +1,5 @@
 "use client";
-import { useState } from "react";
-import { Sidebar, SidebarCTA } from "flowbite-react";
+import { Sidebar } from "flowbite-react";
 import {
   // BarChart,
   ClipboardList,
@@ -15,8 +14,6 @@ import {
 } from "lucide-react";
 import { useUser } from "@propelauth/nextjs/client";
 import BusinessIcon from "@/components/BusinessIcon";
-import UserProfile from "@/components/UserProfile";
-import { AccountModal } from "@/components/Modals/AccountModal";
 import Link from "next/link";
 import { useNavigationContext } from "@/components/context/NavigationContext";
 import { useOrgContext } from "@/components/context/OrgContext";
@@ -26,7 +23,6 @@ const SidebarComponent = () => {
   const { user } = useUser();
   const { setCurrentPage } = useNavigationContext();
   const { currentOrg } = useOrgContext();
-  const [openAccount, setOpenAccount] = useState(false);
   const org = user?.getOrg(currentOrg);
   const isOwner = org?.isRole("Owner");
   return (
@@ -50,7 +46,7 @@ const SidebarComponent = () => {
             />
           </Link>
         </div>
-        <Sidebar.ItemGroup className="mt-4 space-y-2 border-t border-gray-200 pt-4 first:mt-0 first:border-t-0 first:pt-0 dark:border-gray-700">
+        {/* <Sidebar.ItemGroup className="mt-4 space-y-2 border-t border-gray-200 pt-4 first:mt-0 first:border-t-0 first:pt-0 dark:border-gray-700">
           <SidebarCTA>
             <div className="flex items-center">
               <div
@@ -67,11 +63,11 @@ const SidebarComponent = () => {
               </button>
             </div>
           </SidebarCTA>
-          <AccountModal
+           <AccountModal
             open={openAccount}
             onClose={() => setOpenAccount(false)}
           />
-        </Sidebar.ItemGroup>
+        </Sidebar.ItemGroup> */}
         <Sidebar.ItemGroup className="mt-4 space-y-2 border-t border-gray-200 pt-4 first:mt-0 first:border-t-0 first:pt-0 dark:border-gray-700">
           {betaMode && (
             <Sidebar.Item
