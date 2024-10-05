@@ -113,13 +113,10 @@ const threadDeliveryDate = (order: any): Date | null => {
   const methodTitle = shippingLines[0].method_title;
   if (!methodTitle) return null;
 
-  console.log("Method Title: ", methodTitle);
-
   // Extract the date string from the method title
   // This regex now matches the format "Delivery DayOfWeek - Month Day, Year"
   const dateMatch = methodTitle.match(/Delivery \w+ - (\w+ \d+, \d+)/);
 
-  console.log("Date Match: ", dateMatch);
   if (!dateMatch) return null;
 
   const dateString = dateMatch[1];
