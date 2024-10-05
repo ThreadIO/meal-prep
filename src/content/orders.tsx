@@ -99,10 +99,14 @@ export default function OrdersPage() {
     console.log("trigger fetch orders");
     if (mode === "delivery") {
       const today = now(getLocalTimeZone());
-      const weekAgo = today
-        .subtract({ weeks: 1 })
+      let weekAgo = today
+        .subtract({ weeks: 2 })
         .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
-
+      if (org?.name == "JustFit Kitchen") {
+        weekAgo = today
+          .subtract({ weeks: 1 })
+          .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+      }
       const start = convertCalendarToZonedDateTime(
         deliveryDateRange.start,
         0,
