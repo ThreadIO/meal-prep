@@ -100,7 +100,7 @@ export default function OrdersPage() {
     if (mode === "delivery") {
       const today = now(getLocalTimeZone());
       const weekAgo = today
-        .subtract({ weeks: 1 })
+        .subtract({ weeks: 2 })
         .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 
       const start = convertCalendarToZonedDateTime(

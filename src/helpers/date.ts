@@ -113,56 +113,22 @@ const threadDeliveryDate = (order: any): Date | null => {
   const methodTitle = shippingLines[0].method_title;
   if (!methodTitle) return null;
 
-  const datePaid = new Date(order.date_paid);
-  if (isNaN(datePaid.getTime())) return null;
+  console.log("Method Title: ", methodTitle);
 
-  const isWednesdayDelivery = methodTitle.toLowerCase().includes("wednesday");
-  const isSundayDelivery = methodTitle.toLowerCase().includes("sunday");
+  // Extract the date string from the method title
+  // This regex now matches the format "Delivery DayOfWeek - Month Day, Year"
+  const dateMatch = methodTitle.match(/Delivery \w+ - (\w+ \d+, \d+)/);
 
-  if (!isWednesdayDelivery && !isSundayDelivery) return null;
+  console.log("Date Match: ", dateMatch);
+  if (!dateMatch) return null;
 
-  const getCutoffDate = (date: Date) => {
-    const cutoff = new Date(date);
-    cutoff.setDate(cutoff.getDate() + ((5 - cutoff.getDay() + 7) % 7));
-    cutoff.setHours(0, 0, 0, 0);
-    return cutoff;
-  };
+  const dateString = dateMatch[1];
+  const deliveryDate = new Date(dateString);
 
-  const getNextDayOfWeek = (date: Date, dayOfWeek: number) => {
-    const result = new Date(date);
-    result.setDate(result.getDate() + ((dayOfWeek - result.getDay() + 7) % 7));
-    return result;
-  };
+  // Check if the parsed date is valid
+  if (isNaN(deliveryDate.getTime())) return null;
 
-  const cutoffDate = getCutoffDate(datePaid);
-  let nextDeliveryDate;
-
-  if (isWednesdayDelivery) {
-    nextDeliveryDate = getNextDayOfWeek(datePaid, 3);
-    if (datePaid >= cutoffDate || nextDeliveryDate <= datePaid) {
-      nextDeliveryDate.setDate(nextDeliveryDate.getDate() + 7);
-    }
-  } else {
-    nextDeliveryDate = getNextDayOfWeek(datePaid, 0);
-    if (datePaid >= cutoffDate) {
-      nextDeliveryDate.setDate(nextDeliveryDate.getDate() + 7);
-    }
-  }
-
-  const ensureMinimumDeliveryTime = (datePaid: Date, deliveryDate: Date) => {
-    const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000;
-    const timeDifference = deliveryDate.getTime() - datePaid.getTime();
-
-    if (timeDifference < twoDaysInMilliseconds) {
-      deliveryDate.setDate(deliveryDate.getDate() + 7);
-    }
-
-    return deliveryDate;
-  };
-
-  nextDeliveryDate = ensureMinimumDeliveryTime(datePaid, nextDeliveryDate);
-
-  return nextDeliveryDate;
+  return deliveryDate;
 };
 
 export function removeTimezoneInfo(dateTimeString: string): string {

@@ -147,7 +147,7 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
   const [testName, setTestName] = useState<string>("");
   const [testOrderName, setTestOrderName] = useState<string>("");
   const [testResult, setTestResult] = useState<string>("");
-
+  const [defaultMeal, setDefaultMeal] = useState<string>("");
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -191,6 +191,11 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
     setFileName("");
   };
 
+  const handleDefaultMealChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newDefaultMeal = e.target.value;
+    setDefaultMeal(newDefaultMeal);
+  };
+
   const filteredClients = clients.filter((client) => {
     if (filter === "all") return true;
     return filter === "yes" ? client.ordered : !client.ordered;
@@ -227,6 +232,15 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
             className="mb-4"
           />
           {fileName && <p>File uploaded: {fileName}</p>}
+          <Input
+            type="text"
+            label="Default Meal for 'No' Orders"
+            placeholder="Enter default meal"
+            value={defaultMeal}
+            onChange={handleDefaultMealChange}
+            className="mb-4"
+          />
+          ;
           {clients.length > 0 && (
             <>
               <div className="mb-4 flex gap-2">
