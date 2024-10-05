@@ -102,7 +102,7 @@ export default function OrdersPage() {
       let weekAgo = today
         .subtract({ weeks: 2 })
         .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
-      if (org.name == "JustFit Kitchen") {
+      if (org?.name == "JustFit Kitchen") {
         weekAgo = today
           .subtract({ weeks: 1 })
           .set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
