@@ -36,6 +36,8 @@ const Onboarding = () => {
   useEffect(() => {
     if (merchantId) {
       checkApplicationStatus();
+    } else {
+      createMerchant();
     }
   }, [merchantId]);
 
@@ -94,6 +96,10 @@ const Onboarding = () => {
         } else {
           throw new Error("Failed to create merchant");
         }
+      }
+
+      if (merchantId == null) {
+        throw new Error("MerchantId is null!");
       }
 
       const sessionResponse = await fetch("/api/rainforest/session", {
