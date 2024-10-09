@@ -22,6 +22,8 @@ const Onboarding = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [applicationSubmitted, setApplicationSubmitted] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState("");
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [error, setError] = useState<string>("");
   const queryClient = useQueryClient();
 
   const pa_Org = user?.getOrg(currentOrg);
@@ -34,12 +36,26 @@ const Onboarding = () => {
   }, [pa_Org]);
 
   useEffect(() => {
-    if (merchantId) {
+    const initializeMerchant = async () => {
+      setIsInitializing(true);
+      try {
+        await createMerchant();
+      } catch (err) {
+        console.error("Error initializing merchant:", err);
+        setError("Failed to initialize merchant. Please try again.");
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeMerchant();
+  }, []); // This effect runs only once on mount
+
+  useEffect(() => {
+    if (merchantId && !isInitializing) {
       checkApplicationStatus();
-    } else {
-      createMerchant();
     }
-  }, [merchantId]);
+  }, [merchantId, isInitializing]);
 
   const checkApplicationStatus = async () => {
     try {
@@ -247,6 +263,14 @@ const Onboarding = () => {
       ),
     },
   ];
+
+  if (isInitializing) {
+    return <Spinner label="Initializing..." />;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <Card className="p-6 m-4">
