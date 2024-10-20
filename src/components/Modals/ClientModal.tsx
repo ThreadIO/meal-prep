@@ -14,6 +14,8 @@ import {
   TableCell,
 } from "@nextui-org/react";
 import Papa from "papaparse";
+import { generateNoOrdersLabelManifest } from "@/helpers/downloads";
+import { saveAs } from "file-saver";
 
 interface Order {
   billing: {
@@ -32,6 +34,7 @@ interface Client {
   clientName: string;
   allergies: string;
   ordered: boolean;
+  team: string;
 }
 
 const getNicknames = (name: string): string[] => {
@@ -177,6 +180,7 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
                 clientName: fullName,
                 allergies: row[2] || "",
                 ordered: hasOrdered,
+                team: row[3] || "", // Add team information
               };
             });
           setClients(parsedClients);
@@ -200,6 +204,20 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
     if (filter === "all") return true;
     return filter === "yes" ? client.ordered : !client.ordered;
   });
+
+  const handleGenerateNoOrdersLabel = () => {
+    if (!defaultMeal) {
+      alert(
+        "Please enter a default meal before generating the label manifest."
+      );
+      return;
+    }
+
+    const noOrderClients = clients.filter((client) => !client.ordered);
+    const csvData = generateNoOrdersLabelManifest(noOrderClients, defaultMeal);
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "no_orders_label_manifest.csv");
+  };
 
   const testNameMatching = () => {
     const csvNameVariations = getNameVariations(testName);
@@ -240,7 +258,6 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
             onChange={handleDefaultMealChange}
             className="mb-4"
           />
-          ;
           {clients.length > 0 && (
             <>
               <div className="mb-4 flex gap-2">
@@ -268,6 +285,7 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
                   <TableHeader>
                     <TableColumn>Client Name</TableColumn>
                     <TableColumn>Allergies</TableColumn>
+                    <TableColumn>Team</TableColumn>
                     <TableColumn>Ordered</TableColumn>
                   </TableHeader>
                   <TableBody>
@@ -275,6 +293,7 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
                       <TableRow key={index}>
                         <TableCell>{client.clientName}</TableCell>
                         <TableCell>{client.allergies}</TableCell>
+                        <TableCell>{client.team}</TableCell>
                         <TableCell>
                           <span
                             className={`px-2 py-1 rounded ${
@@ -320,6 +339,13 @@ export const ClientModal: React.FC<ClientModalProps> = (props) => {
           )}
         </div>
         <ModalFooter>
+          <Button
+            onClick={handleGenerateNoOrdersLabel}
+            disabled={clients.length === 0 || !defaultMeal}
+            color="primary"
+          >
+            Generate &apos;No Orders&apos; Label Manifest
+          </Button>
           <Button
             color="danger"
             onPress={handleClear}
