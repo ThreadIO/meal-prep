@@ -263,3 +263,60 @@ const getFormattedShippingAddress = (order: any) => {
     return `${shippingAddress.address_1 || ""} ${shippingAddress.address_2 || ""}, ${shippingAddress.city || ""}, ${shippingAddress.state || ""} ${shippingAddress.postcode || ""}, ${shippingAddress.country || ""}`.trim();
   }
 };
+
+// Updated function to generate CSV data for clients without orders
+export const generateNoOrdersLabelManifest = (
+  clients: any[],
+  defaultMeal: string
+) => {
+  const csvHeader = [
+    "Customer Name",
+    "First Name",
+    "Last Name",
+    "Product Name",
+    "Expiry Date",
+    "Calories",
+    "Protein",
+    "Carbs",
+    "Fat",
+    "Ingredients",
+    "Allergens",
+    "Delivery Date",
+    "All Sizes",
+    "Meal Option",
+    "Shipping Address",
+  ];
+
+  console.log("Clients: ", clients);
+  const csvData = [csvHeader];
+
+  clients.forEach((client) => {
+    const [lastName, firstName] = client.clientName.split(" ");
+    const rowData = [
+      `${firstName} ${lastName}`,
+      firstName,
+      lastName,
+      `${defaultMeal}`,
+      "",
+      "", // Calories
+      "", // Protein
+      "", // Carbs
+      "", // Fat
+      "", // Ingredients
+      client.allergies,
+      "",
+      "", // All Sizes
+      "", // Meal Option
+      client.team, // Use team as the shipping address
+    ];
+    csvData.push(rowData);
+  });
+
+  return csvData
+    .map((row) =>
+      row
+        .map((field) => (typeof field === "string" ? `"${field}"` : field))
+        .join(",")
+    )
+    .join("\n");
+};
