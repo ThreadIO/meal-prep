@@ -37,7 +37,7 @@
     "husky": "^8.0.3",
     "lucide-react": "^0.368.0",
     "mongoose": "^8.9.5",
-    "next": "^14.2.4",
+    "next": "^14.2.23",
     "next-themes": "^0.2.1",
     "node-fetch": "^3.3.2",
     "papaparse": "^5.4.1",
